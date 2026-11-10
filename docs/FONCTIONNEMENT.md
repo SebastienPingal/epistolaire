@@ -101,11 +101,11 @@ Une migration déjà appliquée ne se modifie plus : tout changement passe par u
 
 La base ne garde ni le code, ni le lien, ni le cookie : seulement leur empreinte. Après 5 codes faux, une demande ne vaut plus rien. Un compte ne peut pas recevoir plus de 5 e-mails par quart d'heure.
 
-Le compte du MJ se crée tout seul la première fois que l'adresse de la variable `MJ_EMAIL` demande à se connecter. Les comptes des joueurs sont créés par le MJ.
+Le compte du MJ se crée tout seul la première fois que son adresse demande à se connecter. Cette adresse est celle de la boîte d'envoi (`SMTP_USER`), sauf si la variable `MJ_EMAIL` en désigne une autre. Les comptes des joueurs sont créés par le MJ.
 
 Dans le code, un traitement réservé au MJ demande un `Mj`, un traitement de joueur demande un `Joueur`. Ces deux preuves ne sont fabriquées que par la connexion, à partir de la session.
 
-Tant que les identifiants d'envoi ne sont pas configurés, les e-mails d'un aperçu ne partent pas : ils sont écrits dans les journaux du serveur, sur Vercel. Le site en ligne, lui, refuse de fonctionner sans eux.
+Les e-mails partent de la boîte Gmail du MJ, par SMTP. Les identifiants sont dans les variables d'environnement du projet Vercel, repris du projet `congres-champetre`. Sans eux, les e-mails d'un aperçu ou du serveur local ne partent pas : ils sont écrits dans les journaux du serveur. Le site en ligne, lui, refuse de fonctionner sans eux.
 
 ## Les garde-fous automatiques
 
@@ -150,7 +150,7 @@ cargo sqlx prepare
 |---|---|
 | `DATABASE_URL` | L'adresse de la base PostgreSQL (Neon) |
 | `DATABASE_URL_UNPOOLED` | L'adresse directe de la base, utilisée pour les migrations |
-| `MJ_EMAIL` | L'adresse e-mail du MJ, qui ouvre son compte |
-| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` | Le serveur d'envoi des e-mails et ses identifiants. Port 465 par défaut |
-| `MAIL_FROM` | L'adresse d'expédition, si elle diffère de `SMTP_USER` (un alias). Facultatif |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` | Le serveur d'envoi des e-mails et ses identifiants |
+| `SMTP_FROM` | L'adresse d'expédition, si elle diffère de `SMTP_USER` (un alias). Facultatif |
+| `MJ_EMAIL` | L'adresse qui ouvre le compte du MJ, si ce n'est pas `SMTP_USER`. Facultatif |
 | `SITE_HOST` | Le nom de domaine du site, s'il ne finit pas par `.vercel.app`. Facultatif |

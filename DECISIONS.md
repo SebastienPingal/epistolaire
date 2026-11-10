@@ -218,7 +218,8 @@ Dernière mise à jour : conception terminée (sujets 1 à 9), réalisation comm
   - Notifications à l'heure : planifications Vercel (Schedules), avec un contrôle régulier en secours. Les limites du plan restent à vérifier.
   - Images : Vercel Blob.
   - Région : Francfort (`fra1`) pour le serveur, et la même région pour la base, afin qu'ils soient proches l'un de l'autre et des joueurs.
-- E-mails : envoyés depuis la boîte mail du MJ pour l'instant. Pas de nom de domaine : le site reste en `.vercel.app`. Les identifiants existent déjà sur un autre projet Vercel du MJ ; leur reprise se fera à la mise en place.
+- E-mails : envoyés depuis la boîte Gmail du MJ, par SMTP, pour l'instant. Pas de nom de domaine : le site reste en `.vercel.app`. Les identifiants ont été repris du projet Vercel `congres-champetre`.
+- Le compte du MJ est celui de l'adresse de cette boîte d'envoi.
 - Base de données : Neon (PostgreSQL), installée depuis la marketplace Vercel, offre gratuite. SQLite en simple fichier est impossible sur Vercel, faute de disque permanent. En Rust, les requêtes sont vérifiées à la compilation.
 - Les types de l'interface sont générés automatiquement à partir de ceux du serveur.
 - La structure de la base est mise à jour automatiquement par le serveur à son démarrage (migrations).
@@ -261,6 +262,5 @@ Dernière mise à jour : conception terminée (sujets 1 à 9), réalisation comm
 ## Questions ouvertes
 
 - Pour l'instant, les aperçus et le site en ligne partagent la même base. Avant le lancement, les aperçus doivent travailler sur une copie (branches Neon), pour qu'un essai ne touche jamais les vraies lettres.
-- La reprise des identifiants e-mail depuis l'autre projet Vercel, à la mise en place.
 - Les limites des offres gratuites (Vercel Schedules, Neon, Blob), à vérifier à la mise en place.
 - Sur l'offre gratuite de Vercel, une planification peut partir avec jusqu'à 15 minutes de retard. Le pli, lui, arrive à l'heure exacte ; seule sa notification pourrait tarder. À trancher à l'étape des notifications.

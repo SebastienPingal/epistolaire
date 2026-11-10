@@ -2,7 +2,8 @@
 //!
 //! * Seules les adresses enregistrées par le MJ peuvent se connecter. Une adresse inconnue
 //!   reçoit la même réponse qu'une adresse connue : le site ne dit pas qui a un compte.
-//! * Le compte du MJ se crée seul à sa première demande, à partir de la variable `MJ_EMAIL`.
+//! * Le compte du MJ se crée seul à sa première demande. Son adresse est celle de la boîte
+//!   d'envoi (`SMTP_USER`), sauf si la variable `MJ_EMAIL` en désigne une autre.
 //! * La base ne garde que des empreintes du code, du lien et de la session.
 //!
 //! C'est aussi ici que se fabriquent les preuves d'identité [`Joueur`] et [`Mj`]
@@ -409,7 +410,9 @@ async fn trouver_compte(pool: &PgPool, email: &str) -> Result<Option<Uuid>, Erre
         return Ok(existant);
     }
 
+    // Les e-mails partent de la boîte du MJ : sans autre précision, c'est son adresse.
     let est_le_mj = std::env::var("MJ_EMAIL")
+        .or_else(|_| std::env::var("SMTP_USER"))
         .ok()
         .and_then(|adresse| normaliser(&adresse))
         .is_some_and(|adresse| adresse == email);

@@ -3,7 +3,7 @@
 //! Variables d'environnement :
 //! * `SMTP_HOST`, `SMTP_USER`, `SMTP_PASS` : le serveur d'envoi et ses identifiants ;
 //! * `SMTP_PORT` : 465 par défaut (connexion chiffrée d'emblée), ou 587 ;
-//! * `MAIL_FROM` : l'adresse d'expédition, si elle diffère de `SMTP_USER` (un alias).
+//! * `SMTP_FROM` : l'adresse d'expédition, si elle diffère de `SMTP_USER` (un alias).
 //!
 //! Sans `SMTP_HOST`, hors du site en ligne, l'e-mail n'est pas envoyé : il est écrit
 //! dans les journaux du serveur. Cela permet de développer et d'essayer un aperçu
@@ -35,7 +35,7 @@ pub async fn envoyer(courriel: Courriel) -> Result<(), Erreur> {
         .ok()
         .and_then(|port| port.parse().ok())
         .unwrap_or(465);
-    let expediteur = std::env::var("MAIL_FROM").unwrap_or_else(|_| utilisateur.clone());
+    let expediteur = std::env::var("SMTP_FROM").unwrap_or_else(|_| utilisateur.clone());
 
     let message = Message::builder()
         .from(Mailbox::new(
