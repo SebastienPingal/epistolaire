@@ -27,6 +27,7 @@ Claude développe et maintient tout le code. Le MJ (propriétaire du repo) déci
 - **Types de l'interface** : générés depuis Rust (`ts-rs`) dans `web/src/types/`. Ne jamais les écrire à la main ; relancer `cargo test` pour les régénérer.
 - **Composants** : shadcn/ui (variante Base UI) et Tailwind CSS. Ajouter un composant avec `npx shadcn@latest add <nom>` depuis `web/` ; il arrive dans `web/src/components/ui/`. Préférer un composant shadcn à un composant écrit à la main.
 - **Thème** : tout ce qui dépend de l'univers (apparence, vocabulaire) vit dans `web/src/theme/`. Le fichier CSS du thème donne leur valeur aux variables de shadcn. Les composants n'écrivent ni couleur ni mot d'univers en dur : ils utilisent les classes des variables (`bg-background`, `text-muted-foreground`, `text-bon`…).
+- **Version de Rust** : Vercel compile avec Rust 1.92 (`rust-version` dans `Cargo.toml`). Ne pas prendre une dépendance qui exige une version plus récente : sqlx reste en 0.8 pour cette raison, et l'outil `sqlx-cli` doit être en 0.8 lui aussi.
 - **Secrets** : jamais dans le repo. Ils vivent dans les variables d'environnement Vercel.
 
 ## Commandes
