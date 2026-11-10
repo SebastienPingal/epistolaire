@@ -1,7 +1,7 @@
 # Guide de fonctionnement
 
 Ce guide décrit comment le site est construit. Il est mis à jour à la fin de chaque étape de `PLAN.md`.
-État décrit : étape 2 (base de données).
+État décrit : étape 3 (connexion).
 
 ## Vue d'ensemble
 
@@ -20,10 +20,14 @@ Les deux sont hébergés sur Vercel. L'interface est un ensemble de fichiers sta
 | `src/` | Le serveur : routeur, accès à la base, logique du jeu |
 | `src/modele.rs` | Le vocabulaire du jeu : gabarits, états d'un pli, d'un sceau… |
 | `src/acces/` | Les deux portes d'accès aux données : celle des joueurs, celle du MJ |
+| `src/connexion.rs` | La connexion par e-mail et les sessions |
+| `src/courriel.rs` | L'envoi des e-mails |
+| `src/erreur.rs` | Les erreurs renvoyées à l'interface |
 | `src/bin/dev.rs` | Le serveur local, pour développer |
 | `migrations/` | La structure de la base, étape par étape |
 | `.sqlx/` | La description des requêtes SQL, qui sert à les vérifier à la compilation |
 | `web/` | L'interface |
+| `web/src/ecrans/` | Les écrans du site |
 | `web/src/types/` | Les types générés depuis le serveur. Ne pas les modifier à la main |
 | `web/src/components/ui/` | Les composants shadcn/ui, ajoutés au fur et à mesure |
 | `web/src/theme/` | Le thème : apparence et vocabulaire de l'univers |
@@ -88,6 +92,21 @@ La structure de la base est décrite par les fichiers de `migrations/`, numérot
 
 Une migration déjà appliquée ne se modifie plus : tout changement passe par un nouveau fichier. Une migration ne supprime jamais une table ou une colonne qui contient du courrier sans étape intermédiaire.
 
+## La connexion
+
+1. La personne saisit son adresse e-mail.
+2. Si l'adresse a un compte, le serveur lui envoie un e-mail avec un lien et un code à 6 chiffres, valables 15 minutes et utilisables une fois. Une adresse inconnue reçoit la même réponse à l'écran, mais aucun e-mail : le site ne dit pas qui a un compte.
+3. Le lien ou le code ouvre une session. Le navigateur reçoit un cookie que le code de la page ne peut pas lire.
+4. La session dure 180 jours après la dernière visite.
+
+La base ne garde ni le code, ni le lien, ni le cookie : seulement leur empreinte. Après 5 codes faux, une demande ne vaut plus rien. Un compte ne peut pas recevoir plus de 5 e-mails par quart d'heure.
+
+Le compte du MJ se crée tout seul la première fois que l'adresse de la variable `MJ_EMAIL` demande à se connecter. Les comptes des joueurs sont créés par le MJ.
+
+Dans le code, un traitement réservé au MJ demande un `Mj`, un traitement de joueur demande un `Joueur`. Ces deux preuves ne sont fabriquées que par la connexion, à partir de la session.
+
+Tant que les identifiants d'envoi ne sont pas configurés, les e-mails d'un aperçu ne partent pas : ils sont écrits dans les journaux du serveur, sur Vercel. Le site en ligne, lui, refuse de fonctionner sans eux.
+
 ## Les garde-fous automatiques
 
 - **Requêtes SQL vérifiées à la compilation.** Une requête qui ne correspond pas à la base empêche le site de se construire. La vérification s'appuie sur le dossier `.sqlx/`, donc elle marche aussi sur Vercel, sans base à portée de main.
@@ -131,3 +150,7 @@ cargo sqlx prepare
 |---|---|
 | `DATABASE_URL` | L'adresse de la base PostgreSQL (Neon) |
 | `DATABASE_URL_UNPOOLED` | L'adresse directe de la base, utilisée pour les migrations |
+| `MJ_EMAIL` | L'adresse e-mail du MJ, qui ouvre son compte |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` | Le serveur d'envoi des e-mails et ses identifiants. Port 465 par défaut |
+| `MAIL_FROM` | L'adresse d'expédition, si elle diffère de `SMTP_USER` (un alias). Facultatif |
+| `SITE_HOST` | Le nom de domaine du site, s'il ne finit pas par `.vercel.app`. Facultatif |

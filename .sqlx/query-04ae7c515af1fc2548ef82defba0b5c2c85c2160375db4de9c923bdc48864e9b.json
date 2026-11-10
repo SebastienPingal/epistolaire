@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        insert into sessions (compte_id, jeton_hash, expire_le)\n        values ($1, $2, now() + make_interval(days => $3))\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "04ae7c515af1fc2548ef82defba0b5c2c85c2160375db4de9c923bdc48864e9b"
+}

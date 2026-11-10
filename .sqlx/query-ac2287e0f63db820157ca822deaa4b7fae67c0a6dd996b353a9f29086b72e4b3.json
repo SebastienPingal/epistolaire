@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        insert into demandes_connexion (id, compte_id, code_hash, lien_hash, expire_le)\n        values ($1, $2, $3, $4, now() + make_interval(mins => $5))\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Text",
+        "Text",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "ac2287e0f63db820157ca822deaa4b7fae67c0a6dd996b353a9f29086b72e4b3"
+}

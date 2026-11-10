@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        insert into comptes (email, role) values ($1::text::citext, 'mj')\n        on conflict (email) do update set email = excluded.email\n        returning id\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "10b73389892a44506d258171c53a0b4e53d88a9aa3ce709e70916e8a99651016"
+}

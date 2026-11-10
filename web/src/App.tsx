@@ -1,72 +1,62 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
-import { appeler } from '@/api';
-import { cn } from '@/lib/utils';
+import { appeler, messageErreur } from '@/api';
+import { Accueil } from '@/ecrans/Accueil';
+import { Connexion } from '@/ecrans/Connexion';
 import { vocabulaire } from '@/theme/neutre';
-import type { Sante } from '@/types/Sante';
+import type { LienConnexion } from '@/types/LienConnexion';
+import type { Moi } from '@/types/Moi';
 
 type Etat =
-  | { etape: 'attente' }
-  | { etape: 'recu'; sante: Sante }
-  | { etape: 'echec' };
+  | { etape: 'chargement' }
+  | { etape: 'deconnecte'; message?: string }
+  | { etape: 'connecte'; moi: Moi };
 
-/** Page de contrôle des étapes 1 et 2. Elle sera remplacée par la connexion. */
-export function App() {
-  const [etat, setEtat] = useState<Etat>({ etape: 'attente' });
-
-  useEffect(() => {
-    let actif = true;
-    appeler<Sante>('/sante')
-      .then((sante) => actif && setEtat({ etape: 'recu', sante }))
-      .catch(() => actif && setEtat({ etape: 'echec' }));
-    return () => {
-      actif = false;
-    };
-  }, []);
-
-  const sante = etat.etape === 'recu' ? etat.sante : null;
-  const serveur = etat.etape === 'attente' ? null : sante !== null;
-  const base = etat.etape === 'attente' ? null : (sante?.base ?? false);
-  const structure = etat.etape === 'attente' ? null : (sante?.structure ?? null) !== null;
-
-  return (
-    <main className="mx-auto max-w-xl px-4 py-12">
-      <h1 className="mb-6 font-serif text-2xl text-balance">{vocabulaire.nomDuSite}</h1>
-      <ul className="divide-y border-y">
-        <Ligne libelle="Le serveur" ok={serveur} />
-        <Ligne libelle="La base de données" ok={base} />
-        <Ligne
-          libelle="La structure de la base"
-          ok={structure}
-          oui={`en place (version ${sante?.structure ?? ''})`}
-          non="absente"
-        />
-      </ul>
-    </main>
-  );
+/** Le jeton d'un lien de connexion, si la page a été ouverte depuis l'e-mail. */
+function jetonDuLien(): string | null {
+  const adresse = new URL(window.location.href);
+  return adresse.pathname === '/connexion' ? adresse.searchParams.get('jeton') : null;
 }
 
-type LigneProps = {
-  libelle: string;
-  ok: boolean | null;
-  oui?: string;
-  non?: string;
-};
+export function App() {
+  const [etat, setEtat] = useState<Etat>({ etape: 'chargement' });
+  const demarre = useRef(false);
 
-function Ligne({ libelle, ok, oui = 'répond', non = 'ne répond pas' }: LigneProps) {
-  const reponse = ok === null ? '…' : ok ? oui : non;
-  return (
-    <li className="flex justify-between gap-4 py-3">
-      <span>{libelle}</span>
-      <span
-        className={cn(
-          'text-muted-foreground',
-          ok === true && 'text-bon',
-          ok === false && 'text-destructive',
-        )}
-      >
-        {reponse}
-      </span>
-    </li>
-  );
+  useEffect(() => {
+    // Un lien ne sert qu'une fois : ce démarrage ne doit jamais partir en double.
+    if (demarre.current) return;
+    demarre.current = true;
+
+    const jeton = jetonDuLien();
+    if (jeton) {
+      // Le jeton quitte la barre d'adresse et l'historique dès qu'il est lu.
+      window.history.replaceState(null, '', '/');
+      appeler<Moi>('/connexion/lien', { jeton } satisfies LienConnexion)
+        .then((moi) => setEtat({ etape: 'connecte', moi }))
+        .catch((e) => setEtat({ etape: 'deconnecte', message: messageErreur(e) }));
+      return;
+    }
+
+    appeler<Moi>('/moi')
+      .then((moi) => setEtat({ etape: 'connecte', moi }))
+      .catch(() => setEtat({ etape: 'deconnecte' }));
+  }, []);
+
+  switch (etat.etape) {
+    case 'chargement':
+      return (
+        <main className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center px-4">
+          <p className="text-muted-foreground">{vocabulaire.connexion.lienEnCours}</p>
+        </main>
+      );
+    case 'deconnecte':
+      return (
+        <Connexion
+          messageInitial={etat.message}
+          surConnexion={(moi) => setEtat({ etape: 'connecte', moi })}
+        />
+      );
+    case 'connecte':
+      return <Accueil moi={etat.moi} surDeconnexion={() => setEtat({ etape: 'deconnecte' })} />;
+  }
 }

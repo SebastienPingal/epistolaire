@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        select c.role as \"role: Role\", p.id as \"personnage_id?\", p.nom as \"personnage_nom?\"\n        from comptes c\n        left join personnages p on p.compte_id = c.id\n        where c.id = $1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "role: Role",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "personnage_id?",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "personnage_nom?",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "e9cc6fc705fde72657389ad8df4bea8433b7e1ace13c065136b63535e6bb0ab7"
+}

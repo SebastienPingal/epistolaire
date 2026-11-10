@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update demandes_connexion set utilisee_le = now() where id = $1 and utilisee_le is null",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "e63932409c446c25ff8e8d9d6206e05602a0cd6be09b7f526ebb1c9dff2db211"
+}

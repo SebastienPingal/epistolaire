@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            select\n                s.id,\n                s.compte_id,\n                c.role as \"role: Role\",\n                s.vue_le < now() - interval '1 day' as \"a_prolonger!\"\n            from sessions s\n            join comptes c on c.id = s.compte_id\n            where s.jeton_hash = $1 and s.expire_le > now()\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "compte_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "role: Role",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "a_prolonger!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      null
+    ]
+  },
+  "hash": "7ae17ab28c1ae25ac8c8dded6099058edb418b530a44f02e7bcd4a16646df986"
+}

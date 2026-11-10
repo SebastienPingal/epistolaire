@@ -1,0 +1,35 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        select d.id, d.compte_id, d.code_hash\n        from demandes_connexion d\n        join comptes c on c.id = d.compte_id\n        where c.email = $1::text::citext\n          and d.utilisee_le is null\n          and d.expire_le > now()\n          and d.essais < $2\n        order by d.cree_le desc\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "compte_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "code_hash",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "d5a82c1a10157668375e5d0c16bb374596992c009852eb263fa8c792330124f3"
+}

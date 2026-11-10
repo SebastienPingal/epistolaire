@@ -4,17 +4,26 @@
 
 pub mod acces;
 pub mod base;
+pub mod connexion;
+pub mod courriel;
+pub mod erreur;
 pub mod modele;
 pub mod sante;
 
 use axum::http::{StatusCode, Uri};
-use axum::routing::get;
+use axum::routing::{get, post};
 use axum::{Json, Router};
 use serde_json::{Value, json};
 
 /// Le routeur complet, partagé par la fonction Vercel et le serveur local.
 pub fn routeur() -> Router {
-    let api = Router::new().route("/sante", get(sante::sante));
+    let api = Router::new()
+        .route("/sante", get(sante::sante))
+        .route("/connexion/demande", post(connexion::demander))
+        .route("/connexion/code", post(connexion::verifier_code))
+        .route("/connexion/lien", post(connexion::verifier_lien))
+        .route("/deconnexion", post(connexion::deconnecter))
+        .route("/moi", get(connexion::moi));
 
     Router::new().nest("/api", api).fallback(introuvable)
 }

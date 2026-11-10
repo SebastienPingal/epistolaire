@@ -13,8 +13,10 @@ export default defineConfig({
   },
   server: {
     // En local, les requêtes /api vont au serveur Rust (`cargo run`).
+    // `xfwd` lui transmet l'adresse du site telle que le navigateur la connaît :
+    // il en a besoin pour écrire le lien de connexion.
     proxy: {
-      '/api': 'http://127.0.0.1:8787',
+      '/api': { target: 'http://127.0.0.1:8787', xfwd: true },
     },
   },
 });

@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "delete from demandes_connexion where expire_le < now() - interval '1 day'",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "a6fde1f5ebbe72e8491c2431b6758a98f0db0e3c1a08c1a785d807a23dfd6f97"
+}

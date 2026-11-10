@@ -142,7 +142,9 @@ Dernière mise à jour : conception terminée (sujets 1 à 9), réalisation comm
 ## Accès et confidentialité
 
 - Connexion par e-mail : un lien et un code à 6 chiffres, utile sur le site installé.
-- On reste connecté plusieurs mois. Seules les adresses enregistrées par le MJ peuvent se connecter.
+- Le lien et le code sont valables 15 minutes et ne servent qu'une fois.
+- On reste connecté 180 jours après la dernière visite. Seules les adresses enregistrées par le MJ peuvent se connecter.
+- Une adresse inconnue reçoit la même réponse à l'écran qu'une adresse connue : le site ne dit pas qui a un compte.
 - Sécurité légère : pas de double vérification, même pour le MJ.
 - Le tri des informations se fait sur le serveur : un joueur ne reçoit jamais ce qu'il ne doit pas voir. Quelques tests automatiques le vérifient.
 - Les joueurs ne voient aucune liste de personnages, seulement leur carnet.

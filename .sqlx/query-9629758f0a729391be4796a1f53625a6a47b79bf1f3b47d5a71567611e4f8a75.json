@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        select count(*) as \"nombre!\"\n        from demandes_connexion\n        where compte_id = $1 and cree_le > now() - make_interval(mins => $2)\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "nombre!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "9629758f0a729391be4796a1f53625a6a47b79bf1f3b47d5a71567611e4f8a75"
+}
