@@ -8,8 +8,8 @@ L'ordre met la boucle du courrier au plus tôt : tout le reste s'appuie dessus.
 
 | # | Étape | État |
 |---|---|---|
-| 1 | Squelette et vérification des risques | En cours |
-| 2 | Base de données | À faire |
+| 1 | Squelette et vérification des risques | Fait |
+| 2 | Base de données | En cours |
 | 3 | Connexion | À faire |
 | 4 | Administration minimale | À faire |
 | 5 | Le joueur écrit | À faire |
@@ -38,7 +38,8 @@ L'ordre met la boucle du courrier au plus tôt : tout le reste s'appuie dessus.
 
 - Serveur Rust en fonction Vercel, interface React, types de l'interface générés depuis le serveur.
 - Projet Vercel relié au repo, base Neon installée, déploiement par aperçu.
-- Vérifications : le runtime Rust en conditions réelles, les requêtes vérifiées à la compilation, les limites des offres gratuites (Schedules, Neon, Blob), l'envoi d'e-mails.
+- Vérifications faites : le runtime Rust en conditions réelles, le routage, les requêtes vérifiées à la compilation, la base Neon.
+- Vérifications reportées à l'étape qui en a besoin : l'envoi d'e-mails (étape 3), les planifications (étape 8), les images sur Blob (étape 11).
 
 On voit : une page en ligne qui confirme que le serveur et la base répondent.
 
