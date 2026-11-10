@@ -250,6 +250,7 @@ Dernière mise à jour : conception terminée (sujets 1 à 9), réalisation comm
 - Carte avec des zones : délais calculés selon les zones, la météo, etc. S'y ajouteront des moyens d'envoi réglables.
 - Aléas du voyage proposés par le site, avec la carte et la météo.
 - Suggestions automatiques d'informations dans les lettres, par mots-clés ou par IA.
+- Un sceau dessiné à partir d'un masque importé (une image en noir et blanc), à la place des initiales.
 - La vraie écriture du joueur transformée en police, et son propre dessin de sceau.
 - Les rôles comme charges à part entière : titulaire, sceau de la charge, lettres adressées à la charge.
 - Inventaires, ressources, colis et objets, hors sceaux.
