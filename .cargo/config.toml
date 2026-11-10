@@ -6,3 +6,7 @@ SQLX_OFFLINE = "true"
 
 # Où `cargo test` écrit les types TypeScript générés depuis les types Rust.
 TS_RS_EXPORT_DIR = { value = "web/src/types", relative = true }
+
+# Section vide, mais nécessaire : l'outil de construction de Vercel lit `build.target`
+# dans ce fichier et échoue si la section n'existe pas.
+[build]
