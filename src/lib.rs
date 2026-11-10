@@ -2,7 +2,9 @@
 //!
 //! Le vocabulaire du code suit celui de `DECISIONS.md` : pli, exemplaire, sceau, carnet…
 
+pub mod acces;
 pub mod base;
+pub mod modele;
 pub mod sante;
 
 use axum::http::{StatusCode, Uri};

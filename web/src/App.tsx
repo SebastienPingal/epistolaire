@@ -10,7 +10,7 @@ type Etat =
   | { etape: 'recu'; sante: Sante }
   | { etape: 'echec' };
 
-/** Page de contrôle de l'étape 1. Elle sera remplacée par la connexion. */
+/** Page de contrôle des étapes 1 et 2. Elle sera remplacée par la connexion. */
 export function App() {
   const [etat, setEtat] = useState<Etat>({ etape: 'attente' });
 
@@ -24,8 +24,10 @@ export function App() {
     };
   }, []);
 
-  const serveur = etat.etape === 'attente' ? null : etat.etape === 'recu';
-  const base = etat.etape === 'attente' ? null : etat.etape === 'recu' && etat.sante.base;
+  const sante = etat.etape === 'recu' ? etat.sante : null;
+  const serveur = etat.etape === 'attente' ? null : sante !== null;
+  const base = etat.etape === 'attente' ? null : (sante?.base ?? false);
+  const structure = etat.etape === 'attente' ? null : (sante?.structure ?? null) !== null;
 
   return (
     <main className="mx-auto max-w-xl px-4 py-12">
@@ -33,13 +35,26 @@ export function App() {
       <ul className="divide-y border-y">
         <Ligne libelle="Le serveur" ok={serveur} />
         <Ligne libelle="La base de données" ok={base} />
+        <Ligne
+          libelle="La structure de la base"
+          ok={structure}
+          oui={`en place (version ${sante?.structure ?? ''})`}
+          non="absente"
+        />
       </ul>
     </main>
   );
 }
 
-function Ligne({ libelle, ok }: { libelle: string; ok: boolean | null }) {
-  const reponse = ok === null ? '…' : ok ? 'répond' : 'ne répond pas';
+type LigneProps = {
+  libelle: string;
+  ok: boolean | null;
+  oui?: string;
+  non?: string;
+};
+
+function Ligne({ libelle, ok, oui = 'répond', non = 'ne répond pas' }: LigneProps) {
+  const reponse = ok === null ? '…' : ok ? oui : non;
   return (
     <li className="flex justify-between gap-4 py-3">
       <span>{libelle}</span>

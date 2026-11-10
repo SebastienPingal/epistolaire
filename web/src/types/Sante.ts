@@ -4,4 +4,8 @@ export type Sante = { serveur: boolean, base: boolean,
 /**
  * L'heure lue dans la base, si elle répond.
  */
-heure_base: string | null, };
+heure_base: string | null, 
+/**
+ * Le numéro de la dernière migration appliquée à la base.
+ */
+structure: number | null, };

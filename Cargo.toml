@@ -33,6 +33,7 @@ sqlx = { version = "0.8", default-features = false, features = [
     "postgres",
     "macros",
     "migrate",
+    "json",
     "chrono",
     "uuid",
 ] }

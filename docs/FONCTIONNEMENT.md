@@ -1,7 +1,7 @@
 # Guide de fonctionnement
 
 Ce guide décrit comment le site est construit. Il est mis à jour à la fin de chaque étape de `PLAN.md`.
-État décrit : étape 1 (squelette).
+État décrit : étape 2 (base de données).
 
 ## Vue d'ensemble
 
@@ -18,7 +18,10 @@ Les deux sont hébergés sur Vercel. L'interface est un ensemble de fichiers sta
 |---|---|
 | `api/main.rs` | Le point d'entrée du serveur sur Vercel |
 | `src/` | Le serveur : routeur, accès à la base, logique du jeu |
+| `src/modele.rs` | Le vocabulaire du jeu : gabarits, états d'un pli, d'un sceau… |
+| `src/acces/` | Les deux portes d'accès aux données : celle des joueurs, celle du MJ |
 | `src/bin/dev.rs` | Le serveur local, pour développer |
+| `migrations/` | La structure de la base, étape par étape |
 | `.sqlx/` | La description des requêtes SQL, qui sert à les vérifier à la compilation |
 | `web/` | L'interface |
 | `web/src/types/` | Les types générés depuis le serveur. Ne pas les modifier à la main |
@@ -41,6 +44,49 @@ L'environnement cloud de Claude nommé `epistolaire` autorise l'adresse `ui.shad
 4. Le traitement interroge la base et répond en JSON.
 
 Toute autre adresse renvoie l'interface.
+
+## La base de données
+
+### Les tables
+
+| Table | Ce qu'elle contient |
+|---|---|
+| `comptes` | Les adresses e-mail autorisées, MJ ou joueur |
+| `personnages` | Les personnages des joueurs et les PNJ, avec leur fiche |
+| `ecritures` | Les polices manuscrites |
+| `sceaux` | Les sceaux, leur nom gravé et leur détenteur actuel |
+| `contacts` | Les carnets d'adresses |
+| `dossiers` | Les dossiers créés par les joueurs |
+| `plis` | Ce qui a été écrit, en version originale |
+| `exemplaires` | Ce que reçoit chaque destinataire, en version livrée |
+| `numeros_gazette`, `lettres_gazette` | Les numéros de la gazette et les lettres retenues |
+| `informations`, `pli_informations` | Les informations étiquetées par le MJ |
+| `evenements` | L'historique de chaque pli |
+| `reglages` | Les réglages généraux, sur une seule ligne |
+
+### Un pli, des exemplaires
+
+Un pli est écrit une fois : la table `plis` garde l'original, que seul le MJ voit.
+Quand le MJ le traite, il crée un exemplaire par destinataire dans `exemplaires`.
+L'exemplaire porte la version livrée (éventuellement réécrite), sa date de livraison, et ce que ce destinataire remarque.
+
+Il n'y a pas d'état « livré ». Un exemplaire est livré quand il est en route et que sa date de livraison est passée. Aucune tâche ne fait ce passage : c'est une comparaison de dates, faite à chaque lecture.
+
+### La porte des joueurs
+
+Un joueur ne lit jamais les tables `plis` et `exemplaires`. Tout son courrier passe par la vue `plis_recus`, qui ne contient que :
+
+- les exemplaires déjà arrivés ;
+- leur version livrée, sans l'original ni le vrai auteur ;
+- les altérations que ce destinataire a remarquées, et aucune autre.
+
+Dans le code, `src/acces/joueur.rs` est le seul endroit qui répond à un joueur, et il ne lit que cette vue. Le contenu d'un pli n'est transmis qu'à son ouverture : tant qu'il est fermé, le joueur n'en reçoit que l'extérieur.
+
+### Les migrations
+
+La structure de la base est décrite par les fichiers de `migrations/`, numérotés. Ils sont embarqués dans le serveur. À son démarrage, le serveur compare son dernier numéro à celui de la base et applique ce qui manque.
+
+Une migration déjà appliquée ne se modifie plus : tout changement passe par un nouveau fichier. Une migration ne supprime jamais une table ou une colonne qui contient du courrier sans étape intermédiaire.
 
 ## Les garde-fous automatiques
 
@@ -84,3 +130,4 @@ cargo sqlx prepare
 | Nom | Rôle |
 |---|---|
 | `DATABASE_URL` | L'adresse de la base PostgreSQL (Neon) |
+| `DATABASE_URL_UNPOOLED` | L'adresse directe de la base, utilisée pour les migrations |

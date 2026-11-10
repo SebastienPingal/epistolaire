@@ -219,6 +219,8 @@ Dernière mise à jour : conception terminée (sujets 1 à 9), réalisation comm
 - E-mails : envoyés depuis la boîte mail du MJ pour l'instant. Pas de nom de domaine : le site reste en `.vercel.app`. Les identifiants existent déjà sur un autre projet Vercel du MJ ; leur reprise se fera à la mise en place.
 - Base de données : Neon (PostgreSQL), installée depuis la marketplace Vercel, offre gratuite. SQLite en simple fichier est impossible sur Vercel, faute de disque permanent. En Rust, les requêtes sont vérifiées à la compilation.
 - Les types de l'interface sont générés automatiquement à partir de ceux du serveur.
+- La structure de la base est mise à jour automatiquement par le serveur à son démarrage (migrations).
+- Le tri de ce qu'un joueur voit est aussi inscrit dans la base : une vue ne contient que les exemplaires arrivés, en version livrée, avec les seules altérations remarquées.
 - Déploiement : repo GitHub relié à Vercel. La branche principale met le site en ligne ; les autres branches ont une adresse d'aperçu pour tester.
 - Sauvegardes : l'historique court de Neon, plus une copie quotidienne automatique de la base dans Vercel Blob, conservée 30 jours.
 - Mises à jour pendant la partie : testées sur un aperçu avant la mise en ligne. Les changements de structure de la base ne doivent jamais perdre une lettre en route.
@@ -256,6 +258,7 @@ Dernière mise à jour : conception terminée (sujets 1 à 9), réalisation comm
 
 ## Questions ouvertes
 
+- Pour l'instant, les aperçus et le site en ligne partagent la même base. Avant le lancement, les aperçus doivent travailler sur une copie (branches Neon), pour qu'un essai ne touche jamais les vraies lettres.
 - La reprise des identifiants e-mail depuis l'autre projet Vercel, à la mise en place.
 - Les limites des offres gratuites (Vercel Schedules, Neon, Blob), à vérifier à la mise en place.
 - Sur l'offre gratuite de Vercel, une planification peut partir avec jusqu'à 15 minutes de retard. Le pli, lui, arrive à l'heure exacte ; seule sa notification pourrait tarder. À trancher à l'étape des notifications.
