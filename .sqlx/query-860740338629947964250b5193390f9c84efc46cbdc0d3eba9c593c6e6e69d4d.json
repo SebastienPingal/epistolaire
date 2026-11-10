@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                select exists (\n                    select 1 from contacts where proprietaire_id = $1 and personnage_id = $2\n                ) as \"connu!\"\n                ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "connu!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "860740338629947964250b5193390f9c84efc46cbdc0d3eba9c593c6e6e69d4d"
+}

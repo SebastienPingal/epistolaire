@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        select id, nom_grave, initiales, image_url\n        from sceaux\n        where detenteur_id = $1\n        order by cree_le\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "nom_grave",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "initiales",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "image_url",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "3904f3198d62c601d8ed585d640365a124594e0509c1e39b4041fed0fadc2929"
+}

@@ -1,0 +1,21 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        update brouillons\n        set contenu = jsonb_build_object('texte', $3::text),\n            destinataire_genre = $4,\n            destinataire_id = $5,\n            destinataire_libre = $6,\n            sceau_id = $7,\n            signe = $8,\n            modifie_le = now()\n        where id = $1 and auteur_id = $2\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Text",
+        "Text",
+        "Uuid",
+        "Text",
+        "Uuid",
+        "Bool"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "1cfdf79dbd261a5d5c78d0d03e1dc26aa168822cdd8f4ba2684eb8573f77e2f7"
+}

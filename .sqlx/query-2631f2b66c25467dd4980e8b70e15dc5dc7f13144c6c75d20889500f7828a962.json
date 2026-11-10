@@ -1,0 +1,52 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        select\n            b.id as \"id!\",\n            b.destinataire_genre as \"genre: GenreDestinataire\",\n            p.nom as \"nom?\",\n            b.destinataire_libre,\n            left(b.contenu->>'texte', 90) as \"debut\",\n            b.modifie_le as \"modifie_le!\"\n        from brouillons b\n        left join personnages p on p.id = b.destinataire_id\n        where b.auteur_id = $1\n        order by b.modifie_le desc\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "genre: GenreDestinataire",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "nom?",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "destinataire_libre",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "debut",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "modifie_le!",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      true,
+      true,
+      false,
+      true,
+      null,
+      true
+    ]
+  },
+  "hash": "2631f2b66c25467dd4980e8b70e15dc5dc7f13144c6c75d20889500f7828a962"
+}

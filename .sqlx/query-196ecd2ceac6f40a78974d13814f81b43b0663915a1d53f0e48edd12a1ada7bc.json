@@ -1,0 +1,46 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        select\n            r.longueur_billet,\n            coalesce(p.quota_hebdo, r.quota_hebdo) as \"quota!\",\n            (\n                select count(*)\n                from plis l\n                where l.auteur_id = p.id\n                  and not l.redige_par_mj\n                  and l.envoye_le >= date_trunc('week', now() at time zone r.fuseau)\n                                     at time zone r.fuseau\n            ) as \"envoyees!\",\n            r.delai_minutes,\n            r.hasard_minutes\n        from personnages p\n        cross join reglages r\n        where p.id = $1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "longueur_billet",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "quota!",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "envoyees!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "delai_minutes",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 4,
+        "name": "hasard_minutes",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      null,
+      false,
+      false
+    ]
+  },
+  "hash": "196ecd2ceac6f40a78974d13814f81b43b0663915a1d53f0e48edd12a1ada7bc"
+}

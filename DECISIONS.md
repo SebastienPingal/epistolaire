@@ -49,11 +49,14 @@ Dernière mise à jour : conception terminée (sujets 1 à 9), réalisation comm
 - Le joueur crée ses propres dossiers pour ranger ses plis. Un pli ne se trouve qu'à un seul endroit à la fois.
 - Une lettre est un objet physique : l'expéditeur n'en garde aucune copie, et l'envoi est définitif.
 - Le brouillon est sauvegardé automatiquement tant que la lettre n'est pas envoyée.
+- Un joueur peut avoir plusieurs brouillons en cours (20 au plus).
+- L'envoi demande une confirmation, qui rappelle qu'on ne garde aucune copie.
 
 ## Rédaction
 
 - La zone d'écriture est un billet qui se remplit, avec une jauge discrète et aucun chiffre affiché.
 - La limite est de 500 caractères, réglable.
+- Le billet peut déborder pendant qu'on écrit : la jauge le signale, et l'envoi est bloqué tant que le texte est trop long.
 
 ## Destinataires et rôles
 
@@ -61,6 +64,7 @@ Dernière mise à jour : conception terminée (sujets 1 à 9), réalisation comm
 - Chaque joueur a un carnet d'adresses, rempli et enrichi par le MJ.
 - Le carnet ajoute automatiquement les personnages nommés par le sceau ou par la signature. Sinon, le MJ peut les ajouter à la main.
 - Une option « autre destinataire » permet d'écrire une adresse libre, que le MJ interprète.
+- Un joueur ne peut choisir comme destinataire qu'un personnage de son carnet. Pour quelqu'un d'autre, il passe par « autre destinataire ».
 - Le rôle d'un personnage est décrit sur sa fiche. Dans chaque carnet, le MJ peut donner une qualité à un contact (« Bertrand, trésorier »). Chacun ne sait que ce qu'on lui a dit.
 
 ## Quota

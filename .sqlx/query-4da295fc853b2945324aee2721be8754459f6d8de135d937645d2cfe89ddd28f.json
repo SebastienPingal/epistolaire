@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        select p.nom, e.police as \"police?\"\n        from personnages p\n        left join ecritures e on e.id = p.ecriture_id\n        where p.id = $1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "nom",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "police?",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "4da295fc853b2945324aee2721be8754459f6d8de135d937645d2cfe89ddd28f"
+}

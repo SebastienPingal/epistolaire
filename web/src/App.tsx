@@ -2,8 +2,12 @@ import { useEffect, useRef, useState } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router';
 
 import { appeler, messageErreur } from '@/api';
-import { Accueil } from '@/ecrans/Accueil';
 import { Connexion } from '@/ecrans/Connexion';
+import { Billet } from '@/joueur/Billet';
+import { Ecritoire } from '@/joueur/Ecritoire';
+import { EspaceJoueur } from '@/joueur/EspaceJoueur';
+import { Fiche } from '@/joueur/Fiche';
+import { Reception } from '@/joueur/Reception';
 import { Ecritures } from '@/mj/Ecritures';
 import { EspaceMj } from '@/mj/EspaceMj';
 import { Personnage } from '@/mj/Personnage';
@@ -86,7 +90,13 @@ export function App() {
             </Routes>
           ) : (
             <Routes>
-              <Route path="*" element={<Accueil moi={etat.moi} surDeconnexion={deconnecter} />} />
+              <Route element={<EspaceJoueur />}>
+                <Route path="/reception" element={<Reception />} />
+                <Route path="/ecrire" element={<Ecritoire />} />
+                <Route path="/ecrire/:id" element={<Billet />} />
+                <Route path="/personnage" element={<Fiche surDeconnexion={deconnecter} />} />
+              </Route>
+              <Route path="*" element={<Navigate to="/reception" replace />} />
             </Routes>
           )}
         </BrowserRouter>

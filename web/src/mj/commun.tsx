@@ -1,15 +1,9 @@
 import type { ReactNode } from 'react';
 
-import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+
+export { Attente } from '@/composants/Attente';
+export { Confirmation } from '@/composants/Confirmation';
 
 /** Le titre d'un écran, avec ses actions à droite. */
 export function Entete({ titre, children }: { titre: string; children?: ReactNode }) {
@@ -58,46 +52,5 @@ export function Champ({
       {children}
       {aide && <p className="text-sm text-muted-foreground">{aide}</p>}
     </div>
-  );
-}
-
-/** L'état d'un écran qui attend ses données, ou qui n'a pas pu les lire. */
-export function Attente({ erreur }: { erreur: string | null }) {
-  return erreur ? (
-    <p role="alert" className="text-destructive">
-      {erreur}
-    </p>
-  ) : (
-    <p className="text-muted-foreground">Chargement…</p>
-  );
-}
-
-type ConfirmationProps = {
-  ouverte: boolean;
-  titre: string;
-  texte: string;
-  action: string;
-  surReponse: (confirme: boolean) => void;
-};
-
-/** Une demande de confirmation avant un geste sans retour. */
-export function Confirmation({ ouverte, titre, texte, action, surReponse }: ConfirmationProps) {
-  return (
-    <Dialog open={ouverte} onOpenChange={(ouvert) => !ouvert && surReponse(false)}>
-      <DialogContent showCloseButton={false}>
-        <DialogHeader>
-          <DialogTitle>{titre}</DialogTitle>
-          <DialogDescription>{texte}</DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => surReponse(false)}>
-            Annuler
-          </Button>
-          <Button variant="destructive" onClick={() => surReponse(true)}>
-            {action}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
   );
 }

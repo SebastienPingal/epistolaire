@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        select k.personnage_id, p.nom, k.qualite\n        from contacts k\n        join personnages p on p.id = k.personnage_id\n        where k.proprietaire_id = $1\n        order by lower(p.nom)\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "personnage_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "nom",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "qualite",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "bfa9b49eeb31ed2f279b9846bb65e9cf1b0900cd91645cd802e194face05dd93"
+}

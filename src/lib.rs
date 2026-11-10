@@ -26,7 +26,11 @@ pub fn routeur() -> Router {
         .route("/moi", get(connexion::moi));
 
     Router::new()
-        .nest("/api", api.nest("/mj", acces::mj::routes()))
+        .nest(
+            "/api",
+            api.nest("/mj", acces::mj::routes())
+                .nest("/joueur", acces::joueur::routes()),
+        )
         .fallback(introuvable)
 }
 

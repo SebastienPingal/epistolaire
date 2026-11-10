@@ -1,4 +1,4 @@
-//! La porte des joueurs : ce qu'un joueur a le droit de voir, et rien d'autre.
+//! Le courrier reçu par un joueur.
 //!
 //! Règle de ce fichier : le courrier ne se lit que dans la vue `plis_recus`, jamais dans
 //! les tables `plis` et `exemplaires`, et toujours filtré sur le personnage du joueur.
@@ -9,7 +9,7 @@ use sqlx::PgPool;
 use ts_rs::TS;
 use uuid::Uuid;
 
-use super::Joueur;
+use crate::acces::Joueur;
 use crate::modele::{EtatSceau, Gabarit};
 
 /// Un pli reçu, tel qu'il se présente fermé : on n'en voit que l'extérieur.

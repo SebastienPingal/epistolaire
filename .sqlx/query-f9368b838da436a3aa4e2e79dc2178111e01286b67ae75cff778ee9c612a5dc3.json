@@ -1,0 +1,59 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        select\n            id as \"id!\",\n            contenu->>'texte' as \"texte\",\n            destinataire_genre as \"genre: GenreDestinataire\",\n            destinataire_id,\n            destinataire_libre,\n            sceau_id,\n            signe as \"signe!\"\n        from brouillons\n        where id = $1 and auteur_id = $2\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "texte",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "genre: GenreDestinataire",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "destinataire_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 4,
+        "name": "destinataire_libre",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "sceau_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 6,
+        "name": "signe!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      true,
+      null,
+      true,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "f9368b838da436a3aa4e2e79dc2178111e01286b67ae75cff778ee9c612a5dc3"
+}

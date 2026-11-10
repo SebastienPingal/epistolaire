@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into evenements (pli_id, genre) values ($1, 'envoi')",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "46ac2636a9b61f6db55feb2a5800b17a2aeb32086c30c4dc3797cbef81a878bd"
+}

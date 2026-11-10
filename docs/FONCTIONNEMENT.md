@@ -1,7 +1,7 @@
 # Guide de fonctionnement
 
 Ce guide décrit comment le site est construit. Il est mis à jour à la fin de chaque étape de `PLAN.md`.
-État décrit : étape 4 (administration minimale).
+État décrit : étape 5 (le joueur écrit).
 
 ## Vue d'ensemble
 
@@ -19,7 +19,7 @@ Les deux sont hébergés sur Vercel. L'interface est un ensemble de fichiers sta
 | `api/main.rs` | Le point d'entrée du serveur sur Vercel |
 | `src/` | Le serveur : routeur, accès à la base, logique du jeu |
 | `src/modele.rs` | Le vocabulaire du jeu : gabarits, états d'un pli, d'un sceau… |
-| `src/acces/joueur.rs` | La porte des joueurs |
+| `src/acces/joueur/` | La porte des joueurs : écritoire, fiche, courrier reçu |
 | `src/acces/mj/` | La porte du MJ : personnages, écritures, sceaux, réglages |
 | `src/connexion.rs` | La connexion par e-mail et les sessions |
 | `src/courriel.rs` | L'envoi des e-mails |
@@ -28,7 +28,8 @@ Les deux sont hébergés sur Vercel. L'interface est un ensemble de fichiers sta
 | `migrations/` | La structure de la base, étape par étape |
 | `.sqlx/` | La description des requêtes SQL, qui sert à les vérifier à la compilation |
 | `web/` | L'interface |
-| `web/src/ecrans/` | Les écrans communs et ceux des joueurs |
+| `web/src/ecrans/` | L'écran de connexion |
+| `web/src/joueur/` | Les écrans des joueurs |
 | `web/src/mj/` | Les écrans du MJ |
 | `web/src/composants/` | Les éléments du jeu réutilisés partout : une écriture, un cachet |
 | `web/src/types/` | Les types générés depuis le serveur. Ne pas les modifier à la main |
@@ -81,13 +82,13 @@ Il n'y a pas d'état « livré ». Un exemplaire est livré quand il est en rout
 
 ### La porte des joueurs
 
-Un joueur ne lit jamais les tables `plis` et `exemplaires`. Tout son courrier passe par la vue `plis_recus`, qui ne contient que :
+Un joueur ne lit jamais les tables `plis` et `exemplaires`. Tout son courrier reçu passe par la vue `plis_recus`, qui ne contient que :
 
 - les exemplaires déjà arrivés ;
 - leur version livrée, sans l'original ni le vrai auteur ;
 - les altérations que ce destinataire a remarquées, et aucune autre.
 
-Dans le code, `src/acces/joueur.rs` est le seul endroit qui répond à un joueur, et il ne lit que cette vue. Le contenu d'un pli n'est transmis qu'à son ouverture : tant qu'il est fermé, le joueur n'en reçoit que l'extérieur.
+Dans le code, le dossier `src/acces/joueur/` est le seul endroit qui répond à un joueur. Pour le courrier reçu, il ne lit que cette vue ; pour ses brouillons, que la vue `brouillons`. Le contenu d'un pli n'est transmis qu'à son ouverture : tant qu'il est fermé, le joueur n'en reçoit que l'extérieur.
 
 ### Les migrations
 
@@ -109,6 +110,25 @@ Le compte du MJ se crée tout seul la première fois que son adresse demande à 
 Dans le code, un traitement réservé au MJ demande un `Mj`, un traitement de joueur demande un `Joueur`. Ces deux preuves ne sont fabriquées que par la connexion, à partir de la session.
 
 Les e-mails partent de la boîte Gmail du MJ, par SMTP. Les identifiants sont dans les variables d'environnement du projet Vercel, repris du projet `congres-champetre`. Sans eux, les e-mails d'un aperçu ou du serveur local ne partent pas : ils sont écrits dans les journaux du serveur. Le site en ligne, lui, refuse de fonctionner sans eux.
+
+## L'espace du joueur
+
+Un joueur a trois destinations : la Réception, l'écritoire et sa fiche. Sur téléphone, elles sont en bas de l'écran.
+
+### Écrire
+
+1. L'écritoire montre combien de lettres il reste à envoyer cette semaine, et les brouillons en cours.
+2. Un billet se rédige dans l'écriture du personnage. Il est sauvegardé tout seul, un instant après la dernière frappe.
+3. Une jauge sans chiffre montre la place qui reste. Le billet peut déborder, mais il ne part pas tant qu'il est trop long.
+4. Le joueur choisit son destinataire : un personnage de son carnet, la gazette, ou une adresse écrite librement.
+5. Il choisit de signer ou non, et de sceller ou non avec un sceau qu'il détient.
+6. L'envoi est définitif, après confirmation. La lettre rejoint la file du MJ avec une date de livraison proposée (le délai, plus ou moins le hasard).
+
+Une lettre envoyée disparaît pour son auteur. Ce n'est pas un simple masquage à l'écran : le joueur ne lit et ne modifie ses lettres qu'à travers la vue `brouillons`, qui ne contient que des lettres pas encore envoyées. Dès l'envoi, la lettre n'y est plus.
+
+### Le quota
+
+Chaque envoi compte, quel que soit le destinataire et quoi que la lettre devienne ensuite. Les brouillons ne comptent pas. Le compte repart de zéro le lundi à 0 h, heure de Paris. Le serveur le vérifie au moment de l'envoi : l'écran ne fait que l'annoncer.
 
 ## L'espace du MJ
 

@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select exists (select 1 from sceaux where id = $1 and detenteur_id = $2) as \"detient!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "detient!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "ffa3963c1b68947c62bd4b2709b4729c85377d3517a8c954c9aac6e2c6f1477c"
+}
