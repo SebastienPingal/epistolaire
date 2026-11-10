@@ -9,8 +9,8 @@ L'ordre met la boucle du courrier au plus tôt : tout le reste s'appuie dessus.
 | # | Étape | État |
 |---|---|---|
 | 1 | Squelette et vérification des risques | Fait |
-| 2 | Base de données | En cours |
-| 3 | Connexion | À faire |
+| 2 | Base de données | Fait |
+| 3 | Connexion | En cours |
 | 4 | Administration minimale | À faire |
 | 5 | Le joueur écrit | À faire |
 | 6 | Le MJ traite | À faire |
@@ -50,7 +50,7 @@ On voit : une page en ligne qui confirme que le serveur et la base répondent.
 - Deux portes d'accès distinctes dans le code : ce que voit le MJ, et ce que voit un joueur. Le tri se fait ici, côté serveur.
 - Les migrations, appliquées sans jamais perdre un pli en route.
 
-On voit : rien de neuf à l'écran. C'est la fondation.
+On voit : la page de contrôle indique que la structure de la base est en place.
 
 ### 3. Connexion
 
