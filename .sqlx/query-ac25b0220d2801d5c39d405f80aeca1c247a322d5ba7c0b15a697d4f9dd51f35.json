@@ -6,8 +6,7 @@
       {
         "ordinal": 0,
         "name": "heure!",
-        "type_info": "Timestamptz",
-        "origin": "Expression"
+        "type_info": "Timestamptz"
       }
     ],
     "parameters": {
