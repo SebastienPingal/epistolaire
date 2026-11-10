@@ -215,6 +215,7 @@ Dernière mise à jour : conception terminée (sujets 1 à 9), réalisation comm
   - Livraison à l'heure exacte : aucune tâche ne « livre ». Un pli est livré dès que sa date est passée, et le serveur le calcule à chaque lecture.
   - Notifications à l'heure : planifications Vercel (Schedules), avec un contrôle régulier en secours. Les limites du plan restent à vérifier.
   - Images : Vercel Blob.
+  - Région : Francfort (`fra1`) pour le serveur, et la même région pour la base, afin qu'ils soient proches l'un de l'autre et des joueurs.
 - E-mails : envoyés depuis la boîte mail du MJ pour l'instant. Pas de nom de domaine : le site reste en `.vercel.app`. Les identifiants existent déjà sur un autre projet Vercel du MJ ; leur reprise se fera à la mise en place.
 - Base de données : Neon (PostgreSQL), installée depuis la marketplace Vercel, offre gratuite. SQLite en simple fichier est impossible sur Vercel, faute de disque permanent. En Rust, les requêtes sont vérifiées à la compilation.
 - Les types de l'interface sont générés automatiquement à partir de ceux du serveur.
@@ -257,3 +258,4 @@ Dernière mise à jour : conception terminée (sujets 1 à 9), réalisation comm
 
 - La reprise des identifiants e-mail depuis l'autre projet Vercel, à la mise en place.
 - Les limites des offres gratuites (Vercel Schedules, Neon, Blob), à vérifier à la mise en place.
+- Sur l'offre gratuite de Vercel, une planification peut partir avec jusqu'à 15 minutes de retard. Le pli, lui, arrive à l'heure exacte ; seule sa notification pourrait tarder. À trancher à l'étape des notifications.
