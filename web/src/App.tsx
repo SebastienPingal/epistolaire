@@ -1,8 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router';
 
 import { appeler, messageErreur } from '@/api';
 import { Accueil } from '@/ecrans/Accueil';
 import { Connexion } from '@/ecrans/Connexion';
+import { Ecritures } from '@/mj/Ecritures';
+import { EspaceMj } from '@/mj/EspaceMj';
+import { Personnage } from '@/mj/Personnage';
+import { Personnages } from '@/mj/Personnages';
+import { Reglages } from '@/mj/Reglages';
+import { Sceaux } from '@/mj/Sceaux';
 import { vocabulaire } from '@/theme/neutre';
 import type { LienConnexion } from '@/types/LienConnexion';
 import type { Moi } from '@/types/Moi';
@@ -42,6 +49,13 @@ export function App() {
       .catch(() => setEtat({ etape: 'deconnecte' }));
   }, []);
 
+  async function deconnecter() {
+    // Même si le serveur ne répond pas, on revient à l'écran de connexion.
+    await appeler('/deconnexion', {}).catch(() => undefined);
+    window.history.replaceState(null, '', '/');
+    setEtat({ etape: 'deconnecte' });
+  }
+
   switch (etat.etape) {
     case 'chargement':
       return (
@@ -57,6 +71,25 @@ export function App() {
         />
       );
     case 'connecte':
-      return <Accueil moi={etat.moi} surDeconnexion={() => setEtat({ etape: 'deconnecte' })} />;
+      return (
+        <BrowserRouter>
+          {etat.moi.role === 'mj' ? (
+            <Routes>
+              <Route path="/mj" element={<EspaceMj surDeconnexion={deconnecter} />}>
+                <Route path="personnages" element={<Personnages />} />
+                <Route path="personnages/:id" element={<Personnage />} />
+                <Route path="ecritures" element={<Ecritures />} />
+                <Route path="sceaux" element={<Sceaux />} />
+                <Route path="reglages" element={<Reglages />} />
+              </Route>
+              <Route path="*" element={<Navigate to="/mj/personnages" replace />} />
+            </Routes>
+          ) : (
+            <Routes>
+              <Route path="*" element={<Accueil moi={etat.moi} surDeconnexion={deconnecter} />} />
+            </Routes>
+          )}
+        </BrowserRouter>
+      );
   }
 }

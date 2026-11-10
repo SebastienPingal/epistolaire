@@ -27,6 +27,19 @@ impl Erreur {
     }
 }
 
+/// Traduit les refus de la base en messages lisibles : un doublon, ou une suppression
+/// de quelque chose qui sert encore. Toute autre erreur reste une erreur interne.
+pub fn refus_de_la_base(
+    doublon: &'static str,
+    encore_utilise: &'static str,
+) -> impl Fn(sqlx::Error) -> Erreur {
+    move |source| match source.as_database_error() {
+        Some(erreur) if erreur.is_unique_violation() => Erreur::Refus(doublon),
+        Some(erreur) if erreur.is_foreign_key_violation() => Erreur::Refus(encore_utilise),
+        _ => Erreur::interne(source),
+    }
+}
+
 impl From<sqlx::Error> for Erreur {
     fn from(source: sqlx::Error) -> Self {
         Self::interne(source)

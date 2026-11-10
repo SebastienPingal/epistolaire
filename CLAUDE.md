@@ -24,11 +24,14 @@ Claude développe et maintient tout le code. Le MJ (propriétaire du repo) déci
 - **Livraison** : un pli est livré dès que sa date de livraison est passée. C'est calculé à chaque lecture ; aucune tâche planifiée ne « livre ». Les planifications ne servent qu'aux notifications.
 - **Migrations** : un fichier numéroté par changement dans `migrations/`, appliqué automatiquement au démarrage du serveur. Ne jamais modifier une migration déjà poussée : en écrire une nouvelle. Elles ne doivent jamais perdre un pli en route : pas de suppression de colonne ou de table sans étape intermédiaire.
 - **Portes d'accès** : tout ce qui répond à un joueur est dans `src/acces/joueur.rs`, exige un `Joueur`, et ne lit le courrier que dans la vue `plis_recus`. Ne jamais lire `plis` ou `exemplaires` pour répondre à un joueur.
+- **Porte du MJ** : tout ce qui est réservé au MJ est dans `src/acces/mj/`, sous `/api/mj`, et chaque traitement prend un `Mj` en paramètre.
 - **SQL** : requêtes vérifiées à la compilation (`sqlx::query!`). Après tout changement de requête ou de migration, relancer `cargo sqlx prepare` et commiter `.sqlx/`.
 - **Types de l'interface** : générés depuis Rust (`ts-rs`) dans `web/src/types/`. Ne jamais les écrire à la main ; relancer `cargo test` pour les régénérer.
 - **Composants** : shadcn/ui (variante Base UI) et Tailwind CSS. Ajouter un composant avec `npx shadcn@latest add <nom>` depuis `web/` ; il arrive dans `web/src/components/ui/`. Préférer un composant shadcn à un composant écrit à la main.
 - **Thème** : tout ce qui dépend de l'univers (apparence, vocabulaire) vit dans `web/src/theme/`. Le fichier CSS du thème donne leur valeur aux variables de shadcn. Les composants n'écrivent ni couleur ni mot d'univers en dur : ils utilisent les classes des variables (`bg-background`, `text-muted-foreground`, `text-bon`…).
 - **Version de Rust** : Vercel compile avec Rust 1.92 (`rust-version` dans `Cargo.toml`). Ne pas prendre une dépendance qui exige une version plus récente : sqlx reste en 0.8 pour cette raison, et l'outil `sqlx-cli` doit être en 0.8 lui aussi.
+- **Écrans du MJ** : dans `web/src/mj/`. Ce sont des outils, pas des écrans immersifs : leurs libellés sont écrits directement dans les composants. Seuls les écrans des joueurs passent par le vocabulaire du thème.
+- **Écritures** : la liste des polices manuscrites est dans `web/src/theme/ecritures.ts`. En ajouter une : installer le paquet `@fontsource/…`, l'ajouter à cette liste, puis l'insérer dans la table `ecritures` par une migration.
 - **Secrets** : jamais dans le repo. Ils vivent dans les variables d'environnement Vercel.
 
 ## Commandes

@@ -1,0 +1,50 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        select\n            p.id, p.nom, p.genre as \"genre: GenrePersonnage\", p.role,\n            c.email::text as \"email?\", p.ecriture_id\n        from personnages p\n        left join comptes c on c.id = p.compte_id\n        order by p.genre, lower(p.nom)\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "nom",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "genre: GenrePersonnage",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "role",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "email?",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "ecriture_id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      null,
+      true
+    ]
+  },
+  "hash": "8486a60dafb95c73e4e6cbd2ada0c65895e8a39265bb24afd782858c2fe584db"
+}

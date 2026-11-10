@@ -1,0 +1,50 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        select longueur_billet, quota_hebdo, delai_minutes, hasard_minutes,\n               calendrier_debut, calendrier_bonds\n        from reglages\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "longueur_billet",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "quota_hebdo",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "delai_minutes",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "hasard_minutes",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 4,
+        "name": "calendrier_debut",
+        "type_info": "Date"
+      },
+      {
+        "ordinal": 5,
+        "name": "calendrier_bonds",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "a0822bb073db7d7ac84d4c3611f329f8e5fde48efa491d34d96609eddd0c0d3a"
+}

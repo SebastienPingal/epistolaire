@@ -25,7 +25,9 @@ pub fn routeur() -> Router {
         .route("/deconnexion", post(connexion::deconnecter))
         .route("/moi", get(connexion::moi));
 
-    Router::new().nest("/api", api).fallback(introuvable)
+    Router::new()
+        .nest("/api", api.nest("/mj", acces::mj::routes()))
+        .fallback(introuvable)
 }
 
 async fn introuvable(uri: Uri) -> (StatusCode, Json<Value>) {

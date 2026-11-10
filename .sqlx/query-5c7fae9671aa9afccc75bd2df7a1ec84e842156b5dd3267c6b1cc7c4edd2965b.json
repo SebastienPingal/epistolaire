@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select genre as \"genre: GenrePersonnage\" from personnages where id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "genre: GenrePersonnage",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "5c7fae9671aa9afccc75bd2df7a1ec84e842156b5dd3267c6b1cc7c4edd2965b"
+}

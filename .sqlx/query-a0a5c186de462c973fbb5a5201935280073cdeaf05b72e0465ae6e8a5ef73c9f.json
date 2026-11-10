@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        update personnages\n        set nom = $2, compte_id = $3, ecriture_id = $4, role = $5, domaine = $6,\n            aptitudes = $7, objectifs = $8, notes_mj = $9, quota_hebdo = $10\n        where id = $1\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Uuid",
+        "Uuid",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "a0a5c186de462c973fbb5a5201935280073cdeaf05b72e0465ae6e8a5ef73c9f"
+}

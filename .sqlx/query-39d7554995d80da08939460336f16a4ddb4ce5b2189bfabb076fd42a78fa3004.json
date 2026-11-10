@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into comptes (email, role) values ($1::text::citext, 'joueur') returning id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "39d7554995d80da08939460336f16a4ddb4ce5b2189bfabb076fd42a78fa3004"
+}

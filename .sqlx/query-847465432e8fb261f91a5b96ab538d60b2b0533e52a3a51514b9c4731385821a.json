@@ -1,0 +1,82 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        select\n            p.id, p.nom, p.genre as \"genre: GenrePersonnage\", c.email::text as \"email?\",\n            p.ecriture_id, p.role, p.domaine, p.aptitudes, p.objectifs, p.notes_mj, p.quota_hebdo\n        from personnages p\n        left join comptes c on c.id = p.compte_id\n        where p.id = $1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "nom",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "genre: GenrePersonnage",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "email?",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "ecriture_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 5,
+        "name": "role",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "domaine",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "aptitudes",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "objectifs",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "notes_mj",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "quota_hebdo",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      null,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "847465432e8fb261f91a5b96ab538d60b2b0533e52a3a51514b9c4731385821a"
+}

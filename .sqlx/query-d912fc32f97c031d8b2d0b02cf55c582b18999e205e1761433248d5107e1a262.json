@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "delete from contacts where proprietaire_id = $1 and personnage_id = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "d912fc32f97c031d8b2d0b02cf55c582b18999e205e1761433248d5107e1a262"
+}

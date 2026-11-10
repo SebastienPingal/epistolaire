@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update ecritures set nom = $2, generique = $3 where id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Bool"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "076bd6954cd5f837bf9c1128cdbfee7548f9b4a74c769bcb2f1cfe809046ef10"
+}

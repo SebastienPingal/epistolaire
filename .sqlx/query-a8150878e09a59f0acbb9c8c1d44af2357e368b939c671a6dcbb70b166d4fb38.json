@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        insert into sceaux (nom_grave, initiales, proprietaire_origine_id, detenteur_id)\n        values ($1, $2, $3, $3)\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "a8150878e09a59f0acbb9c8c1d44af2357e368b939c671a6dcbb70b166d4fb38"
+}

@@ -18,7 +18,6 @@ export const vocabulaire = {
   },
 
   accueil: {
-    mj: 'Vous êtes connecté en tant que meneur de jeu.',
     joueur: (nom: string) => `Vous êtes connecté. Votre personnage : ${nom}.`,
     sansPersonnage: 'Vous êtes connecté. Votre personnage n’est pas encore prêt.',
     deconnexion: 'Se déconnecter',

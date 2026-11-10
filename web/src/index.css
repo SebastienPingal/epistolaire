@@ -65,3 +65,19 @@
     @apply font-sans;
   }
 }
+
+/* Au doigt : des cibles assez grandes, et des champs qui ne font pas zoomer la page. */
+@media (pointer: coarse) {
+  [data-slot='button'],
+  [data-slot='sidebar-menu-button'],
+  [data-slot='select-trigger'] {
+    min-height: 2.75rem;
+    min-width: 2.75rem;
+  }
+  [data-slot='input'],
+  [data-slot='textarea'],
+  [data-slot='select-trigger'] {
+    min-height: 2.75rem;
+    font-size: 1rem;
+  }
+}

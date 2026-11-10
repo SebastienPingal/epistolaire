@@ -135,6 +135,9 @@ Dernière mise à jour : conception terminée (sujets 1 à 9), réalisation comm
 - Le MJ crée les personnages des joueurs (un joueur, un personnage) et rédige leur fiche de départ.
 - Il crée les PNJ à la volée, y compris au moment d'écrire en leur nom.
 - Les sceaux sont générés (initiales et nom en légende) ou créés à partir d'une image importée.
+- À la création d'un personnage, le site propose de lui créer un sceau à son nom.
+- Le site fournit 14 écritures manuscrites. Le MJ les renomme et les attribue, mais n'en crée pas : en ajouter une se fait dans le code.
+- Un personnage qui a déjà écrit ou reçu du courrier ne peut plus être supprimé. Un sceau qui a déjà fermé un pli non plus.
 - Le MJ gère les carnets, les réglages généraux et des notes privées.
 - La fonction « Voir comme » montre le site tel que le voit un joueur, sans rien ouvrir ni modifier.
 - Écriture et sceau : le joueur choisit dans la sélection du MJ, sur un écran qui peut être habillé de façon immersive. Le MJ valide.

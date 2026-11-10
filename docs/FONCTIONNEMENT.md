@@ -1,7 +1,7 @@
 # Guide de fonctionnement
 
 Ce guide décrit comment le site est construit. Il est mis à jour à la fin de chaque étape de `PLAN.md`.
-État décrit : étape 3 (connexion).
+État décrit : étape 4 (administration minimale).
 
 ## Vue d'ensemble
 
@@ -19,7 +19,8 @@ Les deux sont hébergés sur Vercel. L'interface est un ensemble de fichiers sta
 | `api/main.rs` | Le point d'entrée du serveur sur Vercel |
 | `src/` | Le serveur : routeur, accès à la base, logique du jeu |
 | `src/modele.rs` | Le vocabulaire du jeu : gabarits, états d'un pli, d'un sceau… |
-| `src/acces/` | Les deux portes d'accès aux données : celle des joueurs, celle du MJ |
+| `src/acces/joueur.rs` | La porte des joueurs |
+| `src/acces/mj/` | La porte du MJ : personnages, écritures, sceaux, réglages |
 | `src/connexion.rs` | La connexion par e-mail et les sessions |
 | `src/courriel.rs` | L'envoi des e-mails |
 | `src/erreur.rs` | Les erreurs renvoyées à l'interface |
@@ -27,7 +28,9 @@ Les deux sont hébergés sur Vercel. L'interface est un ensemble de fichiers sta
 | `migrations/` | La structure de la base, étape par étape |
 | `.sqlx/` | La description des requêtes SQL, qui sert à les vérifier à la compilation |
 | `web/` | L'interface |
-| `web/src/ecrans/` | Les écrans du site |
+| `web/src/ecrans/` | Les écrans communs et ceux des joueurs |
+| `web/src/mj/` | Les écrans du MJ |
+| `web/src/composants/` | Les éléments du jeu réutilisés partout : une écriture, un cachet |
 | `web/src/types/` | Les types générés depuis le serveur. Ne pas les modifier à la main |
 | `web/src/components/ui/` | Les composants shadcn/ui, ajoutés au fur et à mesure |
 | `web/src/theme/` | Le thème : apparence et vocabulaire de l'univers |
@@ -106,6 +109,27 @@ Le compte du MJ se crée tout seul la première fois que son adresse demande à 
 Dans le code, un traitement réservé au MJ demande un `Mj`, un traitement de joueur demande un `Joueur`. Ces deux preuves ne sont fabriquées que par la connexion, à partir de la session.
 
 Les e-mails partent de la boîte Gmail du MJ, par SMTP. Les identifiants sont dans les variables d'environnement du projet Vercel, repris du projet `congres-champetre`. Sans eux, les e-mails d'un aperçu ou du serveur local ne partent pas : ils sont écrits dans les journaux du serveur. Le site en ligne, lui, refuse de fonctionner sans eux.
+
+## L'espace du MJ
+
+Le MJ arrive sur un espace à part, avec un menu. Pour l'instant il sert à préparer la partie :
+
+- **Personnages** : créer les personnages des joueurs et les PNJ, remplir leur fiche, donner à chaque joueur son adresse e-mail (c'est ce qui lui ouvre le site), choisir son écriture, tenir son carnet d'adresses.
+- **Écritures** : voir les 14 écritures fournies, les renommer, marquer celles qui sont génériques.
+- **Sceaux** : créer des sceaux, changer leur nom gravé ou leurs initiales, les faire changer de mains.
+- **Réglages** : longueur d'un billet, quota, délai et hasard de livraison, calendrier.
+
+Toutes les adresses de cet espace commencent par `/api/mj` côté serveur, et chacune vérifie que c'est bien le MJ qui demande. Un joueur connecté qui essaierait d'y entrer est refusé.
+
+### Les écritures
+
+Une écriture est une police manuscrite fournie avec le site. La liste est dans `web/src/theme/ecritures.ts`, et la base en garde une ligne par police. Le MJ ne crée pas d'écriture : en ajouter une demande d'ajouter la police au site, puis une migration.
+
+Deux joueurs ne peuvent pas avoir la même écriture : c'est la base elle-même qui le refuse.
+
+### Les sceaux
+
+Un sceau est un objet, avec un nom gravé qui ne change pas quand il change de mains. À la création d'un personnage, le site propose de lui créer un sceau à son nom. Dans l'habillage neutre, un sceau est dessiné comme un simple cachet portant des initiales. L'import d'une image de sceau viendra avec les images des documents.
 
 ## Les garde-fous automatiques
 

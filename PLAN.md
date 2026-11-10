@@ -65,7 +65,7 @@ On voit : on se connecte, et le site sait qui on est.
 ### 4. Administration minimale
 
 - Personnages des joueurs et PNJ, avec leur fiche.
-- Écritures (polices manuscrites) et sceaux générés.
+- Écritures (polices manuscrites) et sceaux générés. L'import d'une image de sceau est reporté à l'étape 11, avec les images.
 - Carnets d'adresses, avec la qualité facultative de chaque contact.
 - Réglages généraux : longueur, quota, délai, hasard, calendrier.
 

@@ -93,7 +93,7 @@ pub async fn demander(
     entetes: HeaderMap,
     Json(demande): Json<DemandeConnexion>,
 ) -> Result<StatusCode, Erreur> {
-    let email = normaliser(&demande.email)
+    let email = normaliser_email(&demande.email)
         .ok_or(Erreur::Refus("Cette adresse n'a pas la forme d'une adresse e-mail."))?;
     let site = adresse_du_site(&entetes)?;
     let pool = base::pool().await?;
@@ -159,7 +159,7 @@ pub async fn verifier_code(
     entetes: HeaderMap,
     Json(saisie): Json<CodeConnexion>,
 ) -> Result<Response, Erreur> {
-    let email = normaliser(&saisie.email).ok_or(REFUS_CODE)?;
+    let email = normaliser_email(&saisie.email).ok_or(REFUS_CODE)?;
     let code: String = saisie.code.chars().filter(char::is_ascii_digit).collect();
     let pool = base::pool().await?;
 
@@ -414,7 +414,7 @@ async fn trouver_compte(pool: &PgPool, email: &str) -> Result<Option<Uuid>, Erre
     let est_le_mj = std::env::var("MJ_EMAIL")
         .or_else(|_| std::env::var("SMTP_USER"))
         .ok()
-        .and_then(|adresse| normaliser(&adresse))
+        .and_then(|adresse| normaliser_email(&adresse))
         .is_some_and(|adresse| adresse == email);
     if !est_le_mj {
         return Ok(None);
@@ -445,7 +445,7 @@ async fn faire_le_menage(pool: &PgPool) -> Result<(), Erreur> {
 }
 
 /// Met l'adresse en forme, ou la refuse si elle n'en a pas l'allure.
-fn normaliser(email: &str) -> Option<String> {
+pub fn normaliser_email(email: &str) -> Option<String> {
     let email = email.trim().to_lowercase();
     let (avant, apres) = email.split_once('@')?;
     let valable = !avant.is_empty()

@@ -4,14 +4,14 @@
 //!
 //! * [`joueur`] : ce qu'un joueur a le droit de voir. Ses requêtes ne lisent le courrier
 //!   qu'à travers la vue `plis_recus`, et toujours pour un personnage précis.
-//! * la porte du MJ, qui voit tout : originaux, plis en route, historique.
-//!   Elle arrive avec les écrans du MJ.
+//! * [`mj`] : la porte du MJ, qui voit tout. Chacun de ses traitements exige un [`Mj`].
 //!
 //! Chaque porte exige une preuve d'identité ([`Joueur`] ou [`Mj`]). Ces preuves ne sont
 //! fabriquées que par la connexion : un traitement ne peut donc pas répondre à un joueur
 //! avec des données du MJ par simple oubli d'une vérification.
 
 pub mod joueur;
+pub mod mj;
 
 use uuid::Uuid;
 

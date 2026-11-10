@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update comptes set email = $2::text::citext where id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "3536308ecebdc0348b83cddd647f2b9b4a369e1746308a0e9f07b743237d566a"
+}

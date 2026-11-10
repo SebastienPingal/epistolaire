@@ -15,12 +15,17 @@ const MESSAGE_PAR_DEFAUT = "Quelque chose s'est mal passé. Réessayez dans un i
 /**
  * Appelle le serveur. Tous les échanges avec lui passent par ici.
  * Avec un `corps`, la requête est un envoi (POST) ; sinon c'est une lecture (GET).
+ * `methode` sert aux modifications (PUT) et aux suppressions (DELETE).
  */
-export async function appeler<Reponse = void>(chemin: string, corps?: unknown): Promise<Reponse> {
+export async function appeler<Reponse = void>(
+  chemin: string,
+  corps?: unknown,
+  methode?: 'PUT' | 'DELETE',
+): Promise<Reponse> {
   let reponse: Response;
   try {
     reponse = await fetch(`/api${chemin}`, {
-      method: corps === undefined ? 'GET' : 'POST',
+      method: methode ?? (corps === undefined ? 'GET' : 'POST'),
       credentials: 'same-origin',
       headers: {
         Accept: 'application/json',
@@ -30,6 +35,11 @@ export async function appeler<Reponse = void>(chemin: string, corps?: unknown): 
     });
   } catch {
     throw new ErreurApi(0, 'reseau', 'Le site est injoignable. Vérifiez votre connexion.');
+  }
+
+  // La session a expiré en cours de route : on repart de l'écran de connexion.
+  if (reponse.status === 401 && chemin.startsWith('/mj/')) {
+    window.location.assign('/');
   }
 
   if (!reponse.ok) {
@@ -54,3 +64,8 @@ export async function appeler<Reponse = void>(chemin: string, corps?: unknown): 
 export function messageErreur(erreur: unknown): string {
   return erreur instanceof ErreurApi ? erreur.message : MESSAGE_PAR_DEFAUT;
 }
+
+export const modifier = <Reponse = void>(chemin: string, corps: unknown) =>
+  appeler<Reponse>(chemin, corps, 'PUT');
+
+export const supprimer = (chemin: string) => appeler(chemin, undefined, 'DELETE');

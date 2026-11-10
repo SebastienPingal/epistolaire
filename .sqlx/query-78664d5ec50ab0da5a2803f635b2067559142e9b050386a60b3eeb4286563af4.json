@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        select\n            k.personnage_id, p.nom, k.qualite, k.origine as \"origine: OrigineContact\"\n        from contacts k\n        join personnages p on p.id = k.personnage_id\n        where k.proprietaire_id = $1\n        order by lower(p.nom)\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "personnage_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "nom",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "qualite",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "origine: OrigineContact",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "78664d5ec50ab0da5a2803f635b2067559142e9b050386a60b3eeb4286563af4"
+}

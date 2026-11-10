@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into personnages (nom, genre, compte_id) values ($1, $2, $3) returning id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "7ac8846dfad629fc8f39f1d55bcd9e5e1314fc4ecb820a7be51b51cbab4ebb18"
+}

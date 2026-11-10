@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        insert into contacts (proprietaire_id, personnage_id, qualite, origine)\n        values ($1, $2, $3, 'mj')\n        on conflict (proprietaire_id, personnage_id) do update set qualite = excluded.qualite\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "fe1a10f17375a58f65cd18a3d4fefd205a537c9e3734ab0bd6bb4895b5044821"
+}
