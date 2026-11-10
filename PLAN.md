@@ -10,8 +10,8 @@ L'ordre met la boucle du courrier au plus tôt : tout le reste s'appuie dessus.
 |---|---|---|
 | 1 | Squelette et vérification des risques | Fait |
 | 2 | Base de données | Fait |
-| 3 | Connexion | En cours |
-| 4 | Administration minimale | À faire |
+| 3 | Connexion | Fait |
+| 4 | Administration minimale | En cours |
 | 5 | Le joueur écrit | À faire |
 | 6 | Le MJ traite | À faire |
 | 7 | Le joueur reçoit | À faire |
