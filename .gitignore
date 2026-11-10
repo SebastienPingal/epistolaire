@@ -1,0 +1,14 @@
+# Rust
+/target
+
+# Interface
+node_modules
+/web/dist
+
+# Secrets et réglages locaux
+.env
+.env.*
+!.env.exemple
+
+# Vercel
+.vercel

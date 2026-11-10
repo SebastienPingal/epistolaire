@@ -1,0 +1,46 @@
+[package]
+name = "epistolaire"
+version = "0.1.0"
+edition = "2024"
+publish = false
+default-run = "dev"
+
+[lib]
+path = "src/lib.rs"
+
+# Le point d'entrée Vercel : un fichier dans api/ = une fonction.
+# Il n'y en a qu'un, et le routeur interne distribue les requêtes.
+[[bin]]
+name = "main"
+path = "api/main.rs"
+
+# Le serveur local, pour développer sans Vercel.
+[[bin]]
+name = "dev"
+path = "src/bin/dev.rs"
+
+[dependencies]
+axum = "0.8"
+chrono = { version = "0.4", features = ["serde"] }
+dotenvy = "0.15"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sqlx = { version = "0.9", default-features = false, features = [
+    "runtime-tokio",
+    "tls-rustls-ring-webpki",
+    "postgres",
+    "macros",
+    "migrate",
+    "chrono",
+    "uuid",
+] }
+tokio = { version = "1", features = ["full"] }
+tower = "0.5"
+ts-rs = { version = "12", features = ["chrono-impl", "uuid-impl"] }
+uuid = { version = "1", features = ["v7", "serde"] }
+vercel_runtime = { version = "2", features = ["axum"] }
+
+[profile.release]
+codegen-units = 1
+lto = "fat"
+opt-level = 3

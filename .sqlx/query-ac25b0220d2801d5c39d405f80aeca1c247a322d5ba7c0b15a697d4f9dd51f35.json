@@ -1,0 +1,21 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select now() as \"heure!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "heure!",
+        "type_info": "Timestamptz",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "ac25b0220d2801d5c39d405f80aeca1c247a322d5ba7c0b15a697d4f9dd51f35"
+}

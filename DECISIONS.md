@@ -208,6 +208,7 @@ Dernière mise à jour : conception terminée (sujets 1 à 9), réalisation comm
 ## Technique
 
 - Stack : Rust pour le serveur, React pour l'interface.
+- Composants de l'interface : shadcn/ui (variante Base UI), avec Tailwind CSS. Les couleurs et les polices de shadcn sont fournies par le thème.
 - Hébergement : Vercel, sur le compte existant du MJ.
   - Interface React : fichiers statiques servis par Vercel.
   - Serveur Rust : une seule fonction Vercel (runtime Rust officiel) avec un routeur interne, sans processus permanent.

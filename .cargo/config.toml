@@ -1,0 +1,8 @@
+[env]
+# Les requêtes SQL sont vérifiées à la compilation à partir du dossier .sqlx,
+# sans base de données : la compilation donne le même résultat partout, Vercel compris.
+# Après avoir changé une requête : `cargo sqlx prepare` (voir docs/FONCTIONNEMENT.md).
+SQLX_OFFLINE = "true"
+
+# Où `cargo test` écrit les types TypeScript générés depuis les types Rust.
+TS_RS_EXPORT_DIR = { value = "web/src/types", relative = true }
