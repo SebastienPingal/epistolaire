@@ -156,6 +156,12 @@ Un sceau est un objet, avec un nom gravé qui ne change pas quand il change de m
 - **Requêtes SQL vérifiées à la compilation.** Une requête qui ne correspond pas à la base empêche le site de se construire. La vérification s'appuie sur le dossier `.sqlx/`, donc elle marche aussi sur Vercel, sans base à portée de main.
 - **Types partagés.** Les types de l'interface sont générés depuis ceux du serveur. Si le serveur change une réponse, l'interface ne se construit plus tant qu'elle n'a pas suivi.
 
+## Les essais
+
+Le dossier `essais/` contient des parcours qui utilisent le site comme le ferait une personne, dans un vrai navigateur : se connecter, préparer la partie en MJ, écrire et envoyer en joueur. Ils vérifient aussi ce qui ne doit pas être possible : lire une lettre envoyée, lire le brouillon d'un autre, entrer chez le MJ en étant joueur, dépasser son quota.
+
+Ils tournent contre une base locale, jamais contre la base en ligne.
+
 ## Développer en local
 
 Il faut Rust, Node et une base PostgreSQL.

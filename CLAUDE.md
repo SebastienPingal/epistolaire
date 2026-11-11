@@ -35,6 +35,47 @@ Claude développe et maintient tout le code. Le MJ (propriétaire du repo) déci
 - **Écritures** : la liste des polices manuscrites est dans `web/src/theme/ecritures.ts`. En ajouter une : installer le paquet `@fontsource/…`, l'ajouter à cette liste, puis l'insérer dans la table `ecritures` par une migration.
 - **Secrets** : jamais dans le repo. Ils vivent dans les variables d'environnement Vercel.
 
+## Hébergement
+
+- Projet Vercel `epistolaire`, dans l'équipe `Brume`, relié à ce repo. Région `fra1`.
+- Base Neon reliée au projet. Les aperçus et le site en ligne partagent la même base pour l'instant : une migration poussée sur une branche s'applique donc aussi à la base du site en ligne.
+- Chaque push sur une branche construit un aperçu en 4 à 5 minutes : `https://epistolaire-git-<branche>-brume.vercel.app`. Les aperçus sont protégés : pour les lire, passer par l'outil Vercel qui ouvre une adresse de déploiement.
+- Pour mettre une étape validée en ligne : `git push origin <branche>:main`.
+- L'outil de construction de Vercel exige une section `[build]` dans `.cargo/config.toml`, même vide.
+
+## Environnement de travail
+
+Dans une session neuve, avant de compiler ou d'essayer :
+
+```bash
+rustup toolchain install 1.92.0 --profile minimal
+cargo install sqlx-cli --version 0.8.6 --no-default-features --features rustls,postgres --locked
+pg_ctlcluster 16 main start
+su postgres -c "psql -c \"alter user postgres password 'postgres'\""
+su postgres -c "createdb epistolaire"
+cp -n .env.exemple .env
+npm --prefix web ci
+```
+
+- La base locale s'arrête quand la session redémarre : relancer `pg_ctlcluster 16 main start`.
+- Compiler comme Vercel : `cargo +1.92.0 check`.
+- L'environnement cloud `epistolaire` autorise `ui.shadcn.com`, nécessaire pour ajouter des composants.
+
+## Essais
+
+Les parcours d'essai sont dans `essais/`. Chacun vide la base locale, y met son jeu de données, lance le site et le parcourt dans un vrai navigateur :
+
+```bash
+essais/lancer.sh connexion
+essais/lancer.sh preparation-mj
+essais/lancer.sh ecrire
+```
+
+- Chaque étape ajoute son parcours, et met à jour les anciens quand un écran change.
+- Sans identifiants SMTP en local, les e-mails sont écrits dans le journal du serveur : les parcours y lisent les codes de connexion.
+- `essais/vue-plis-recus.sql` vérifie ce que la vue des joueurs laisse voir d'un pli altéré.
+- Regarder aussi les captures d'écran (`essais/sortie/`), au format téléphone d'abord.
+
 ## Commandes
 
 ```bash
