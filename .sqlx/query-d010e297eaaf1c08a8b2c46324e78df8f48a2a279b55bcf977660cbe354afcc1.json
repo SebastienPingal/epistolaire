@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        select genre as \"genre: GenrePersonnage\", ecriture_id\n        from personnages where id = $1 for update\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "genre: GenrePersonnage",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "ecriture_id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      true
+    ]
+  },
+  "hash": "d010e297eaaf1c08a8b2c46324e78df8f48a2a279b55bcf977660cbe354afcc1"
+}

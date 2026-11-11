@@ -13,8 +13,8 @@ L'ordre met la boucle du courrier au plus tôt : tout le reste s'appuie dessus.
 | 3 | Connexion | Fait |
 | 4 | Administration minimale | Fait |
 | 5 | Le joueur écrit | Fait |
-| 6 | Le MJ traite | À faire (la prochaine) |
-| 7 | Le joueur reçoit | À faire |
+| 6 | Le MJ traite | En aperçu, à valider |
+| 7 | Le joueur reçoit | À faire (la prochaine) |
 | 8 | Notifications | À faire |
 | 9 | Filet de sécurité | À faire |
 | 10 | Altérations | À faire |
@@ -32,16 +32,16 @@ L'ordre met la boucle du courrier au plus tôt : tout le reste s'appuie dessus.
 
 ## Pour reprendre
 
-État au moment de cette note : les étapes 1 à 5 sont en ligne sur `main`. La prochaine est l'étape 6.
+État au moment de cette note : les étapes 1 à 5 sont en ligne sur `main`. L'étape 6 est sur sa branche, en aperçu : elle attend la validation du MJ avant d'aller sur `main`. La suivante est l'étape 7.
 
-### Avant de coder l'étape 6, à demander au MJ
+Les six questions de l'étape 6 sont tranchées et notées dans `DECISIONS.md`, section « Traitement par le MJ ».
 
-- **Lettre adressée à un PNJ** : une fois traitée, où le MJ la retrouve-t-il pour y répondre ? Proposition : elle reçoit un exemplaire au nom du PNJ, que le MJ lit depuis la fiche du PNJ et depuis la file.
-- **Lettre à une adresse libre** : le MJ choisit un personnage existant, ou en crée un à la volée. À confirmer.
-- **Lettre à la gazette** : elle reste dans la file jusqu'à l'étape 12 (gazette). Le MJ peut-il déjà l'écarter ?
-- **Date proposée dépassée** : « une nouvelle date proche est proposée ». Proche de combien ? Proposition : quelques minutes après la validation.
-- **Réponse au nom d'un PNJ** : un PNJ sans écriture ni sceau peut-il écrire ? Proposition : oui, avec une écriture générique à choisir au moment d'écrire.
-- **Tri de la file** : « par urgence ». Proposition : les plis dont la date proposée est la plus proche en premier, avec une alerte quand elle est dépassée.
+### Avant de coder l'étape 7, à demander au MJ
+
+- **Calendrier du jeu** : la longueur des mois (« 12e jour du 3e mois, an 1 »). Proposition : des mois de 30 jours.
+- **Carnet automatique** : le carnet ajoute les personnages nommés par le sceau ou la signature. À l'arrivée du pli, ou à son ouverture ? Proposition : à l'ouverture.
+- **Geste d'ouverture** : jusqu'où soigner l'animation dès cette étape, et que montrer d'un pli fermé sans sceau.
+- **Dossiers** : un pli rangé peut-il revenir dans la Réception ? Un dossier non vide peut-il être supprimé ?
 
 ### À régler avant le lancement
 

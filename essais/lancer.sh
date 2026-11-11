@@ -4,6 +4,7 @@
 #   essais/lancer.sh connexion        la connexion par e-mail
 #   essais/lancer.sh preparation-mj   les écrans de préparation du MJ
 #   essais/lancer.sh ecrire           l'écritoire du joueur
+#   essais/lancer.sh traiter          la file du MJ, les plis en route, la plume des PNJ
 #
 # Le script vide la base locale, y met le jeu de données du parcours, lance le serveur
 # et l'interface, déroule le parcours, puis arrête tout. Les captures d'écran et le
@@ -14,7 +15,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-parcours="${1:?Quel parcours ? connexion, preparation-mj ou ecrire}"
+parcours="${1:?Quel parcours ? connexion, preparation-mj, ecrire ou traiter}"
 sortie="${2:-essais/sortie}"
 export DATABASE_URL="${DATABASE_URL:-postgres://postgres:postgres@localhost:5432/epistolaire}"
 mkdir -p "$sortie"

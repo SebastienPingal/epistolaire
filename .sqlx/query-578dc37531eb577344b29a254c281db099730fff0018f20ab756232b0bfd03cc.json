@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update plis set etat = 'traite', modifie_le = now() where id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "578dc37531eb577344b29a254c281db099730fff0018f20ab756232b0bfd03cc"
+}

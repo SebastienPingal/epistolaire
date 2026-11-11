@@ -48,7 +48,8 @@ valeurs! {
         ATraiter,
         /// Le MJ a décidé de son sort : ses exemplaires existent.
         Traite,
-        /// Lettre adressée à la gazette et non retenue.
+        /// Mis de côté par le MJ, sans exemplaire : une lettre à la gazette non retenue,
+        /// ou une adresse libre restée sans suite. Le MJ peut le remettre dans la file.
         Ecarte,
     }
 }

@@ -1,0 +1,71 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        select\n            x.pli_id,\n            x.destinataire_id,\n            x.origine as \"origine: OrigineExemplaire\",\n            x.acheminement as \"acheminement: Acheminement\",\n            x.livraison_le,\n            (x.acheminement = 'en_route' and x.livraison_le <= now()) as \"arrive!\",\n            p.destinataire_genre as \"genre: GenreDestinataire\",\n            p.destinataire_id as vise_id,\n            exists (\n                select 1 from exemplaires autre\n                where autre.pli_id = x.pli_id and autre.id <> x.id\n                  and autre.destinataire_id = $2\n            ) as \"deja_servi!\"\n        from exemplaires x\n        join plis p on p.id = x.pli_id\n        where x.id = $1\n        for update of x\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "pli_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "destinataire_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "origine: OrigineExemplaire",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "acheminement: Acheminement",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "livraison_le",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 5,
+        "name": "arrive!",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 6,
+        "name": "genre: GenreDestinataire",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "vise_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 8,
+        "name": "deja_servi!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      null,
+      true,
+      true,
+      null
+    ]
+  },
+  "hash": "63a7cc12cdb343cbbee51630d5e72f28a366acfc7eaa95f0490de7442f1408e3"
+}

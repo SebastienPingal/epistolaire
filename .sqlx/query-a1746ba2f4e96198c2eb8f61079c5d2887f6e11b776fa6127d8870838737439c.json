@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        update plis\n        set etat = $3, modifie_le = now()\n        where id = $1 and etat = $2\n          and not redige_par_mj\n          and destinataire_genre in ('gazette', 'libre')\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "a1746ba2f4e96198c2eb8f61079c5d2887f6e11b776fa6127d8870838737439c"
+}

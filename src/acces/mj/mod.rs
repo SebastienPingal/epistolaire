@@ -3,16 +3,32 @@
 //! Règle de ce dossier : chaque traitement prend un [`Mj`](super::Mj) en paramètre.
 //! C'est ce qui garantit qu'un joueur, même connecté, n'obtient rien d'ici.
 
+mod acheminement;
 mod ecritures;
+mod en_route;
+mod file;
 mod personnages;
+mod plume;
 mod reglages;
 mod sceaux;
 
 use axum::Router;
-use axum::routing::{get, put};
+use axum::routing::{get, post, put};
 
 pub fn routes() -> Router {
     Router::new()
+        // Le courrier : la file, les plis en route, et la plume du MJ.
+        .route("/a-traiter", get(file::lister))
+        .route("/a-traiter/{id}/traitement", post(file::traiter))
+        .route(
+            "/a-traiter/{id}/ecart",
+            post(file::ecarter).delete(file::reprendre),
+        )
+        .route("/en-route", get(en_route::lister))
+        .route("/exemplaires/{id}", put(en_route::modifier))
+        .route("/exemplaires/{id}/copie", post(en_route::copier))
+        .route("/lettres", post(plume::ecrire))
+        // La préparation de la partie.
         .route("/personnages", get(personnages::lister).post(personnages::creer))
         .route(
             "/personnages/{id}",

@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        insert into plis (\n            auteur_id, redige_par_mj, gabarit, destinataire_genre, destinataire_id,\n            contenu, sceau_id, signe, etat, envoye_le, date_proposee\n        )\n        values (\n            $1, true, 'billet', 'personnage', $2,\n            jsonb_build_object('texte', $3::text), $4, $5, 'traite', now(),\n            -- « greatest » ignore une date vide : le cas se traite donc à part.\n            case\n                when $6::timestamptz is null then now() + make_interval(mins => $7)\n                else greatest($6::timestamptz, now())\n            end\n        )\n        returning id, date_proposee as \"livraison_le!\"\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "livraison_le!",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Text",
+        "Uuid",
+        "Bool",
+        "Timestamptz",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      true
+    ]
+  },
+  "hash": "d0a2a930f3741c2233defffa22ca73e1b0eeacd21d8305e2da444f319aa7a2f0"
+}

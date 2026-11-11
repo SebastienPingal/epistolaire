@@ -8,12 +8,16 @@ import { Ecritoire } from '@/joueur/Ecritoire';
 import { EspaceJoueur } from '@/joueur/EspaceJoueur';
 import { Fiche } from '@/joueur/Fiche';
 import { Reception } from '@/joueur/Reception';
+import { ATraiter } from '@/mj/ATraiter';
+import { Ecrire } from '@/mj/Ecrire';
 import { Ecritures } from '@/mj/Ecritures';
+import { EnRoute } from '@/mj/EnRoute';
 import { EspaceMj } from '@/mj/EspaceMj';
 import { Personnage } from '@/mj/Personnage';
 import { Personnages } from '@/mj/Personnages';
 import { Reglages } from '@/mj/Reglages';
 import { Sceaux } from '@/mj/Sceaux';
+import { Traitement } from '@/mj/Traitement';
 import { vocabulaire } from '@/theme/neutre';
 import type { LienConnexion } from '@/types/LienConnexion';
 import type { Moi } from '@/types/Moi';
@@ -80,13 +84,18 @@ export function App() {
           {etat.moi.role === 'mj' ? (
             <Routes>
               <Route path="/mj" element={<EspaceMj surDeconnexion={deconnecter} />}>
+                <Route path="a-traiter" element={<ATraiter />} />
+                <Route path="a-traiter/:id" element={<Traitement />} />
+                <Route path="en-route" element={<EnRoute />} />
+                <Route path="ecrire" element={<Ecrire />} />
                 <Route path="personnages" element={<Personnages />} />
                 <Route path="personnages/:id" element={<Personnage />} />
                 <Route path="ecritures" element={<Ecritures />} />
                 <Route path="sceaux" element={<Sceaux />} />
                 <Route path="reglages" element={<Reglages />} />
               </Route>
-              <Route path="*" element={<Navigate to="/mj/personnages" replace />} />
+              {/* À traiter est la page d'accueil du MJ. */}
+              <Route path="*" element={<Navigate to="/mj/a-traiter" replace />} />
             </Routes>
           ) : (
             <Routes>

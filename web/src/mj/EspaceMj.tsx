@@ -1,4 +1,13 @@
-import { LogOutIcon, PenLineIcon, SettingsIcon, StampIcon, UsersIcon } from 'lucide-react';
+import {
+  FeatherIcon,
+  InboxIcon,
+  LogOutIcon,
+  PenLineIcon,
+  SendIcon,
+  SettingsIcon,
+  StampIcon,
+  UsersIcon,
+} from 'lucide-react';
 import type { ComponentType } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router';
 
@@ -22,6 +31,12 @@ import { vocabulaire } from '@/theme/neutre';
 
 type Entree = { chemin: string; libelle: string; Icone: ComponentType };
 
+const COURRIER: Entree[] = [
+  { chemin: '/mj/a-traiter', libelle: 'À traiter', Icone: InboxIcon },
+  { chemin: '/mj/en-route', libelle: 'En route', Icone: SendIcon },
+  { chemin: '/mj/ecrire', libelle: 'Écrire', Icone: FeatherIcon },
+];
+
 const PREPARATION: Entree[] = [
   { chemin: '/mj/personnages', libelle: 'Personnages', Icone: UsersIcon },
   { chemin: '/mj/ecritures', libelle: 'Écritures', Icone: PenLineIcon },
@@ -34,7 +49,9 @@ type Props = { surDeconnexion: () => void };
 /** Le cadre de tous les écrans du MJ : un menu, et l'écran choisi. */
 export function EspaceMj({ surDeconnexion }: Props) {
   const { pathname } = useLocation();
-  const courante = PREPARATION.find((entree) => pathname.startsWith(entree.chemin));
+  const courante = [...COURRIER, ...PREPARATION].find((entree) =>
+    pathname.startsWith(entree.chemin),
+  );
 
   return (
     <SidebarProvider>
@@ -43,6 +60,12 @@ export function EspaceMj({ surDeconnexion }: Props) {
           <p className="px-2 pt-2 font-serif text-lg">{vocabulaire.nomDuSite}</p>
         </SidebarHeader>
         <SidebarContent>
+          <SidebarGroup>
+            <SidebarGroupLabel>Courrier</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <Menu entrees={COURRIER} />
+            </SidebarGroupContent>
+          </SidebarGroup>
           <SidebarGroup>
             <SidebarGroupLabel>Préparation</SidebarGroupLabel>
             <SidebarGroupContent>

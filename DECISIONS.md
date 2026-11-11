@@ -92,6 +92,26 @@ Dernière mise à jour : conception terminée (sujets 1 à 9), réalisation comm
 - Le MJ valide en un clic ou change librement la date. S'il valide après la date proposée, une nouvelle date proche est proposée.
 - Chaque pli arrive à l'heure exacte calculée, de jour comme de nuit.
 
+## Traitement par le MJ
+
+- La file À traiter est triée par urgence : la lettre dont la date de livraison proposée est la plus proche vient en premier. Une alerte signale les dates déjà dépassées.
+- Une lettre validée après sa date proposée arrive 10 minutes après la validation, sauf si le MJ choisit une autre date.
+- Une date choisie dans le passé vaut « tout de suite ».
+- Une lettre adressée à un joueur se valide en un clic : au destinataire visé, à la date proposée.
+- Une lettre adressée à un PNJ reste dans la file tant que le MJ n'y a pas répondu, ou ne l'a pas classée sans réponse. La réponse s'écrit sous la lettre, et part dans le même geste.
+- Un PNJ ne « reçoit » pas à une date : son exemplaire est arrivé et lu dès que le MJ répond ou classe. Il ne passe jamais par l'écran En route.
+- Une lettre à une adresse libre : le MJ choisit un personnage existant, ou crée un PNJ à la volée, sans quitter l'écran. Le nom proposé est l'adresse écrite par le joueur.
+- Une lettre adressée à la gazette attend la composition d'un numéro, rangée à part dans la file. D'ici là, le MJ peut l'écarter, ou la remettre à un personnage comme une lettre interceptée.
+- Écarter, c'est mettre de côté une lettre sans destinataire précis (gazette ou adresse libre) : elle n'ira nulle part. Le MJ peut revenir sur ce choix. Une lettre qui a un destinataire ne s'écarte pas : elle se perd.
+- Les copies pour des tiers partent même si l'exemplaire du destinataire est retenu ou perdu.
+- Un personnage ne reçoit jamais deux exemplaires du même pli.
+- Tant qu'un exemplaire n'est pas arrivé, le MJ peut changer sa date et son destinataire, le retenir, le perdre, le remettre en route, ou en faire partir une copie. Un pli retenu ou perdu peut toujours être remis en route. Une fois arrivé, il ne se modifie plus.
+- Le MJ n'écrit qu'au nom d'un PNJ. Écrire au nom d'un joueur est une contrefaçon : elle viendra avec les altérations.
+- Une lettre de PNJ ne passe pas par la file : elle part aussitôt, avec le délai habituel (plus ou moins le hasard) ou la date choisie par le MJ.
+- Un PNJ sans écriture reçoit celle que le MJ choisit au moment d'écrire, et la garde. Les écritures génériques sont proposées en premier ; celles des joueurs ne le sont pas. Un PNJ sans sceau envoie un pli non scellé.
+- Le MJ peut dépasser la longueur d'un billet : l'écran le lui signale, sans le bloquer.
+- Les lettres du MJ ne comptent dans aucun quota.
+
 ## Altérations
 
 - Les outils :

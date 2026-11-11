@@ -1,0 +1,122 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        select\n            p.id,\n            p.auteur_id as \"auteur_id!\",\n            a.nom as auteur_nom,\n            e.police as \"police?\",\n            coalesce(p.contenu->>'texte', '') as \"texte!\",\n            p.signe,\n            s.nom_grave as \"sceau_nom?\",\n            s.initiales as \"sceau_initiales?\",\n            s.image_url as \"sceau_image?\",\n            p.destinataire_genre as \"genre: GenreDestinataire\",\n            p.destinataire_id,\n            d.nom as \"destinataire_nom?\",\n            d.genre as \"destinataire_genre?: GenrePersonnage\",\n            p.destinataire_libre,\n            p.etat as \"etat: EtatPli\",\n            p.envoye_le as \"envoye_le!\",\n            coalesce(p.date_proposee, p.envoye_le) as \"date_proposee!\",\n            coalesce(p.date_proposee <= now(), true) as \"date_depassee!\"\n        from plis p\n        join personnages a on a.id = p.auteur_id\n        left join ecritures e on e.id = a.ecriture_id\n        left join sceaux s on s.id = p.sceau_id\n        left join personnages d on d.id = p.destinataire_id\n        where p.etat in ('a_traiter', 'ecarte') and not p.redige_par_mj\n        order by p.date_proposee nulls first, p.envoye_le\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "auteur_id!",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "auteur_nom",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "police?",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "texte!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "signe",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 6,
+        "name": "sceau_nom?",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "sceau_initiales?",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "sceau_image?",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "genre: GenreDestinataire",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "destinataire_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 11,
+        "name": "destinataire_nom?",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 12,
+        "name": "destinataire_genre?: GenrePersonnage",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 13,
+        "name": "destinataire_libre",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 14,
+        "name": "etat: EtatPli",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 15,
+        "name": "envoye_le!",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 16,
+        "name": "date_proposee!",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 17,
+        "name": "date_depassee!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      false,
+      null,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      false,
+      false,
+      true,
+      false,
+      true,
+      null,
+      null
+    ]
+  },
+  "hash": "8d2862acb0669fc26c5f24e7d1dd25cc342a73f62666634215a1f26a45fdda14"
+}

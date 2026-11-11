@@ -1,0 +1,42 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        select\n            x.pli_id,\n            (x.acheminement = 'en_route' and x.livraison_le <= now()) as \"arrive!\",\n            greatest(coalesce($2::timestamptz, x.livraison_le, now()), now()) as \"livraison_le!\",\n            exists (\n                select 1 from exemplaires autre\n                where autre.pli_id = x.pli_id and autre.destinataire_id = $3\n            ) as \"deja_servi!\"\n        from exemplaires x\n        where x.id = $1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "pli_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "arrive!",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 2,
+        "name": "livraison_le!",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 3,
+        "name": "deja_servi!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Timestamptz",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "13cc3932dc418b73ccfdf0434e3930219308acf43c80aad0f6badc9177de36bc"
+}

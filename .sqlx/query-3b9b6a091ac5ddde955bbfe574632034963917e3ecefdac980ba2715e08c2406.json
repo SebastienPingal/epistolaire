@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        insert into exemplaires (\n            pli_id, destinataire_id, origine,\n            contenu, ecriture_id, sceau_id, sceau_etat,\n            signature_nom, signature_ecriture_id, signature_etat,\n            acheminement, livraison_le, ouvert_le\n        )\n        select\n            p.id, d.id, $3::text,\n            p.contenu, a.ecriture_id, p.sceau_id,\n            case when p.sceau_id is not null then 'intact' end,\n            case when p.signe then a.nom end,\n            case when p.signe then a.ecriture_id end,\n            case when p.signe then 'intacte' else 'absente' end,\n            $4::text,\n            case when d.genre = 'pnj' then now() else $5::timestamptz end,\n            case when d.genre = 'pnj' and $4::text = 'en_route' then now() end\n        from plis p\n        join personnages d on d.id = $2\n        left join personnages a on a.id = p.auteur_id\n        where p.id = $1\n        returning id\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Text",
+        "Text",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "3b9b6a091ac5ddde955bbfe574632034963917e3ecefdac980ba2715e08c2406"
+}

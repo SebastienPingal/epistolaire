@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        update exemplaires x\n        set destinataire_id = d.id,\n            origine = $3,\n            acheminement = $4,\n            livraison_le = case\n                when d.genre = 'pnj' and $4::text = 'en_route' then now()\n                when $4::text = 'en_route'\n                    then greatest(coalesce($5::timestamptz, x.livraison_le), now())\n                else coalesce($5::timestamptz, x.livraison_le)\n            end,\n            ouvert_le = case when d.genre = 'pnj' and $4::text = 'en_route' then now() end,\n            modifie_le = now()\n        from personnages d\n        where x.id = $1 and d.id = $2\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Text",
+        "Text",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "3cdc1ec109548e66125f7000408e67fb19613b344b839fccf0dae5d21ec1e4e1"
+}

@@ -37,9 +37,9 @@ const ok = (nom, cond) => console.log((cond ? 'OK   ' : 'ECHEC') + ' ' + nom);
   await p.waitForSelector('[role=alert]');
   ok('code faux : refusé (' + (await p.textContent('[role=alert]')).trim() + ')', true);
   await saisirCode(code);
-  await p.waitForURL('**/mj/personnages');
-  await p.waitForSelector('h1:text-is("Personnages")');
-  ok('bon code : connecté en MJ', true);
+  await p.waitForURL('**/mj/a-traiter');
+  await p.waitForSelector('h1:text-is("À traiter")');
+  ok('bon code : connecté en MJ, sur la file À traiter', true);
   await p.screenshot({ path: dossier + '/connexion-3-accueil.png' });
   const cookies = await ctx.cookies();
   const c = cookies.find((x) => x.name === 'session');
@@ -48,8 +48,8 @@ const ok = (nom, cond) => console.log((cond ? 'OK   ' : 'ECHEC') + ' ' + nom);
 
   // 3. Rechargement, puis déconnexion.
   await p.reload();
-  await p.waitForURL('**/mj/personnages');
-  await p.waitForSelector('h1:text-is("Personnages")');
+  await p.waitForURL('**/mj/a-traiter');
+  await p.waitForSelector('h1:text-is("À traiter")');
   ok('rechargement : toujours connecté', true);
   // Sur téléphone, le menu du MJ est replié : on l'ouvre pour atteindre la déconnexion.
   await p.click('[data-sidebar=trigger]');

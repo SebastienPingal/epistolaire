@@ -1,0 +1,42 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        select\n            p.auteur_id,\n            p.destinataire_genre as \"genre: GenreDestinataire\",\n            p.destinataire_id,\n            case\n                when $2::timestamptz is not null then greatest($2::timestamptz, now())\n                when p.date_proposee > now() then p.date_proposee\n                else now() + make_interval(mins => $3)\n            end as \"livraison_le!\"\n        from plis p\n        where p.id = $1 and p.etat = 'a_traiter'\n        for update\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "auteur_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "genre: GenreDestinataire",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "destinataire_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 3,
+        "name": "livraison_le!",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Timestamptz",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      true,
+      true,
+      true,
+      null
+    ]
+  },
+  "hash": "6f0c672ab6e53cfb0458a1d1f93958c9f01c49e900baa19801626f9bb138f160"
+}

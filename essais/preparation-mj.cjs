@@ -23,9 +23,12 @@ const base = 'http://localhost:5173';
   };
 
   await connecter('mj@exemple.fr');
-  await p.waitForURL('**/mj/personnages');
+  await p.waitForURL('**/mj/a-traiter');
+  await p.waitForSelector('text=Aucune lettre n\'attend votre décision');
+  ok('MJ connecté : arrive sur À traiter, file vide');
+  await p.click('a:has-text("Personnages")');
   await p.waitForSelector('text=Aucun joueur');
-  ok('MJ connecté : arrive sur Personnages');
+  ok('menu : Personnages');
 
   const creer = async (nom, genre, email) => {
     await p.goto(base + '/mj/personnages');

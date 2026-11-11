@@ -25,6 +25,7 @@ Claude développe et maintient tout le code. Le MJ (propriétaire du repo) déci
 - **Migrations** : un fichier numéroté par changement dans `migrations/`, appliqué automatiquement au démarrage du serveur. Ne jamais modifier une migration déjà poussée : en écrire une nouvelle. Elles ne doivent jamais perdre un pli en route : pas de suppression de colonne ou de table sans étape intermédiaire.
 - **Porte des joueurs** : tout ce qui répond à un joueur est dans `src/acces/joueur/`, sous `/api/joueur`, et chaque traitement prend un `Joueur` en paramètre. Le courrier reçu ne se lit que dans la vue `plis_recus`. Ses propres lettres ne se lisent et ne se modifient que dans la vue `brouillons`. Ne jamais lire `plis` ou `exemplaires` pour répondre à un joueur. Deux exceptions, dans `ecritoire.rs` : compter les envois de la semaine, et l'envoi lui-même.
 - **Porte du MJ** : tout ce qui est réservé au MJ est dans `src/acces/mj/`, sous `/api/mj`, et chaque traitement prend un `Mj` en paramètre.
+- **Exemplaires** : un exemplaire ne se crée que par `poser_exemplaire` (`src/acces/mj/acheminement.rs`), qui recopie la version écrite par l'auteur. Tout geste du MJ sur un pli ajoute une ligne à son historique avec `noter`. Le MJ ne modifie plus un exemplaire arrivé.
 - **SQL** : requêtes vérifiées à la compilation (`sqlx::query!`). Après tout changement de requête ou de migration, relancer `cargo sqlx prepare` et commiter `.sqlx/`.
 - **Types de l'interface** : générés depuis Rust (`ts-rs`) dans `web/src/types/`. Ne jamais les écrire à la main ; relancer `cargo test` pour les régénérer.
 - **Composants** : shadcn/ui (variante Base UI) et Tailwind CSS. Ajouter un composant avec `npx shadcn@latest add <nom>` depuis `web/` ; il arrive dans `web/src/components/ui/`. Préférer un composant shadcn à un composant écrit à la main.
@@ -69,6 +70,7 @@ Les parcours d'essai sont dans `essais/`. Chacun vide la base locale, y met son 
 essais/lancer.sh connexion
 essais/lancer.sh preparation-mj
 essais/lancer.sh ecrire
+essais/lancer.sh traiter
 ```
 
 - Chaque étape ajoute son parcours, et met à jour les anciens quand un écran change.

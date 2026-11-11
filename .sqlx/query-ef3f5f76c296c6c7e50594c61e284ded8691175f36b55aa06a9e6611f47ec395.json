@@ -1,0 +1,104 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        select\n            x.id,\n            x.pli_id,\n            a.nom as \"auteur_nom?\",\n            x.destinataire_id,\n            d.nom as destinataire_nom,\n            x.origine as \"origine: OrigineExemplaire\",\n            x.acheminement as \"acheminement: Acheminement\",\n            x.livraison_le,\n            p.envoye_le as \"envoye_le!\",\n            coalesce(x.contenu->>'texte', '') as \"texte!\",\n            e.police as \"police?\",\n            case when x.signature_etat in ('intacte', 'contrefaite') then x.signature_nom end\n                as \"signature?\",\n            s.nom_grave as \"sceau_nom?\",\n            s.initiales as \"sceau_initiales?\",\n            s.image_url as \"sceau_image?\"\n        from exemplaires x\n        join plis p on p.id = x.pli_id\n        join personnages d on d.id = x.destinataire_id\n        left join personnages a on a.id = p.auteur_id\n        left join ecritures e on e.id = x.ecriture_id\n        left join sceaux s on s.id = x.sceau_id\n        where x.acheminement <> 'en_route' or x.livraison_le > now()\n        order by x.livraison_le nulls last, x.cree_le\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "pli_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "auteur_nom?",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "destinataire_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 4,
+        "name": "destinataire_nom",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "origine: OrigineExemplaire",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "acheminement: Acheminement",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "livraison_le",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 8,
+        "name": "envoye_le!",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 9,
+        "name": "texte!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "police?",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 11,
+        "name": "signature?",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 12,
+        "name": "sceau_nom?",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 13,
+        "name": "sceau_initiales?",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 14,
+        "name": "sceau_image?",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      null,
+      false,
+      null,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "ef3f5f76c296c6c7e50594c61e284ded8691175f36b55aa06a9e6611f47ec395"
+}

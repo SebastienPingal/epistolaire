@@ -1,7 +1,7 @@
 # Guide de fonctionnement
 
 Ce guide décrit comment le site est construit. Il est mis à jour à la fin de chaque étape de `PLAN.md`.
-État décrit : étape 5 (le joueur écrit).
+État décrit : étape 6 (le MJ traite).
 
 ## Vue d'ensemble
 
@@ -20,7 +20,7 @@ Les deux sont hébergés sur Vercel. L'interface est un ensemble de fichiers sta
 | `src/` | Le serveur : routeur, accès à la base, logique du jeu |
 | `src/modele.rs` | Le vocabulaire du jeu : gabarits, états d'un pli, d'un sceau… |
 | `src/acces/joueur/` | La porte des joueurs : écritoire, fiche, courrier reçu |
-| `src/acces/mj/` | La porte du MJ : personnages, écritures, sceaux, réglages |
+| `src/acces/mj/` | La porte du MJ : la file, les plis en route, la plume des PNJ, puis personnages, écritures, sceaux, réglages |
 | `src/connexion.rs` | La connexion par e-mail et les sessions |
 | `src/courriel.rs` | L'envoi des e-mails |
 | `src/erreur.rs` | Les erreurs renvoyées à l'interface |
@@ -77,6 +77,9 @@ Toute autre adresse renvoie l'interface.
 Un pli est écrit une fois : la table `plis` garde l'original, que seul le MJ voit.
 Quand le MJ le traite, il crée un exemplaire par destinataire dans `exemplaires`.
 L'exemplaire porte la version livrée (éventuellement réécrite), sa date de livraison, et ce que ce destinataire remarque.
+Pour l'instant la version livrée est toujours celle que l'auteur a écrite : son texte, son écriture, sa signature s'il a signé, son sceau s'il a scellé. Les altérations viendront à l'étape 10.
+
+Chaque exemplaire dit pourquoi il existe : c'est celui du destinataire, une redirection, ou une copie pour un tiers. Un personnage n'a jamais deux exemplaires du même pli.
 
 Il n'y a pas d'état « livré ». Un exemplaire est livré quand il est en route et que sa date de livraison est passée. Aucune tâche ne fait ce passage : c'est une comparaison de dates, faite à chaque lecture.
 
@@ -132,7 +135,44 @@ Chaque envoi compte, quel que soit le destinataire et quoi que la lettre devienn
 
 ## L'espace du MJ
 
-Le MJ arrive sur un espace à part, avec un menu. Pour l'instant il sert à préparer la partie :
+Le MJ arrive sur un espace à part, avec un menu en deux parties : le courrier, et la préparation de la partie. Sa page d'accueil est la file À traiter.
+
+### À traiter
+
+La file contient les lettres envoyées par les joueurs, dans leur version originale. Elle est triée par urgence : la lettre dont la date de livraison proposée est la plus proche vient en premier, et une alerte signale les dates déjà dépassées. Les lettres pour la gazette sont rangées à part, en bas.
+
+Traiter une lettre, c'est décider de son sort. C'est à ce moment que ses exemplaires sont créés, et qu'elle quitte la file.
+
+- **Lettre à un joueur** : le bouton Valider la met en route en un clic, vers le destinataire visé, à la date proposée. Si cette date est passée, le pli arrive 10 minutes après la validation.
+- **Ouvrir une lettre** permet de tout décider : le destinataire (le changer, c'est rediriger), des copies pour des tiers, la date, puis Livrer, Retenir ou Perdre.
+- **Lettre à un PNJ** : elle reste dans la file tant que le MJ n'y a pas répondu, ou ne l'a pas classée sans réponse. La réponse s'écrit sous la lettre. Elle part dans le même geste : si elle est refusée, rien n'est traité.
+- **Adresse libre** : le MJ choisit un personnage, ou crée un PNJ sans quitter l'écran. Le nom proposé est l'adresse écrite par le joueur.
+- **Lettre à la gazette** : en attendant la composition des numéros (étape 12), le MJ peut l'écarter ou la remettre à quelqu'un.
+- **Écarter** met de côté une lettre sans destinataire précis. Elle reste visible en bas de la file, d'où elle peut revenir.
+
+Un PNJ ne « reçoit » pas à une date : c'est le MJ qui lit pour lui. Son exemplaire est donc arrivé et lu aussitôt, et ne passe jamais par l'écran En route.
+
+### En route
+
+Cet écran montre les exemplaires qui ne sont pas encore arrivés, le prochain en premier, puis ceux qui sont retenus, puis ceux qui sont perdus. Tant qu'un exemplaire n'est pas arrivé, le MJ peut changer sa date ou son destinataire, le retenir, le perdre, le remettre en route, ou en faire partir une copie pour un tiers. Une date placée dans le passé vaut « tout de suite ».
+
+Rien ne « livre » un pli : il est arrivé dès que sa date est passée. À partir de là, le serveur refuse toute modification.
+
+### Écrire au nom d'un PNJ
+
+Le MJ choisit un PNJ (ou en crée un), un destinataire, et écrit un billet. Les règles sont celles des joueurs : une écriture, une signature et un sceau facultatifs. Trois différences :
+
+- la lettre ne passe pas par la file : elle part aussitôt, avec le délai habituel ou la date que le MJ choisit ;
+- le MJ peut dépasser la longueur d'un billet ;
+- un PNJ qui n'a pas encore d'écriture reçoit celle que le MJ choisit à ce moment, et la garde.
+
+Le MJ n'écrit qu'au nom d'un PNJ. Ses lettres ne comptent dans aucun quota.
+
+### L'historique
+
+Chaque geste du MJ sur un pli (traitement, changement de date ou de destinataire, copie, mise à l'écart) ajoute une ligne à la table `evenements`, avec l'état d'avant et d'après. Rien n'y est jamais effacé. Cet historique sera affiché à l'étape 13.
+
+### La préparation
 
 - **Personnages** : créer les personnages des joueurs et les PNJ, remplir leur fiche, donner à chaque joueur son adresse e-mail (c'est ce qui lui ouvre le site), choisir son écriture, tenir son carnet d'adresses.
 - **Écritures** : voir les 14 écritures fournies, les renommer, marquer celles qui sont génériques.
@@ -158,7 +198,7 @@ Un sceau est un objet, avec un nom gravé qui ne change pas quand il change de m
 
 ## Les essais
 
-Le dossier `essais/` contient des parcours qui utilisent le site comme le ferait une personne, dans un vrai navigateur : se connecter, préparer la partie en MJ, écrire et envoyer en joueur. Ils vérifient aussi ce qui ne doit pas être possible : lire une lettre envoyée, lire le brouillon d'un autre, entrer chez le MJ en étant joueur, dépasser son quota.
+Le dossier `essais/` contient des parcours qui utilisent le site comme le ferait une personne, dans un vrai navigateur : se connecter, préparer la partie en MJ, écrire et envoyer en joueur, traiter la file et suivre les plis en route en MJ. Ils vérifient aussi ce qui ne doit pas être possible : lire une lettre envoyée, lire le brouillon d'un autre, entrer chez le MJ en étant joueur, dépasser son quota, traiter deux fois la même lettre, modifier un pli arrivé.
 
 Ils tournent contre une base locale, jamais contre la base en ligne.
 
