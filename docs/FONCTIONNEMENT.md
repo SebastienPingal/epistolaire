@@ -135,7 +135,7 @@ Chaque envoi compte, quel que soit le destinataire et quoi que la lettre devienn
 Le MJ arrive sur un espace à part, avec un menu. Pour l'instant il sert à préparer la partie :
 
 - **Personnages** : créer les personnages des joueurs et les PNJ, remplir leur fiche, donner à chaque joueur son adresse e-mail (c'est ce qui lui ouvre le site), choisir son écriture, tenir son carnet d'adresses.
-- **Écritures** : voir les 14 écritures fournies, les renommer, marquer celles qui sont génériques.
+- **Écritures** : voir les 51 écritures fournies, les renommer, marquer celles qui sont génériques.
 - **Sceaux** : créer des sceaux, changer leur nom gravé ou leurs initiales, les faire changer de mains.
 - **Réglages** : longueur d'un billet, quota, délai et hasard de livraison, calendrier.
 
@@ -144,6 +144,8 @@ Toutes les adresses de cet espace commencent par `/api/mj` côté serveur, et ch
 ### Les écritures
 
 Une écriture est une police manuscrite fournie avec le site. La liste est dans `web/src/theme/ecritures.ts`, et la base en garde une ligne par police. Le MJ ne crée pas d'écriture : en ajouter une demande d'ajouter la police au site, puis une migration.
+
+Les polices ne sont téléchargées par le navigateur que lorsqu'une page les affiche : en avoir beaucoup ne ralentit pas le site. Leur facteur `echelle` a été calé en mesurant la largeur d'une phrase et la hauteur des lettres de chacune, puis en vérifiant le rendu au format téléphone.
 
 Deux joueurs ne peuvent pas avoir la même écriture : c'est la base elle-même qui le refuse.
 
