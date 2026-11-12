@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select detruire_pli($1, $2) as \"detruit!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "detruit!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "67b94693917df9fede6f349c9ceb4725bd8a96d21bd537bf9ece91fc20a654a5"
+}

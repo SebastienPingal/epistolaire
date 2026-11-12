@@ -4,6 +4,7 @@
 //! C'est ce qui garantit qu'un joueur, même connecté, n'obtient rien d'ici.
 
 mod acheminement;
+mod detruits;
 mod ecritures;
 mod en_route;
 mod file;
@@ -13,7 +14,7 @@ mod reglages;
 mod sceaux;
 
 use axum::Router;
-use axum::routing::{get, post, put};
+use axum::routing::{delete, get, post, put};
 
 pub fn routes() -> Router {
     Router::new()
@@ -28,6 +29,7 @@ pub fn routes() -> Router {
         .route("/exemplaires/{id}", put(en_route::modifier))
         .route("/exemplaires/{id}/copie", post(en_route::copier))
         .route("/lettres", post(plume::ecrire))
+        .route("/detruits", get(detruits::lister))
         // La préparation de la partie.
         .route("/personnages", get(personnages::lister).post(personnages::creer))
         .route(
@@ -45,6 +47,9 @@ pub fn routes() -> Router {
         .route("/sceaux", get(sceaux::lister).post(sceaux::creer))
         .route("/sceaux/{id}", put(sceaux::modifier).delete(sceaux::supprimer))
         .route("/reglages", get(reglages::lire).put(reglages::modifier))
+        .route("/reglages/calendrier", get(reglages::calendrier))
+        .route("/reglages/bonds", post(reglages::ajouter_bond))
+        .route("/reglages/bonds/{id}", delete(reglages::retirer_bond))
 }
 
 /// Un texte obligatoire : sans espaces autour, non vide, de longueur raisonnable.

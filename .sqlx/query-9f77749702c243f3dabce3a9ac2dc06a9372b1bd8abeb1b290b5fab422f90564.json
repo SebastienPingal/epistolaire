@@ -1,0 +1,98 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        select\n            x.id,\n            x.pli_id,\n            a.nom as \"auteur_nom?\",\n            d.nom as destinataire_nom,\n            x.detruit_le as \"detruit_le!\",\n            x.livraison_le as \"arrive_le!\",\n            x.ouvert_le is not null as \"ouvert!\",\n            (select v.details->>'dossier' from evenements v\n             where v.exemplaire_id = x.id and v.genre = 'destruction'\n             order by v.cree_le desc limit 1) as \"dossier?\",\n            coalesce(x.contenu->>'texte', '') as \"texte!\",\n            e.police as \"police?\",\n            case when x.signature_etat in ('intacte', 'contrefaite') then x.signature_nom end\n                as \"signature?\",\n            s.nom_grave as \"sceau_nom?\",\n            s.initiales as \"sceau_initiales?\",\n            s.image_url as \"sceau_image?\"\n        from exemplaires x\n        join plis p on p.id = x.pli_id\n        join personnages d on d.id = x.destinataire_id\n        left join personnages a on a.id = p.auteur_id\n        left join ecritures e on e.id = x.ecriture_id\n        left join sceaux s on s.id = x.sceau_id\n        where x.detruit_le is not null\n        order by x.detruit_le desc\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "pli_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "auteur_nom?",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "destinataire_nom",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "detruit_le!",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 5,
+        "name": "arrive_le!",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 6,
+        "name": "ouvert!",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 7,
+        "name": "dossier?",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "texte!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "police?",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "signature?",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 11,
+        "name": "sceau_nom?",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 12,
+        "name": "sceau_initiales?",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 13,
+        "name": "sceau_image?",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      null,
+      null,
+      null,
+      false,
+      null,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "9f77749702c243f3dabce3a9ac2dc06a9372b1bd8abeb1b290b5fab422f90564"
+}

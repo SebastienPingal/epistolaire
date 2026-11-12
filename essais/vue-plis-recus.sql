@@ -43,6 +43,7 @@ select pg_temp.poser('3 en route (demain)',    'livraison_le = now() + interval 
 select pg_temp.poser('4 retenu',               'acheminement = ''retenu''');
 select pg_temp.poser('5 perdu',                'acheminement = ''perdu''');
 select pg_temp.poser('6 signature retiree',    'signature_etat = ''retiree''');
+select pg_temp.poser('7 detruit',              'detruit_le = now()');
 
 \echo '--- Ce que voit le destinataire (vue plis_recus) ---'
 select c.cas, r.contenu->>'texte' as texte, r.sceau_nom, r.sceau_etat, r.signature_nom,

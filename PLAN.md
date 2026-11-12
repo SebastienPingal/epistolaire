@@ -16,7 +16,7 @@ Le détail de chaque étape restante (tâches, questions à poser au MJ, parcour
 | 4 | Administration minimale | Fait |
 | 5 | Le joueur écrit | Fait |
 | 6 | Le MJ traite | Fait |
-| 7 | Le joueur reçoit | À faire (la prochaine) |
+| 7 | Le joueur reçoit | En aperçu, à valider par le MJ |
 | 8 | Notifications et site installable | À faire |
 | 9 | Filet de sécurité | À faire |
 | L | Lancement : répétition générale et mise en jeu | À faire |
@@ -40,7 +40,8 @@ La partie commence dès que les étapes 7, 8 et 9 sont en ligne, après la rép�
 État au moment de cette note (12 novembre) :
 
 - les étapes 1 à 6 sont en ligne sur `main`, avec le plan détaillé de la suite (`docs/taches/`) ;
-- la suivante est l'étape 7 : lire `docs/taches/README.md`, puis `docs/taches/07-le-joueur-recoit.md`.
+- l'étape 7 est en aperçu sur la branche `claude/vigilant-noether-e6m0nk`, en attente de la validation du MJ. Ses réponses (bonds datés, destruction des plis, mode choix) sont dans `DECISIONS.md` ;
+- ensuite viendra l'étape 8 : lire `docs/taches/README.md`, puis `docs/taches/08-notifications.md`.
 
 Les questions à poser au MJ avant chaque étape sont dans sa fiche, avec une réponse recommandée. Celles qui sont déjà tranchées (calendrier, carnet, retard des notifications, ordre du lancement) sont dans `DECISIONS.md`.
 

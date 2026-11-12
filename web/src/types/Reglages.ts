@@ -20,8 +20,4 @@ hasard_minutes: number,
 /**
  * Le jour réel qui vaut « jour 1 » du calendrier du jeu.
  */
-calendrier_debut: string, 
-/**
- * Jours ajoutés par les bonds dans le temps.
- */
-calendrier_bonds: number, };
+calendrier_debut: string, };

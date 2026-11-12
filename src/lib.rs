@@ -4,6 +4,7 @@
 
 pub mod acces;
 pub mod base;
+pub mod calendrier;
 pub mod connexion;
 pub mod courriel;
 pub mod erreur;

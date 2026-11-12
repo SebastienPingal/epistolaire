@@ -7,9 +7,11 @@ import { Billet } from '@/joueur/Billet';
 import { Ecritoire } from '@/joueur/Ecritoire';
 import { EspaceJoueur } from '@/joueur/EspaceJoueur';
 import { Fiche } from '@/joueur/Fiche';
-import { Reception } from '@/joueur/Reception';
+import { Pli } from '@/joueur/Pli';
+import { DossierJoueur, Reception } from '@/joueur/Reception';
 import { ATraiter } from '@/mj/ATraiter';
 import { Ecrire } from '@/mj/Ecrire';
+import { Detruits } from '@/mj/Detruits';
 import { Ecritures } from '@/mj/Ecritures';
 import { EnRoute } from '@/mj/EnRoute';
 import { EspaceMj } from '@/mj/EspaceMj';
@@ -88,6 +90,7 @@ export function App() {
                 <Route path="a-traiter/:id" element={<Traitement />} />
                 <Route path="en-route" element={<EnRoute />} />
                 <Route path="ecrire" element={<Ecrire />} />
+                <Route path="detruits" element={<Detruits />} />
                 <Route path="personnages" element={<Personnages />} />
                 <Route path="personnages/:id" element={<Personnage />} />
                 <Route path="ecritures" element={<Ecritures />} />
@@ -101,6 +104,8 @@ export function App() {
             <Routes>
               <Route element={<EspaceJoueur />}>
                 <Route path="/reception" element={<Reception />} />
+                <Route path="/dossiers/:id" element={<DossierJoueur />} />
+                <Route path="/pli/:id" element={<Pli />} />
                 <Route path="/ecrire" element={<Ecritoire />} />
                 <Route path="/ecrire/:id" element={<Billet />} />
                 <Route path="/personnage" element={<Fiche surDeconnexion={deconnecter} />} />

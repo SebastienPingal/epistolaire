@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select ranger_pli($1, $2, $3) as \"range!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "range!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "11d3641b457b523c2e3da47acc9580b6e4dd63ab805a71558288663d19002053"
+}

@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update dossiers set nom = $3 where id = $1 and proprietaire_id = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "215ece91cc1502a2d898ea1a125a619d29851b9ec96b738f9ce765ea04c344d6"
+}

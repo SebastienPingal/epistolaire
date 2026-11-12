@@ -1,0 +1,84 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        select\n            r.id                                   as \"id!\",\n            r.gabarit                              as \"gabarit!: Gabarit\",\n            (r.arrive_le at time zone g.fuseau)::date as \"arrive_jour!\",\n            r.ouvert_le is not null                as \"ouvert!\",\n            r.dossier_id,\n            r.sceau_nom,\n            r.sceau_initiales,\n            r.sceau_image,\n            r.sceau_etat                           as \"sceau_etat: EtatSceau\",\n            case when r.ouvert_le is not null then r.signature_nom end as \"signature?\",\n            case when r.ouvert_le is not null then left(r.contenu->>'texte', $3) end\n                                                   as \"debut?\"\n        from plis_recus r\n        cross join reglages g\n        where r.destinataire_id = $1\n          and r.dossier_id is not distinct from $2::uuid\n        order by r.arrive_le desc, r.id\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "gabarit!: Gabarit",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "arrive_jour!",
+        "type_info": "Date"
+      },
+      {
+        "ordinal": 3,
+        "name": "ouvert!",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 4,
+        "name": "dossier_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 5,
+        "name": "sceau_nom",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "sceau_initiales",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "sceau_image",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "sceau_etat: EtatSceau",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "signature?",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "debut?",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      true,
+      true,
+      null,
+      null,
+      true,
+      true,
+      true,
+      true,
+      true,
+      null,
+      null
+    ]
+  },
+  "hash": "c289e84d73a071ef847894b28c75b6fdb4a36e32ab498d0b5ab52039966e04a4"
+}

@@ -1,7 +1,7 @@
 # Guide de fonctionnement
 
 Ce guide décrit comment le site est construit. Il est mis à jour à la fin de chaque étape de `PLAN.md`.
-État décrit : étape 6 (le MJ traite).
+État décrit : étape 7 (le joueur reçoit).
 
 ## Vue d'ensemble
 
@@ -19,8 +19,9 @@ Les deux sont hébergés sur Vercel. L'interface est un ensemble de fichiers sta
 | `api/main.rs` | Le point d'entrée du serveur sur Vercel |
 | `src/` | Le serveur : routeur, accès à la base, logique du jeu |
 | `src/modele.rs` | Le vocabulaire du jeu : gabarits, états d'un pli, d'un sceau… |
-| `src/acces/joueur/` | La porte des joueurs : écritoire, fiche, courrier reçu |
-| `src/acces/mj/` | La porte du MJ : la file, les plis en route, la plume des PNJ, puis personnages, écritures, sceaux, réglages |
+| `src/calendrier.rs` | Le calendrier du jeu : d'un jour réel à une date du jeu |
+| `src/acces/joueur/` | La porte des joueurs : écritoire, fiche, courrier reçu, dossiers |
+| `src/acces/mj/` | La porte du MJ : la file, les plis en route, la plume des PNJ, les plis détruits, puis personnages, écritures, sceaux, réglages |
 | `src/connexion.rs` | La connexion par e-mail et les sessions |
 | `src/courriel.rs` | L'envoi des e-mails |
 | `src/erreur.rs` | Les erreurs renvoyées à l'interface |
@@ -31,7 +32,8 @@ Les deux sont hébergés sur Vercel. L'interface est un ensemble de fichiers sta
 | `web/src/ecrans/` | L'écran de connexion |
 | `web/src/joueur/` | Les écrans des joueurs |
 | `web/src/mj/` | Les écrans du MJ |
-| `web/src/composants/` | Les éléments du jeu réutilisés partout : une écriture, un cachet |
+| `web/src/composants/` | Les éléments du jeu réutilisés partout : une écriture, un cachet, une enveloppe |
+| `web/src/composants/gabarits/` | Le rendu des gabarits, tels qu'on les lit : pour l'instant le billet |
 | `web/src/types/` | Les types générés depuis le serveur. Ne pas les modifier à la main |
 | `web/src/components/ui/` | Les composants shadcn/ui, ajoutés au fur et à mesure |
 | `web/src/theme/` | Le thème : apparence et vocabulaire de l'univers |
@@ -71,6 +73,7 @@ Toute autre adresse renvoie l'interface.
 | `informations`, `pli_informations` | Les informations étiquetées par le MJ |
 | `evenements` | L'historique de chaque pli |
 | `reglages` | Les réglages généraux, sur une seule ligne |
+| `bonds_calendrier` | Les bonds dans le temps décidés par le MJ, chacun avec son jour |
 
 ### Un pli, des exemplaires
 
@@ -91,7 +94,21 @@ Un joueur ne lit jamais les tables `plis` et `exemplaires`. Tout son courrier re
 - leur version livrée, sans l'original ni le vrai auteur ;
 - les altérations que ce destinataire a remarquées, et aucune autre.
 
-Dans le code, le dossier `src/acces/joueur/` est le seul endroit qui répond à un joueur. Pour le courrier reçu, il ne lit que cette vue ; pour ses brouillons, que la vue `brouillons`. Le contenu d'un pli n'est transmis qu'à son ouverture : tant qu'il est fermé, le joueur n'en reçoit que l'extérieur.
+Un pli détruit par son destinataire sort aussi de la vue, sans quitter la base.
+
+Dans le code, le dossier `src/acces/joueur/` est le seul endroit qui répond à un joueur. Pour le courrier reçu, il ne lit que cette vue ; pour ses brouillons, que la vue `brouillons`. Le contenu d'un pli n'est transmis qu'à son ouverture : tant qu'il est fermé, le joueur n'en reçoit que l'extérieur (son sceau et sa date d'arrivée).
+
+Le joueur ne modifie jamais la table `exemplaires` lui-même. Ses trois gestes sur son courrier sont des fonctions de la base, qui vérifient d'abord, par la vue `plis_recus`, que le pli est arrivé, qu'il n'est pas détruit et qu'il est bien à lui :
+
+| Fonction | Ce qu'elle fait |
+|---|---|
+| `ouvrir_pli(pli, joueur)` | Marque le pli ouvert. À la première ouverture seulement, ajoute au carnet le propriétaire d'origine du sceau et la personne qui signe, s'il ne les connaît pas |
+| `ranger_pli(pli, joueur, dossier)` | Range le pli dans un dossier de ce joueur, ou dans la Réception (dossier vide) |
+| `detruire_pli(pli, joueur)` | Détruit le pli pour ce joueur, et en garde la trace dans l'historique du pli |
+
+Chacune renvoie « faux » sans rien changer si le pli n'est pas à ce joueur ou pas encore arrivé ; le serveur répond alors « introuvable ».
+
+Aucun horodatage de pli ne part vers un joueur : seulement des dates du jeu, sans heure. Le tri par heure d'arrivée se fait dans la base.
 
 ### Les migrations
 
@@ -133,6 +150,23 @@ Une lettre envoyée disparaît pour son auteur. Ce n'est pas un simple masquage 
 
 Chaque envoi compte, quel que soit le destinataire et quoi que la lettre devienne ensuite. Les brouillons ne comptent pas. Le compte repart de zéro le lundi à 0 h, heure de Paris. Le serveur le vérifie au moment de l'envoi : l'écran ne fait que l'annoncer.
 
+### Recevoir
+
+1. **La Réception** reçoit tout le courrier arrivé, le plus récent en premier. Chaque pli y est une petite enveloppe : son cachet (ou sa pliure s'il n'est pas scellé), sa date d'arrivée dans le calendrier du jeu, et un point tant qu'il n'est pas ouvert. Une fois ouvert, la ligne montre aussi qui signe, ou les premiers mots d'une lettre anonyme.
+2. **Ouvrir un pli** se fait d'un geste. Au doigt : glisser le cachet de côté (sur 40 % de la largeur du pli ; en dessous, il revient à sa place). À la souris : maintenir le bouton 0,8 seconde, pendant qu'un anneau se remplit autour du cachet. Au clavier : maintenir Espace ou Entrée. Le cachet se brise en deux, puis la lettre paraît. Si l'appareil demande des animations réduites, rien ne bouge : la lettre paraît dès le geste fini.
+3. **La lettre** se lit dans l'écriture de son auteur, avec la date où elle a été écrite en haut, la signature et le cachet en bas, puis la date de réception.
+4. **Le carnet** s'enrichit à la première ouverture : le propriétaire d'origine du sceau et la personne qui signe y entrent, s'ils n'y sont pas déjà.
+5. **Les dossiers** : le joueur en crée (30 au plus), les renomme, y range ses plis et les en ressort. Un pli n'est jamais qu'à un seul endroit. Le mode « Choisir » permet de ranger ou de détruire plusieurs plis d'un coup.
+6. **Détruire** : un pli, plusieurs, ou tout un dossier. Supprimer un dossier qui contient des plis les détruit avec lui, après un avertissement. Le pli disparaît pour le joueur, mais la base le garde, et le MJ le voit dans « Détruites ». Le carnet, lui, ne perd rien.
+
+### Le calendrier du jeu
+
+Un jour réel vaut un jour de jeu. Le « premier jour du jeu » (un réglage du MJ) vaut le « 1er jour du 1er mois, an 1 ». Ensuite, les mois ont la longueur des vrais mois, comme si l'an 1 commençait un 1er janvier. Le jour change à minuit, heure de Paris.
+
+Le MJ fait des bonds dans le temps : « 10 jours passent, à partir de tel jour ». Un bond ne compte qu'à partir de son jour, si bien qu'un pli reçu avant garde la date qu'il avait.
+
+Le calcul est dans `src/calendrier.rs`, avec ses tests. Le serveur lit les réglages et les bonds une fois par requête, puis convertit chaque date. L'ancienne colonne `reglages.calendrier_bonds` (un total unique) est remplacée par la table `bonds_calendrier` et n'est plus lue.
+
 ## L'espace du MJ
 
 Le MJ arrive sur un espace à part, avec un menu en deux parties : le courrier, et la préparation de la partie. Sa page d'accueil est la file À traiter.
@@ -168,16 +202,20 @@ Le MJ choisit un PNJ (ou en crée un), un destinataire, et écrit un billet. Les
 
 Le MJ n'écrit qu'au nom d'un PNJ. Ses lettres ne comptent dans aucun quota.
 
+### Détruites
+
+La liste des plis que les joueurs ont détruits, le plus récent en premier : qui l'avait reçu, de qui il venait, quand il a été détruit, depuis quel dossier, et s'il avait été lu. Le pli s'y lit dans la version que le joueur avait reçue. L'écran Correspondances (étape 13) reprendra ces informations.
+
 ### L'historique
 
-Chaque geste du MJ sur un pli (traitement, changement de date ou de destinataire, copie, mise à l'écart) ajoute une ligne à la table `evenements`, avec l'état d'avant et d'après. Rien n'y est jamais effacé. Cet historique sera affiché à l'étape 13.
+Chaque geste du MJ sur un pli (traitement, changement de date ou de destinataire, copie, mise à l'écart), et chaque destruction par un joueur, ajoute une ligne à la table `evenements`, avec l'état d'avant et d'après. Rien n'y est jamais effacé. Cet historique sera affiché à l'étape 13.
 
 ### La préparation
 
 - **Personnages** : créer les personnages des joueurs et les PNJ, remplir leur fiche, donner à chaque joueur son adresse e-mail (c'est ce qui lui ouvre le site), choisir son écriture, tenir son carnet d'adresses.
 - **Écritures** : voir les 14 écritures fournies, les renommer, marquer celles qui sont génériques.
 - **Sceaux** : créer des sceaux, changer leur nom gravé ou leurs initiales, les faire changer de mains.
-- **Réglages** : longueur d'un billet, quota, délai et hasard de livraison, calendrier.
+- **Réglages** : longueur d'un billet, quota, délai et hasard de livraison, premier jour du jeu. En bas, « Le temps du jeu » : la date du jeu d'aujourd'hui, et les bonds dans le temps (ajouter, retirer).
 
 Toutes les adresses de cet espace commencent par `/api/mj` côté serveur, et chacune vérifie que c'est bien le MJ qui demande. Un joueur connecté qui essaierait d'y entrer est refusé.
 
@@ -198,7 +236,9 @@ Un sceau est un objet, avec un nom gravé qui ne change pas quand il change de m
 
 ## Les essais
 
-Le dossier `essais/` contient des parcours qui utilisent le site comme le ferait une personne, dans un vrai navigateur : se connecter, préparer la partie en MJ, écrire et envoyer en joueur, traiter la file et suivre les plis en route en MJ. Ils vérifient aussi ce qui ne doit pas être possible : lire une lettre envoyée, lire le brouillon d'un autre, entrer chez le MJ en étant joueur, dépasser son quota, traiter deux fois la même lettre, modifier un pli arrivé.
+Le dossier `essais/` contient des parcours qui utilisent le site comme le ferait une personne, dans un vrai navigateur : se connecter, préparer la partie en MJ, écrire et envoyer en joueur, traiter la file et suivre les plis en route en MJ, recevoir, ouvrir, ranger et détruire en joueur. Ils vérifient aussi ce qui ne doit pas être possible : lire une lettre envoyée, lire le brouillon d'un autre, entrer chez le MJ en étant joueur, dépasser son quota, traiter deux fois la même lettre, modifier un pli arrivé, ouvrir un pli pas encore arrivé ou celui d'un autre, toucher aux dossiers d'un autre.
+
+Le geste d'ouverture au doigt est essayé avec de vrais événements tactiles envoyés au navigateur.
 
 Ils tournent contre une base locale, jamais contre la base en ligne.
 

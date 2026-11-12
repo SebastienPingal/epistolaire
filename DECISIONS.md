@@ -1,7 +1,7 @@
 # Jeu de rôle épistolaire : décisions de conception
 
 Ce document est tenu à jour au fil des échanges de conception.
-Dernière mise à jour : 12 novembre, avant l'étape 7 (calendrier, carnet, notifications, ordre du lancement).
+Dernière mise à jour : 12 novembre, pendant l'étape 7 (bonds datés, dossiers, destruction des plis).
 
 ## Avancement
 
@@ -48,6 +48,9 @@ Dernière mise à jour : 12 novembre, avant l'étape 7 (calendrier, carnet, noti
 - Tout le courrier reçu arrive dans le dossier Réception, par ordre d'arrivée, gazette comprise.
 - Chaque pli arrive fermé, et l'ouvrir est un moment soigné.
 - Le joueur crée ses propres dossiers pour ranger ses plis. Un pli ne se trouve qu'à un seul endroit à la fois.
+- Le joueur déplace librement ses plis, d'un dossier à l'autre et jusque dans la Réception. Il peut en déplacer plusieurs d'un coup, en mode choix (décidé le 12 novembre).
+- Le joueur peut détruire un pli reçu : un par un, plusieurs d'un coup en mode choix, ou en supprimant un dossier. Supprimer un dossier qui contient des plis les détruit avec lui, et un message le prévient avant. C'est un moyen de faire disparaître des preuves (décidé le 12 novembre).
+- Un pli détruit disparaît pour le joueur, mais pas pour le MJ : la base le garde, et le MJ le voit dans une liste « Détruites », avec la date et le dossier d'où il a été détruit. Le carnet du joueur garde les contacts appris en l'ouvrant.
 - Une lettre est un objet physique : l'expéditeur n'en garde aucune copie, et l'envoi est définitif.
 - Le brouillon est sauvegardé automatiquement tant que la lettre n'est pas envoyée.
 - Un joueur peut avoir plusieurs brouillons en cours (20 au plus).
@@ -153,6 +156,7 @@ Dernière mise à jour : 12 novembre, avant l'étape 7 (calendrier, carnet, noti
   - **Personnages** ;
   - **Correspondances**, avec l'original et la version livrée côte à côte ;
   - **Chronologie**, avec des filtres et une recherche.
+- En attendant l'écran Correspondances (étape 13), une liste « Détruites » montre les plis que les joueurs ont détruits.
 - Informations étiquetées : le MJ crée des informations et les rattache aux plis. Le site montre qui les a reçues et ouvertes, par quel chemin elles ont circulé, et ce que sait chaque personnage.
 
 ## Administration
@@ -188,7 +192,7 @@ Dernière mise à jour : 12 novembre, avant l'étape 7 (calendrier, carnet, noti
 | Sceau | Image ; nom gravé du propriétaire d'origine ; détenteur actuel | Son détenteur sait qu'il le possède. Les autres le voient sur les plis |
 | Contact de carnet | Pour un joueur : un personnage, avec une qualité facultative | Ce joueur seulement |
 | Pli | Auteur réel ; destinataire visé ; gabarit ; version originale (texte, sceau, signature, date d'envoi) ; état ; informations rattachées ; historique | Le MJ |
-| Exemplaire | Ce que reçoit un destinataire précis : version livrée ; ce qu'il a remarqué ; date de livraison ; ouvert ou non ; dossier | Son destinataire, une fois livré, et seulement la version livrée. Le MJ |
+| Exemplaire | Ce que reçoit un destinataire précis : version livrée ; ce qu'il a remarqué ; date de livraison ; ouvert ou non ; dossier ; détruit ou non | Son destinataire, une fois livré, et seulement la version livrée. Le MJ |
 | Numéro de gazette | Date de parution ; articles et lettres retenues. Un exemplaire par joueur | Chaque joueur, son exemplaire |
 | Dossier | Un nom et des exemplaires rangés. La Réception est le dossier par défaut | Son joueur |
 | Information | Un intitulé, des notes, les plis qui la contiennent | Le MJ |
@@ -218,6 +222,7 @@ Dernière mise à jour : 12 novembre, avant l'étape 7 (calendrier, carnet, noti
   - **rapport** : titre, auteur, rubriques répétables ;
   - **carte ou illustration** : image, titre, légende.
 - Le calendrier : un jour réel vaut un jour de jeu, avec des bonds dans le temps décidés par le MJ.
+- Un bond compte à partir de son jour : les plis reçus avant gardent leur date (décidé le 12 novembre). Le MJ choisit le jour du bond, aujourd'hui par défaut, et peut retirer un bond.
 - Dans l'habillage neutre, les mois sont numérotés : « 12e jour du 3e mois, an 1 ».
 - Les mois ont la longueur des vrais mois. Le premier jour du jeu est le « 1er jour du 1er mois, an 1 », puis le temps avance comme dans le calendrier réel à partir d'un 1er janvier : le 1er mois a 31 jours, le 2e en a 28, et ainsi de suite. Le jour change à minuit, heure de Paris.
 - Seules les dates s'affichent, sans l'heure : date d'écriture sur la lettre, date d'arrivée dans la Réception.

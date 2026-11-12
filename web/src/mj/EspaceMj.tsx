@@ -1,5 +1,6 @@
 import {
   FeatherIcon,
+  FlameIcon,
   InboxIcon,
   LogOutIcon,
   PenLineIcon,
@@ -35,6 +36,7 @@ const COURRIER: Entree[] = [
   { chemin: '/mj/a-traiter', libelle: 'À traiter', Icone: InboxIcon },
   { chemin: '/mj/en-route', libelle: 'En route', Icone: SendIcon },
   { chemin: '/mj/ecrire', libelle: 'Écrire', Icone: FeatherIcon },
+  { chemin: '/mj/detruits', libelle: 'Détruites', Icone: FlameIcon },
 ];
 
 const PREPARATION: Entree[] = [

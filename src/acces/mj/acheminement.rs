@@ -62,6 +62,8 @@ pub(super) fn origine_pour(
 }
 
 /// Crée l'exemplaire d'un destinataire, dans la version que l'auteur a écrite.
+/// Quand le pli est signé, l'exemplaire retient qui signe : c'est ce qui ajoutera
+/// l'auteur au carnet du destinataire, à l'ouverture.
 ///
 /// Un PNJ n'attend pas son courrier : c'est le MJ qui le lit pour lui. Son exemplaire
 /// est donc arrivé et ouvert aussitôt, quelle que soit la date demandée.
@@ -78,7 +80,7 @@ pub(super) async fn poser_exemplaire(
         insert into exemplaires (
             pli_id, destinataire_id, origine,
             contenu, ecriture_id, sceau_id, sceau_etat,
-            signature_nom, signature_ecriture_id, signature_etat,
+            signature_nom, signature_ecriture_id, signature_etat, signature_personnage_id,
             acheminement, livraison_le, ouvert_le
         )
         select
@@ -88,6 +90,7 @@ pub(super) async fn poser_exemplaire(
             case when p.signe then a.nom end,
             case when p.signe then a.ecriture_id end,
             case when p.signe then 'intacte' else 'absente' end,
+            case when p.signe then a.id end,
             $4::text,
             case when d.genre = 'pnj' then now() else $5::timestamptz end,
             case when d.genre = 'pnj' and $4::text = 'en_route' then now() end

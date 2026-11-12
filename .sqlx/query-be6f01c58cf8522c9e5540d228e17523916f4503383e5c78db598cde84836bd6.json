@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        select count(*)::int as \"nombre!\"\n        from plis_recus\n        where destinataire_id = $1 and ouvert_le is null\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "nombre!",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "be6f01c58cf8522c9e5540d228e17523916f4503383e5c78db598cde84836bd6"
+}

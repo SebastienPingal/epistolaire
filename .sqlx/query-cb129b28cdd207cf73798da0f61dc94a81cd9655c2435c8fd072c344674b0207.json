@@ -1,0 +1,113 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        select\n            r.id                                   as \"id!\",\n            r.gabarit                              as \"gabarit!: Gabarit\",\n            (r.arrive_le at time zone g.fuseau)::date as \"arrive_jour!\",\n            (r.ecrit_le at time zone g.fuseau)::date  as \"ecrit_jour!\",\n            r.ouvert_le is not null                as \"ouvert!\",\n            r.dossier_id,\n            coalesce(r.contenu->>'texte', '')      as \"texte!\",\n            texte.police                           as \"police?\",\n            r.sceau_nom,\n            r.sceau_initiales,\n            r.sceau_image,\n            r.sceau_etat                           as \"sceau_etat: EtatSceau\",\n            r.signature_nom,\n            signature.police                       as \"signature_police?\",\n            r.passages_reecrits                    as \"passages!: Value\",\n            reecriture.police                      as \"police_reecriture?\"\n        from plis_recus r\n        cross join reglages g\n        left join ecritures texte on texte.id = r.ecriture_id\n        left join ecritures signature on signature.id = r.signature_ecriture_id\n        left join ecritures reecriture on reecriture.id = r.reecriture_ecriture_id\n        where r.id = $1 and r.destinataire_id = $2\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "gabarit!: Gabarit",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "arrive_jour!",
+        "type_info": "Date"
+      },
+      {
+        "ordinal": 3,
+        "name": "ecrit_jour!",
+        "type_info": "Date"
+      },
+      {
+        "ordinal": 4,
+        "name": "ouvert!",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 5,
+        "name": "dossier_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 6,
+        "name": "texte!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "police?",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "sceau_nom",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "sceau_initiales",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "sceau_image",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 11,
+        "name": "sceau_etat: EtatSceau",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 12,
+        "name": "signature_nom",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 13,
+        "name": "signature_police?",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 14,
+        "name": "passages!: Value",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 15,
+        "name": "police_reecriture?",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      true,
+      true,
+      null,
+      null,
+      null,
+      true,
+      null,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "cb129b28cdd207cf73798da0f61dc94a81cd9655c2435c8fd072c344674b0207"
+}

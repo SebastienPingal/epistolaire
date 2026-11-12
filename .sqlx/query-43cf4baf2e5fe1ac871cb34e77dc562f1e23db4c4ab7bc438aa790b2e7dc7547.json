@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "delete from bonds_calendrier where id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "43cf4baf2e5fe1ac871cb34e77dc562f1e23db4c4ab7bc438aa790b2e7dc7547"
+}

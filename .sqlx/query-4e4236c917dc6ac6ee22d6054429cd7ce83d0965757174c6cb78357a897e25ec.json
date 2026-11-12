@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            select calendrier_debut, (now() at time zone fuseau)::date as \"aujourd_hui!\"\n            from reglages\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "calendrier_debut",
+        "type_info": "Date"
+      },
+      {
+        "ordinal": 1,
+        "name": "aujourd_hui!",
+        "type_info": "Date"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      null
+    ]
+  },
+  "hash": "4e4236c917dc6ac6ee22d6054429cd7ce83d0965757174c6cb78357a897e25ec"
+}

@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        select\n            d.id,\n            d.nom,\n            (select count(*) from plis_recus r\n             where r.destinataire_id = d.proprietaire_id and r.dossier_id = d.id)::int as \"nombre!\"\n        from dossiers d\n        where d.proprietaire_id = $1\n        order by d.rang, lower(d.nom), d.cree_le\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "nom",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "nombre!",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      null
+    ]
+  },
+  "hash": "cf85407dfe789c1822763b76ea0f63be7e441f4badfa7be3d28dac95b1382bdb"
+}

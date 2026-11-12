@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select (now() at time zone fuseau)::date as \"jour!\" from reglages",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "jour!",
+        "type_info": "Date"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "e3a527d463ba36d0f637fae8f5391cffdac2bf2380c36764f64a6e8ed73640c7"
+}
