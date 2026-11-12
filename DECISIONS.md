@@ -1,7 +1,7 @@
 # Jeu de rôle épistolaire : décisions de conception
 
 Ce document est tenu à jour au fil des échanges de conception.
-Dernière mise à jour : conception terminée (sujets 1 à 9), réalisation commencée (voir `PLAN.md`).
+Dernière mise à jour : 12 novembre, avant l'étape 7 (calendrier, carnet, notifications, ordre du lancement).
 
 ## Avancement
 
@@ -41,6 +41,7 @@ Dernière mise à jour : conception terminée (sujets 1 à 9), réalisation comm
 - Six gabarits à cases fixes.
 - Notifications par le navigateur et par e-mail, au choix de chaque joueur.
 - Lancement visé fin novembre ou début décembre.
+- La partie commence dès que la boucle du courrier, les notifications et le filet de sécurité sont prêts (étapes 7 à 9), après une répétition générale. Les outils du MJ (altérations, documents, gazette, vue complète) et les finitions arrivent ensuite, pendant la partie.
 
 ## Espace joueur
 
@@ -62,7 +63,7 @@ Dernière mise à jour : conception terminée (sujets 1 à 9), réalisation comm
 
 - Une lettre a un seul destinataire. La gazette compte comme un destinataire.
 - Chaque joueur a un carnet d'adresses, rempli et enrichi par le MJ.
-- Le carnet ajoute automatiquement les personnages nommés par le sceau ou par la signature. Sinon, le MJ peut les ajouter à la main.
+- Le carnet ajoute automatiquement les personnages nommés par le sceau ou par la signature, au moment où le joueur ouvre le pli, s'ils sont visibles et qu'il ne les connaît pas déjà. Sinon, le MJ peut les ajouter à la main.
 - Une option « autre destinataire » permet d'écrire une adresse libre, que le MJ interprète.
 - Un joueur ne peut choisir comme destinataire qu'un personnage de son carnet. Pour quelqu'un d'autre, il passe par « autre destinataire ».
 - Le rôle d'un personnage est décrit sur sa fiche. Dans chaque carnet, le MJ peut donner une qualité à un contact (« Bertrand, trésorier »). Chacun ne sait que ce qu'on lui a dit.
@@ -218,6 +219,7 @@ Dernière mise à jour : conception terminée (sujets 1 à 9), réalisation comm
   - **carte ou illustration** : image, titre, légende.
 - Le calendrier : un jour réel vaut un jour de jeu, avec des bonds dans le temps décidés par le MJ.
 - Dans l'habillage neutre, les mois sont numérotés : « 12e jour du 3e mois, an 1 ».
+- Les mois ont la longueur des vrais mois. Le premier jour du jeu est le « 1er jour du 1er mois, an 1 », puis le temps avance comme dans le calendrier réel à partir d'un 1er janvier : le 1er mois a 31 jours, le 2e en a 28, et ainsi de suite. Le jour change à minuit, heure de Paris.
 - Seules les dates s'affichent, sans l'heure : date d'écriture sur la lettre, date d'arrivée dans la Réception.
 - L'ouverture d'un pli se fait par un geste : glisser le doigt sur le sceau sur téléphone, cliquer et maintenir sur ordinateur. Un pli sans sceau se déplie de la même façon.
 - Le son est désactivé par défaut. Les animations sont réduites si l'appareil le demande.
@@ -232,6 +234,7 @@ Dernière mise à jour : conception terminée (sujets 1 à 9), réalisation comm
   - un e-mail de rappel quand un pli reste non ouvert, après un délai qu'il fixe.
 - Le choix est proposé à la première connexion et modifiable à tout moment. Sans choix, le joueur ne voit que la pastille sur le site.
 - Pas d'heures de silence : la notification part dès l'arrivée du pli, même la nuit.
+- Le pli arrive à l'heure exacte ; son alerte peut partir jusqu'à 15 minutes après. On se contente des planifications de Vercel, sans service extérieur.
 - Le MJ choisit ses canaux comme les joueurs. Il est prévenu quand une lettre arrive dans sa file, et alerté quand une date proposée approche sans validation.
 
 ## Technique
@@ -244,6 +247,7 @@ Dernière mise à jour : conception terminée (sujets 1 à 9), réalisation comm
   - Livraison à l'heure exacte : aucune tâche ne « livre ». Un pli est livré dès que sa date est passée, et le serveur le calcule à chaque lecture.
   - Notifications à l'heure : planifications Vercel (Schedules), avec un contrôle régulier en secours. Les limites du plan restent à vérifier.
   - Images : Vercel Blob.
+- Le site installable arrive avec les notifications (étape 8) : sur iPhone, les notifications du navigateur n'existent que pour un site installé.
   - Région : Francfort (`fra1`) pour le serveur, et la même région pour la base, afin qu'ils soient proches l'un de l'autre et des joueurs.
 - E-mails : envoyés depuis la boîte Gmail du MJ, par SMTP, pour l'instant. Pas de nom de domaine : le site reste en `.vercel.app`. Les identifiants ont été repris du projet Vercel `congres-champetre`.
 - Le compte du MJ est celui de l'adresse de cette boîte d'envoi.
@@ -291,4 +295,4 @@ Dernière mise à jour : conception terminée (sujets 1 à 9), réalisation comm
 
 - Pour l'instant, les aperçus et le site en ligne partagent la même base. Avant le lancement, les aperçus doivent travailler sur une copie (branches Neon), pour qu'un essai ne touche jamais les vraies lettres.
 - Les limites des offres gratuites (Vercel Schedules, Neon, Blob), à vérifier à la mise en place.
-- Sur l'offre gratuite de Vercel, une planification peut partir avec jusqu'à 15 minutes de retard. Le pli, lui, arrive à l'heure exacte ; seule sa notification pourrait tarder. À trancher à l'étape des notifications.
+- Les planifications de Vercel permises par l'offre de l'équipe : à vérifier au début de l'étape 8. Si elles ne permettent pas une alerte dans le quart d'heure, la question revient au MJ.

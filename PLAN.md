@@ -4,6 +4,8 @@ Ce plan découpe la V1 décrite dans `DECISIONS.md` en étapes.
 Chaque étape est livrée sur une branche, donc sur une adresse d'aperçu, et regardée avant de passer à la suivante.
 L'ordre met la boucle du courrier au plus tôt : tout le reste s'appuie dessus.
 
+Le détail de chaque étape restante (tâches, questions à poser au MJ, parcours d'essai, points à relire) est dans `docs/taches/`, avec un mode d'emploi commun : `docs/taches/README.md`.
+
 ## Avancement
 
 | # | Étape | État |
@@ -13,15 +15,18 @@ L'ordre met la boucle du courrier au plus tôt : tout le reste s'appuie dessus.
 | 3 | Connexion | Fait |
 | 4 | Administration minimale | Fait |
 | 5 | Le joueur écrit | Fait |
-| 6 | Le MJ traite | En aperçu, à valider |
+| 6 | Le MJ traite | Validé par le MJ, à mettre en ligne |
 | 7 | Le joueur reçoit | À faire (la prochaine) |
-| 8 | Notifications | À faire |
+| 8 | Notifications et site installable | À faire |
 | 9 | Filet de sécurité | À faire |
-| 10 | Altérations | À faire |
-| 11 | Documents et gabarits | À faire |
-| 12 | Gazette | À faire |
-| 13 | Vue MJ complète | À faire |
-| 14 | Finitions et répétition générale | À faire |
+| L | Lancement : répétition générale et mise en jeu | À faire |
+| 10 | Altérations | Après le lancement |
+| 11 | Documents et gabarits | Après le lancement |
+| 12 | Gazette | Après le lancement |
+| 13 | Vue MJ complète | Après le lancement |
+| 14 | Finitions | Après le lancement |
+
+La partie commence dès que les étapes 7, 8 et 9 sont en ligne, après la répétition générale (décision du MJ, 12 novembre). Les outils du MJ arrivent ensuite, pendant la partie.
 
 ## Façon de travailler
 
@@ -32,22 +37,13 @@ L'ordre met la boucle du courrier au plus tôt : tout le reste s'appuie dessus.
 
 ## Pour reprendre
 
-État au moment de cette note : les étapes 1 à 5 sont en ligne sur `main`. L'étape 6 est sur sa branche, en aperçu : elle attend la validation du MJ avant d'aller sur `main`. La suivante est l'étape 7.
+État au moment de cette note (12 novembre) :
 
-Les six questions de l'étape 6 sont tranchées et notées dans `DECISIONS.md`, section « Traitement par le MJ ».
+- les étapes 1 à 5 sont en ligne sur `main` ;
+- l'étape 6 est validée par le MJ, sur la branche `claude/site-epistolaire-etape-6-lhm8fk`. Sa mise en ligne (`git push origin claude/site-epistolaire-etape-6-lhm8fk:main`) a été refusée à Claude faute de permission : le MJ doit l'autoriser ou la faire ;
+- la suivante est l'étape 7 : lire `docs/taches/README.md`, puis `docs/taches/07-le-joueur-recoit.md`.
 
-### Avant de coder l'étape 7, à demander au MJ
-
-- **Calendrier du jeu** : la longueur des mois (« 12e jour du 3e mois, an 1 »). Proposition : des mois de 30 jours.
-- **Carnet automatique** : le carnet ajoute les personnages nommés par le sceau ou la signature. À l'arrivée du pli, ou à son ouverture ? Proposition : à l'ouverture.
-- **Geste d'ouverture** : jusqu'où soigner l'animation dès cette étape, et que montrer d'un pli fermé sans sceau.
-- **Dossiers** : un pli rangé peut-il revenir dans la Réception ? Un dossier non vide peut-il être supprimé ?
-
-### À régler avant le lancement
-
-- Les aperçus et le site en ligne partagent la même base. Activer les branches Neon par aperçu, puis vider les données d'essai.
-- Sur l'offre gratuite de Vercel, une planification peut partir avec 15 minutes de retard : à trancher à l'étape 8.
-- Le format du calendrier du jeu (« 12e jour du 3e mois, an 1 ») : longueur des mois à fixer à l'étape 7.
+Les questions à poser au MJ avant chaque étape sont dans sa fiche, avec une réponse recommandée. Celles qui sont déjà tranchées (calendrier, carnet, retard des notifications, ordre du lancement) sont dans `DECISIONS.md`.
 
 ---
 
@@ -123,7 +119,9 @@ On voit : une lettre fait le tour complet. C'est le premier moment où le jeu s'
 
 ## Nécessaire pour jouer en vrai
 
-### 8. Notifications
+### 8. Notifications et site installable
+
+Le site installable est avancé ici depuis l'étape 9 : sur iPhone, les notifications du navigateur n'existent que pour un site installé.
 
 - La pastille sur le site.
 - L'e-mail à chaque arrivée, et l'e-mail de rappel.
@@ -135,7 +133,17 @@ On voit : une lettre fait le tour complet. C'est le premier moment où le jeu s'
 
 - Les tests automatiques de confidentialité : un joueur ne reçoit jamais ce qu'il ne doit pas voir.
 - La sauvegarde quotidienne de la base, conservée 30 jours.
-- Le site installable sur téléphone.
+- La vérification du site installé sur de vrais téléphones (le site installable est fait à l'étape 8).
+
+### L. Lancement : répétition générale et mise en jeu
+
+- Les aperçus travaillent sur leur propre base (branches Neon) : un essai ne touche plus les vraies lettres.
+- Le site en ligne vérifié : accès sans compte Vercel, variables, tâches planifiées, limites gratuites.
+- La base en ligne sauvegardée, puis nettoyée des essais, avec l'accord du MJ.
+- Une partie d'essai sur le site en ligne, avec des comptes fictifs.
+- La vraie partie préparée, et le message d'accueil des joueurs.
+
+On voit : la partie commence.
 
 ## Les outils du MJ
 
@@ -167,11 +175,10 @@ On voit : une lettre fait le tour complet. C'est le premier moment où le jeu s'
 - La fonction « Voir comme ».
 - Les notes privées.
 
-## Lancement
+## Pendant la partie
 
-### 14. Finitions et répétition générale
+### 14. Finitions
 
 - Le choix de l'écriture et du sceau par le joueur, validé par le MJ.
 - La taille du texte, les animations réduites, le son.
 - Le guide de fonctionnement, complet.
-- Une partie d'essai avec des comptes fictifs, puis la mise en ligne.

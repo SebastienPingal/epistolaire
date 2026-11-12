@@ -8,6 +8,7 @@ Claude développe et maintient tout le code. Le MJ (propriétaire du repo) déci
 - `DECISIONS.md` : ce que fait le site, et pourquoi. C'est la référence. Toute décision nouvelle y est notée.
 - `PLAN.md` : les étapes de réalisation et leur état.
 - `docs/FONCTIONNEMENT.md` : comment le site est construit, lancé et déployé.
+- `docs/taches/` : le détail de chaque étape restante. Commencer par `docs/taches/README.md`, le mode d'emploi d'une étape, puis la fiche de l'étape.
 
 ## Façon de travailler avec le MJ
 
