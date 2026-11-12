@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        update preferences_notification set navigateur = false\n        where compte_id = $1\n          and not exists (select 1 from abonnements_navigateur where compte_id = $1)\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "6a1fc3778e527d9324f292ba2c13c0fca5d04715583671ae3441c156d9bc4121"
+}

@@ -27,6 +27,8 @@ Claude développe et maintient tout le code. Le MJ (propriétaire du repo) déci
 - **Porte des joueurs** : tout ce qui répond à un joueur est dans `src/acces/joueur/`, sous `/api/joueur`, et chaque traitement prend un `Joueur` en paramètre. Le courrier reçu ne se lit que dans la vue `plis_recus`, et ne se modifie que par les fonctions SQL `ouvrir_pli`, `ranger_pli` et `detruire_pli`. Ses propres lettres ne se lisent et ne se modifient que dans la vue `brouillons`. Ses dossiers se lisent et s'écrivent directement, toujours filtrés sur son personnage. Ne jamais lire `plis` ou `exemplaires` pour répondre à un joueur. Deux exceptions, dans `ecritoire.rs` : compter les envois de la semaine, et l'envoi lui-même.
 - **Dates des joueurs** : un joueur ne reçoit jamais d'horodatage de pli, seulement des dates du jeu (`DateJeu`, `src/calendrier.rs`). Le jour réel se calcule en SQL à Paris : `(horodatage at time zone r.fuseau)::date`.
 - **Porte du MJ** : tout ce qui est réservé au MJ est dans `src/acces/mj/`, sous `/api/mj`, et chaque traitement prend un `Mj` en paramètre.
+- **Porte des tâches** : les tâches planifiées sont dans `src/taches/`, sous `/api/taches`. Chacune prend une `Planification`, qui exige l'en-tête `Authorization: Bearer <CRON_SECRET>`. Hors du site en ligne (`VERCEL_ENV` différent de `production`), rien ne part vers un joueur : le message est écrit dans le journal (`src/notifications/envoi.rs`).
+- **Notifications** : un message ne dit jamais qui écrit ni ce qui est écrit. Les mots que les joueurs lisent hors du site (e-mails, notifications) sont dans `src/theme.rs`, pendant serveur de `web/src/theme/neutre.ts`. On marque ce qui est signalé avant d'envoyer, sous verrou.
 - **Exemplaires** : un exemplaire ne se crée que par `poser_exemplaire` (`src/acces/mj/acheminement.rs`), qui recopie la version écrite par l'auteur. Tout geste du MJ sur un pli ajoute une ligne à son historique avec `noter`. Le MJ ne modifie plus un exemplaire arrivé.
 - **SQL** : requêtes vérifiées à la compilation (`sqlx::query!`). Après tout changement de requête ou de migration, relancer `cargo sqlx prepare` et commiter `.sqlx/`.
 - **Types de l'interface** : générés depuis Rust (`ts-rs`) dans `web/src/types/`. Ne jamais les écrire à la main ; relancer `cargo test` pour les régénérer.
@@ -74,9 +76,11 @@ essais/lancer.sh preparation-mj
 essais/lancer.sh ecrire
 essais/lancer.sh traiter
 essais/lancer.sh recevoir
+essais/lancer.sh notifications
 ```
 
 - Chaque étape ajoute son parcours, et met à jour les anciens quand un écran change.
+- À la première connexion d'un compte, l'écran du choix des notifications passe avant tout : les parcours le franchissent avec `surveillerPremierChoix` (`essais/commun.cjs`).
 - Sans identifiants SMTP en local, les e-mails sont écrits dans le journal du serveur : les parcours y lisent les codes de connexion.
 - `essais/vue-plis-recus.sql` vérifie ce que la vue des joueurs laisse voir d'un pli altéré.
 - Regarder aussi les captures d'écran (`essais/sortie/`), au format téléphone d'abord.

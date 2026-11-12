@@ -1,0 +1,11 @@
+<!-- L'icône du site installé, thème neutre : un cachet de cire qui porte une enveloppe.
+     Les PNG de web/public/icones/ en sont tirés par web/scripts/icones.cjs. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#f6f1e7"/>
+  <g id="cachet">
+    <circle cx="256" cy="256" r="196" fill="#7a2e2e"/>
+    <circle cx="256" cy="256" r="160" fill="none" stroke="#f6f1e7" stroke-opacity="0.45" stroke-width="6"/>
+    <rect x="164" y="190" width="184" height="132" rx="12" fill="none" stroke="#f6f1e7" stroke-width="16"/>
+    <polyline points="168,198 256,266 344,198" fill="none" stroke="#f6f1e7" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

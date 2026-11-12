@@ -23,7 +23,7 @@ pub struct Courriel {
 }
 
 /// Le nom d'expéditeur que voient les joueurs.
-const NOM_EXPEDITEUR: &str = "Correspondance";
+const NOM_EXPEDITEUR: &str = crate::theme::NOM_DU_SITE;
 
 pub async fn envoyer(courriel: Courriel) -> Result<(), Erreur> {
     let Ok(hote) = std::env::var("SMTP_HOST") else {

@@ -1,4 +1,5 @@
 const { chromium } = require('playwright');
+const { surveillerPremierChoix } = require('./commun.cjs');
 const fs = require('fs');
 const [dossier, journal] = process.argv.slice(2);
 const dernier = (re) => { const m = [...fs.readFileSync(journal, 'utf8').matchAll(re)]; return m.length ? m[m.length - 1][1] : null; };
@@ -18,7 +19,9 @@ const BERTRAND = '00000000-0000-0000-0000-0000000000a2', DAME = '00000000-0000-0
     await p.click('button[type=submit]');
     await p.waitForSelector('text=Code à 6 chiffres');
     await p.waitForTimeout(400);
+    const passer = surveillerPremierChoix(p);
     await p.locator('input[autocomplete="one-time-code"]').pressSequentially(dernier(/saisissez ce code : (\d{6})/g));
+    await passer();
     await p.waitForURL('**/reception');
     return { p, erreurs };
   };

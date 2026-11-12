@@ -19,6 +19,7 @@ pub mod courrier;
 mod dossiers;
 mod ecritoire;
 mod fiche;
+mod notifications;
 
 use axum::Router;
 use axum::routing::{get, post, put};
@@ -51,4 +52,11 @@ pub fn routes() -> Router {
         )
         // Le personnage.
         .route("/fiche", get(fiche::lire))
+        // Être prévenu.
+        .route("/pastille", get(notifications::pastille))
+        .route("/notifications", get(notifications::lire).put(notifications::choisir))
+        .route(
+            "/abonnements",
+            post(notifications::abonner).delete(notifications::desabonner),
+        )
 }

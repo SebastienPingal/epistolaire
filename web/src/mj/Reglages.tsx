@@ -12,6 +12,7 @@ import type { NouveauBond } from '@/types/NouveauBond';
 import type { Reglages as ReglagesServeur } from '@/types/Reglages';
 
 import { Attente, Champ, Entete, Section } from './commun';
+import { SectionNotificationsMj } from './Notifications';
 
 export function Reglages() {
   const { donnees, erreur } = useLecture<ReglagesServeur>('/mj/reglages');
@@ -22,6 +23,7 @@ export function Reglages() {
     <>
       <Formulaire reglages={donnees} surEnregistre={calendrier.recharger} />
       <TempsDuJeu calendrier={calendrier.donnees} recharger={calendrier.recharger} />
+      <SectionNotificationsMj />
     </>
   );
 }

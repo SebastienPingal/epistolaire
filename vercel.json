@@ -5,6 +5,26 @@
   "installCommand": "npm --prefix web ci",
   "buildCommand": "npm --prefix web run build",
   "outputDirectory": "web/dist",
+  "schedules": {
+    "notifications": {
+      "schedule": "*/15 * * * *",
+      "path": "/api/taches/notifications",
+      "requestMethod": "GET"
+    }
+  },
+  "headers": [
+    {
+      "source": "/sw.js",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache" },
+        { "key": "Service-Worker-Allowed", "value": "/" }
+      ]
+    },
+    {
+      "source": "/manifest.webmanifest",
+      "headers": [{ "key": "Content-Type", "value": "application/manifest+json" }]
+    }
+  ],
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/main" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }

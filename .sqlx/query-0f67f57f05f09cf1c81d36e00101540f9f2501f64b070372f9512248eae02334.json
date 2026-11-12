@@ -1,0 +1,38 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        select\n            c.id,\n            c.email::text as \"email!\",\n            coalesce(pr.navigateur, false) as \"navigateur!\",\n            coalesce(pr.email_arrivee, false) as \"email_arrivee!\"\n        from comptes c\n        left join preferences_notification pr on pr.compte_id = c.id\n        where c.role = 'mj'\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "email!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "navigateur!",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 3,
+        "name": "email_arrivee!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "0f67f57f05f09cf1c81d36e00101540f9f2501f64b070372f9512248eae02334"
+}

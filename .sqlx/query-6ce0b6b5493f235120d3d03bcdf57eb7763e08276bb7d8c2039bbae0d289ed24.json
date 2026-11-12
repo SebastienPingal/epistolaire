@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select count(*)::int as \"nombre!\" from plis where etat = 'a_traiter'",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "nombre!",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "6ce0b6b5493f235120d3d03bcdf57eb7763e08276bb7d8c2039bbae0d289ed24"
+}

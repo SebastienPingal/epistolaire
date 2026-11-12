@@ -168,4 +168,35 @@ export const vocabulaire = {
     nonRenseigne: 'Rien pour l’instant.',
     deconnexion: 'Se déconnecter',
   },
+
+  notifications: {
+    titrePremierChoix: 'Être prévenu',
+    introPremierChoix:
+      'Quand un pli arrive pour vous, le site peut vous prévenir. Le message dit seulement qu’un pli vous attend : jamais qui l’envoie, ni ce qu’il contient.',
+    titreFiche: 'Être prévenu',
+    navigateur: 'Une notification sur cet appareil',
+    navigateurAide: 'À chaque arrivée, même site fermé.',
+    navigateurAilleurs: 'Également activées sur un autre de vos appareils.',
+    aInstaller:
+      'Sur iPhone et iPad, il faut d’abord ajouter le site à l’écran d’accueil : touchez le bouton Partager, puis « Sur l’écran d’accueil ». Ouvrez ensuite le site depuis son icône, et revenez ici.',
+    refuse:
+      'Les notifications sont bloquées pour ce site. Vous pouvez les autoriser dans les réglages de votre navigateur.',
+    indisponible: 'Ce navigateur ne peut pas recevoir de notifications.',
+    emailArrivee: 'Un e-mail à chaque arrivée',
+    emailRappel: 'Un e-mail de rappel quand un pli reste fermé',
+    delaiRappel: 'Rappel au bout de',
+    delais: [
+      { heures: 6, libelle: '6 heures' },
+      { heures: 12, libelle: '12 heures' },
+      { heures: 24, libelle: 'un jour' },
+      { heures: 48, libelle: 'deux jours' },
+      { heures: 72, libelle: 'trois jours' },
+      { heures: 168, libelle: 'une semaine' },
+    ],
+    sansRien: 'Sans rien de tout cela, seul un point sur la Réception vous signale un pli.',
+    enregistrer: 'Enregistrer',
+    plusTard: 'Plus tard',
+    enregistre: 'C’est noté.',
+    pastille: 'Un pli vous attend',
+  },
 } as const;

@@ -50,6 +50,10 @@ tower = "0.5"
 ts-rs = { version = "12", features = ["chrono-impl", "uuid-impl"] }
 uuid = { version = "1", features = ["v7", "serde"] }
 vercel_runtime = { version = "2", features = ["axum"] }
+p256 = { version = "0.13", features = ["ecdh", "ecdsa"] }
+hkdf = "0.12"
+aes-gcm = "0.10"
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json"] }
 
 [profile.release]
 codegen-units = 1

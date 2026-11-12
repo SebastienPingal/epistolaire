@@ -9,7 +9,7 @@ import {
   StampIcon,
   UsersIcon,
 } from 'lucide-react';
-import type { ComponentType } from 'react';
+import { type ComponentType, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router';
 
 import {
@@ -22,13 +22,19 @@ import {
   SidebarHeader,
   SidebarInset,
   SidebarMenu,
+  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarProvider,
   SidebarTrigger,
   useSidebar,
 } from '@/components/ui/sidebar';
+import { usePastille } from '@/outils/notifications';
+import { useLecture } from '@/outils/useLecture';
 import { vocabulaire } from '@/theme/neutre';
+import type { MesNotifications } from '@/types/MesNotifications';
+
+import { PremierChoixMj } from './Notifications';
 
 type Entree = { chemin: string; libelle: string; Icone: ComponentType };
 
@@ -48,12 +54,22 @@ const PREPARATION: Entree[] = [
 
 type Props = { surDeconnexion: () => void };
 
-/** Le cadre de tous les écrans du MJ : un menu, et l'écran choisi. */
+/**
+ * Le cadre de tous les écrans du MJ : un menu, et l'écran choisi.
+ * À la première connexion, le choix des notifications passe avant.
+ */
 export function EspaceMj({ surDeconnexion }: Props) {
   const { pathname } = useLocation();
   const courante = [...COURRIER, ...PREPARATION].find((entree) =>
     pathname.startsWith(entree.chemin),
   );
+  const aTraiter = usePastille('mj');
+  const notifications = useLecture<MesNotifications>('/mj/notifications');
+  const [choixFait, setChoixFait] = useState(false);
+
+  if (notifications.donnees && !notifications.donnees.choisi && !choixFait) {
+    return <PremierChoixMj surFin={() => setChoixFait(true)} />;
+  }
 
   return (
     <SidebarProvider>
@@ -65,7 +81,7 @@ export function EspaceMj({ surDeconnexion }: Props) {
           <SidebarGroup>
             <SidebarGroupLabel>Courrier</SidebarGroupLabel>
             <SidebarGroupContent>
-              <Menu entrees={COURRIER} />
+              <Menu entrees={COURRIER} pastilles={{ '/mj/a-traiter': aTraiter }} />
             </SidebarGroupContent>
           </SidebarGroup>
           <SidebarGroup>
@@ -91,6 +107,14 @@ export function EspaceMj({ surDeconnexion }: Props) {
         <header className="flex h-12 items-center gap-2 border-b px-3 md:hidden">
           <SidebarTrigger />
           <span className="font-medium">{courante?.libelle}</span>
+          {aTraiter > 0 && !pathname.startsWith('/mj/a-traiter') && (
+            <NavLink
+              to="/mj/a-traiter"
+              className="ml-auto flex min-h-11 items-center px-2 text-sm text-muted-foreground"
+            >
+              {aTraiter} à traiter
+            </NavLink>
+          )}
         </header>
         <div className="mx-auto w-full max-w-3xl px-4 py-6 md:py-10">
           <Outlet />
@@ -100,7 +124,14 @@ export function EspaceMj({ surDeconnexion }: Props) {
   );
 }
 
-function Menu({ entrees }: { entrees: Entree[] }) {
+function Menu({
+  entrees,
+  pastilles = {},
+}: {
+  entrees: Entree[];
+  /** Le nombre à afficher à côté d'une entrée, s'il n'est pas nul. */
+  pastilles?: Record<string, number>;
+}) {
   const { pathname } = useLocation();
   const { setOpenMobile } = useSidebar();
 
@@ -116,6 +147,9 @@ function Menu({ entrees }: { entrees: Entree[] }) {
             <Icone />
             <span>{libelle}</span>
           </SidebarMenuButton>
+          {(pastilles[chemin] ?? 0) > 0 && (
+            <SidebarMenuBadge data-pastille>{pastilles[chemin]}</SidebarMenuBadge>
+          )}
         </SidebarMenuItem>
       ))}
     </SidebarMenu>

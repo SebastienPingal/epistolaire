@@ -1,7 +1,7 @@
 # Jeu de rôle épistolaire : décisions de conception
 
 Ce document est tenu à jour au fil des échanges de conception.
-Dernière mise à jour : 12 novembre, pendant l'étape 7 (bonds datés, dossiers, destruction des plis).
+Dernière mise à jour : 12 novembre, au début de l'étape 8 (notifications).
 
 ## Avancement
 
@@ -240,8 +240,14 @@ Dernière mise à jour : 12 novembre, pendant l'étape 7 (bonds datés, dossiers
   - un e-mail de rappel quand un pli reste non ouvert, après un délai qu'il fixe.
 - Le choix est proposé à la première connexion et modifiable à tout moment. Sans choix, le joueur ne voit que la pastille sur le site.
 - Pas d'heures de silence : la notification part dès l'arrivée du pli, même la nuit.
-- Le pli arrive à l'heure exacte ; son alerte peut partir jusqu'à 15 minutes après. On se contente des planifications de Vercel, sans service extérieur.
+- Le pli arrive à l'heure exacte ; son alerte part un peu après. On se contente des planifications de Vercel, sans service extérieur.
+- L'offre gratuite de Vercel ne permet qu'un passage toutes les 15 minutes, décalé au hasard de 0 à 15 minutes. L'alerte part donc le plus souvent 5 à 20 minutes après l'arrivée du pli, et au pire 30 minutes après. Le MJ l'accepte (décidé le 12 novembre), plutôt qu'un service extérieur ou une offre payante.
+- Ces passages consomment environ 3 000 des 5 000 exécutions mensuelles permises par l'offre gratuite.
 - Le MJ choisit ses canaux comme les joueurs. Il est prévenu quand une lettre arrive dans sa file, et alerté quand une date proposée approche sans validation.
+- L'alerte du MJ part 2 heures avant la date de livraison proposée, si la lettre n'est pas encore traitée. Les lettres pour la gazette n'en déclenchent pas : elles attendent un numéro (décidé le 12 novembre).
+- Plusieurs lettres arrivées dans la file entre deux passages font un seul message au MJ : « 3 nouvelles lettres à traiter » (décidé le 12 novembre).
+- Le rappel d'un pli resté fermé part après 24 heures par défaut. Chaque joueur peut changer ce délai (décidé le 12 novembre).
+- La pastille de la Réception est un simple point, sans nombre (décidé le 12 novembre). Celle du MJ, sur À traiter, donne le nombre de lettres.
 
 ## Technique
 
@@ -251,7 +257,7 @@ Dernière mise à jour : 12 novembre, pendant l'étape 7 (bonds datés, dossiers
   - Interface React : fichiers statiques servis par Vercel.
   - Serveur Rust : une seule fonction Vercel (runtime Rust officiel) avec un routeur interne, sans processus permanent.
   - Livraison à l'heure exacte : aucune tâche ne « livre ». Un pli est livré dès que sa date est passée, et le serveur le calcule à chaque lecture.
-  - Notifications à l'heure : planifications Vercel (Schedules), avec un contrôle régulier en secours. Les limites du plan restent à vérifier.
+  - Notifications : une planification Vercel (Schedules) passe toutes les 15 minutes et envoie ce qui est dû. Elle ne tourne que sur le site en ligne.
   - Images : Vercel Blob.
 - Le site installable arrive avec les notifications (étape 8) : sur iPhone, les notifications du navigateur n'existent que pour un site installé.
   - Région : Francfort (`fra1`) pour le serveur, et la même région pour la base, afin qu'ils soient proches l'un de l'autre et des joueurs.
@@ -300,5 +306,4 @@ Dernière mise à jour : 12 novembre, pendant l'étape 7 (bonds datés, dossiers
 ## Questions ouvertes
 
 - Pour l'instant, les aperçus et le site en ligne partagent la même base. Avant le lancement, les aperçus doivent travailler sur une copie (branches Neon), pour qu'un essai ne touche jamais les vraies lettres.
-- Les limites des offres gratuites (Vercel Schedules, Neon, Blob), à vérifier à la mise en place.
-- Les planifications de Vercel permises par l'offre de l'équipe : à vérifier au début de l'étape 8. Si elles ne permettent pas une alerte dans le quart d'heure, la question revient au MJ.
+- Les limites des offres gratuites (Neon, Blob), à vérifier à la mise en place. Celles des planifications Vercel sont connues : voir « Notifications ».

@@ -1,4 +1,5 @@
-//! Les deux portes d'accès aux données.
+//! Les deux portes d'accès aux données des personnes connectées. (La troisième, celle des
+//! tâches planifiées, n'a personne derrière elle : voir `crate::taches`.)
 //!
 //! Tout traitement qui répond à quelqu'un passe par l'une des deux :
 //!

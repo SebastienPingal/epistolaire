@@ -8,6 +8,7 @@ mod detruits;
 mod ecritures;
 mod en_route;
 mod file;
+mod notifications;
 mod personnages;
 mod plume;
 mod reglages;
@@ -50,6 +51,13 @@ pub fn routes() -> Router {
         .route("/reglages/calendrier", get(reglages::calendrier))
         .route("/reglages/bonds", post(reglages::ajouter_bond))
         .route("/reglages/bonds/{id}", delete(reglages::retirer_bond))
+        // Être prévenu.
+        .route("/pastille", get(notifications::pastille))
+        .route("/notifications", get(notifications::lire).put(notifications::choisir))
+        .route(
+            "/abonnements",
+            post(notifications::abonner).delete(notifications::desabonner),
+        )
 }
 
 /// Un texte obligatoire : sans espaces autour, non vide, de longueur raisonnable.

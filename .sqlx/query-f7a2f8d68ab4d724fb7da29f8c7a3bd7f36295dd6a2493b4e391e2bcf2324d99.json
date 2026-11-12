@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        insert into preferences_notification (compte_id, navigateur) values ($1, true)\n        on conflict (compte_id) do update set navigateur = true\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "f7a2f8d68ab4d724fb7da29f8c7a3bd7f36295dd6a2493b4e391e2bcf2324d99"
+}

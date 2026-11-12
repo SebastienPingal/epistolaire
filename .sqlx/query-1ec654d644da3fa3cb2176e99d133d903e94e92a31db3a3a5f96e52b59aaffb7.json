@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        insert into abonnements_navigateur (compte_id, endpoint, cle_p256dh, cle_auth)\n        values ($1, $2, $3, $4)\n        on conflict (endpoint) do update set\n            compte_id = excluded.compte_id,\n            cle_p256dh = excluded.cle_p256dh,\n            cle_auth = excluded.cle_auth\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "1ec654d644da3fa3cb2176e99d133d903e94e92a31db3a3a5f96e52b59aaffb7"
+}

@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select id, endpoint, cle_p256dh, cle_auth from abonnements_navigateur where compte_id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "endpoint",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "cle_p256dh",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "cle_auth",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "433eaad94f772ad23a8851ce9a4d94b8d4955023b9715e43a728890903125340"
+}

@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "delete from abonnements_navigateur where compte_id = $1 and endpoint = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "de1499d3fb05a73fecb485670e1991ab5f4deed7e180b64a2bf69bfb3527fa1f"
+}

@@ -1,0 +1,52 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        select\n            pr.choisi_le is not null as \"choisi!\",\n            coalesce(pr.navigateur, false) as \"navigateur!\",\n            coalesce(pr.email_arrivee, false) as \"email_arrivee!\",\n            coalesce(pr.email_rappel, false) as \"email_rappel!\",\n            coalesce(pr.rappel_heures, 24) as \"rappel_heures!\",\n            (select count(*)::int from abonnements_navigateur a where a.compte_id = c.id)\n                as \"navigateurs_abonnes!\"\n        from comptes c\n        left join preferences_notification pr on pr.compte_id = c.id\n        where c.id = $1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "choisi!",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 1,
+        "name": "navigateur!",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 2,
+        "name": "email_arrivee!",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 3,
+        "name": "email_rappel!",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 4,
+        "name": "rappel_heures!",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 5,
+        "name": "navigateurs_abonnes!",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "ed60cebba5d41d8d9fe3f60f6c8f3f7dde8665ff98decb6a09da808356407417"
+}

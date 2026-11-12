@@ -9,7 +9,10 @@ pub mod connexion;
 pub mod courriel;
 pub mod erreur;
 pub mod modele;
+pub mod notifications;
 pub mod sante;
+pub mod taches;
+pub mod theme;
 
 use axum::http::{StatusCode, Uri};
 use axum::routing::{get, post};
@@ -24,13 +27,15 @@ pub fn routeur() -> Router {
         .route("/connexion/code", post(connexion::verifier_code))
         .route("/connexion/lien", post(connexion::verifier_lien))
         .route("/deconnexion", post(connexion::deconnecter))
-        .route("/moi", get(connexion::moi));
+        .route("/moi", get(connexion::moi))
+        .route("/notifications/cle", get(notifications::cle));
 
     Router::new()
         .nest(
             "/api",
             api.nest("/mj", acces::mj::routes())
-                .nest("/joueur", acces::joueur::routes()),
+                .nest("/joueur", acces::joueur::routes())
+                .nest("/taches", taches::routes()),
         )
         .fallback(introuvable)
 }

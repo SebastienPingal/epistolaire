@@ -1,7 +1,7 @@
 # Guide de fonctionnement
 
 Ce guide décrit comment le site est construit. Il est mis à jour à la fin de chaque étape de `PLAN.md`.
-État décrit : étape 7 (le joueur reçoit).
+État décrit : étape 8 (notifications et site installable), en aperçu.
 
 ## Vue d'ensemble
 
@@ -22,6 +22,9 @@ Les deux sont hébergés sur Vercel. L'interface est un ensemble de fichiers sta
 | `src/calendrier.rs` | Le calendrier du jeu : d'un jour réel à une date du jeu |
 | `src/acces/joueur/` | La porte des joueurs : écritoire, fiche, courrier reçu, dossiers |
 | `src/acces/mj/` | La porte du MJ : la file, les plis en route, la plume des PNJ, les plis détruits, puis personnages, écritures, sceaux, réglages |
+| `src/taches/` | La troisième porte : les tâches planifiées, appelées par Vercel |
+| `src/notifications/` | Les choix de notification de chaque compte, ses navigateurs abonnés, l'envoi, et le chiffrement des notifications du navigateur |
+| `src/theme.rs` | Les mots que les joueurs lisent hors du site (e-mails, notifications) |
 | `src/connexion.rs` | La connexion par e-mail et les sessions |
 | `src/courriel.rs` | L'envoi des e-mails |
 | `src/erreur.rs` | Les erreurs renvoyées à l'interface |
@@ -36,7 +39,9 @@ Les deux sont hébergés sur Vercel. L'interface est un ensemble de fichiers sta
 | `web/src/composants/gabarits/` | Le rendu des gabarits, tels qu'on les lit : pour l'instant le billet |
 | `web/src/types/` | Les types générés depuis le serveur. Ne pas les modifier à la main |
 | `web/src/components/ui/` | Les composants shadcn/ui, ajoutés au fur et à mesure |
-| `web/src/theme/` | Le thème : apparence et vocabulaire de l'univers |
+| `web/src/theme/` | Le thème : apparence et vocabulaire de l'univers, et la source de l'icône du site |
+| `web/public/` | Ce qui est servi tel quel : le manifeste du site installable, ses icônes, le service worker |
+| `web/scripts/icones.cjs` | Tire les icônes PNG de leur source SVG |
 | `web/src/index.css` | Le branchement de Tailwind, de shadcn/ui et du thème |
 | `vercel.json` | La configuration de l'hébergement |
 
@@ -74,6 +79,8 @@ Toute autre adresse renvoie l'interface.
 | `evenements` | L'historique de chaque pli |
 | `reglages` | Les réglages généraux, sur une seule ligne |
 | `bonds_calendrier` | Les bonds dans le temps décidés par le MJ, chacun avec son jour |
+| `preferences_notification` | Les canaux choisis par chaque compte |
+| `abonnements_navigateur` | Les navigateurs abonnés aux notifications, plusieurs par compte |
 
 ### Un pli, des exemplaires
 
@@ -231,6 +238,50 @@ Deux joueurs ne peuvent pas avoir la même écriture : c'est la base elle-même 
 
 Un sceau est un objet, avec un nom gravé qui ne change pas quand il change de mains. À la création d'un personnage, le site propose de lui créer un sceau à son nom. Dans l'habillage neutre, un sceau est dessiné comme un simple cachet portant des initiales. L'import d'une image de sceau viendra avec les images des documents.
 
+## Les notifications
+
+### Ce que chacun choisit
+
+À la première connexion, avant tout le reste, un écran propose les canaux. « Plus tard » compte comme un choix : l'écran ne revient pas. On change d'avis ensuite dans la fiche du personnage (joueur) ou dans les Réglages, section « Mes notifications » (MJ).
+
+- **Une notification sur cet appareil.** Elle s'active appareil par appareil : le téléphone, puis l'ordinateur si on le veut. La permission du navigateur n'est demandée qu'au moment où la personne touche l'interrupteur. Sur iPhone et iPad, l'interrupteur reste grisé tant que le site n'est pas installé sur l'écran d'accueil, avec une phrase qui explique comment faire.
+- **Un e-mail à chaque arrivée** (pour le MJ : à chaque nouvelle lettre ou alerte).
+- **Un e-mail de rappel** quand un pli reste fermé (joueurs seulement), au bout d'un délai que le joueur choisit : un jour par défaut.
+
+Sans aucun canal, il reste la pastille : un point sur « Réception » pour un joueur, le nombre de lettres à côté d'« À traiter » pour le MJ. Elle se relit au changement d'écran, au retour sur l'onglet, et chaque minute. Sur le site installé, l'icône la porte aussi, là où le téléphone le permet.
+
+### La tâche planifiée
+
+Rien ne « livre » : un pli est arrivé dès que sa date est passée. Une tâche passe toutes les 15 minutes et prévient de ce qui est arrivé depuis son dernier passage. Sur l'offre gratuite de Vercel, ce passage est décalé au hasard de 0 à 15 minutes : une alerte part le plus souvent 5 à 20 minutes après l'arrivée, au pire 30 minutes.
+
+Elle est déclarée dans `vercel.json` (section `schedules`) et appelle `GET /api/taches/notifications`. Elle ne tourne que sur le site en ligne, pas sur les aperçus. En un passage :
+
+1. **Arrivées.** Les exemplaires arrivés et pas encore signalés sont marqués, puis chaque joueur concerné est prévenu une fois, selon ses choix. Un pli déjà ouvert, ou remis à un PNJ, ne déclenche rien.
+2. **Rappels.** Les plis restés fermés plus longtemps que le délai choisi : un e-mail par joueur, un seul rappel par pli.
+3. **Le MJ.** Les lettres arrivées dans sa file, et celles dont la date de livraison proposée est à moins de 2 heures sans qu'il les ait traitées (sauf les lettres à la gazette, qui attendent un numéro). Tout tient dans un seul message.
+
+Ce qui a été signalé est noté dans la base (`exemplaires.notifie_le`, `rappele_le` ; `plis.mj_prevenu_le`, `mj_alerte_le`). On marque **avant** d'envoyer, sous verrou : deux passages simultanés ne préviennent jamais deux fois. La migration a marqué tout ce qui existait déjà, pour que le premier passage n'envoie pas l'historique.
+
+**La garde.** Vercel joint à l'appel l'en-tête `Authorization: Bearer <CRON_SECRET>`. Sans ce secret, la tâche répond 401, même à un joueur ou au MJ connecté.
+
+**Hors du site en ligne** (aperçu, ou en local), rien ne part vers un joueur : l'e-mail ou la notification est écrit dans le journal du serveur à la place. Seul le MJ reçoit vraiment. Un essai ne prévient donc jamais un vrai joueur, même si les aperçus partagent la base du site en ligne.
+
+**Ce que dit un message.** « Un pli vous attend », avec l'adresse de la Réception. Jamais qui écrit, ni ce qui est écrit. Ces mots sont dans `src/theme.rs`.
+
+### Les notifications du navigateur
+
+Le navigateur qui s'abonne donne une adresse (celle du service de notifications de son fabricant : Google, Mozilla, Apple…) et deux clés. Le site chiffre chaque message pour ce seul navigateur (RFC 8291), et le signe avec sa paire de clés VAPID (RFC 8292) pour prouver au service qu'il vient bien de lui. Le chiffrement est écrit dans `src/notifications/chiffrement.rs` avec les bibliothèques RustCrypto : la bibliothèque `web-push` dépend d'OpenSSL, absent de la compilation sur Vercel. Un test le vérifie sur l'exemple de la RFC.
+
+Un abonnement que le service dit disparu (le navigateur s'est désabonné) est supprimé. Quand un compte n'a plus aucun navigateur abonné, le canal est coupé.
+
+Le service worker (`web/public/sw.js`) affiche la notification, et ouvre le bon écran quand on la touche. Plusieurs arrivées n'en font qu'une. Il ne met rien en cache : le site ne marche pas hors connexion.
+
+## Le site installé
+
+Le site s'installe sur l'écran d'accueil comme une application : manifeste `web/public/manifest.webmanifest`, icônes dans `web/public/icones/`, balises dans `web/index.html`. Sur iPhone, c'est la condition pour recevoir des notifications.
+
+L'icône est un cachet de cire qui porte une enveloppe, aux couleurs du thème neutre. Sa source est `web/src/theme/icone.svg` ; après l'avoir changée, relancer `node web/scripts/icones.cjs`.
+
 ## Les garde-fous automatiques
 
 - **Requêtes SQL vérifiées à la compilation.** Une requête qui ne correspond pas à la base empêche le site de se construire. La vérification s'appuie sur le dossier `.sqlx/`, donc elle marche aussi sur Vercel, sans base à portée de main.
@@ -241,6 +292,8 @@ Un sceau est un objet, avec un nom gravé qui ne change pas quand il change de m
 Le dossier `essais/` contient des parcours qui utilisent le site comme le ferait une personne, dans un vrai navigateur : se connecter, préparer la partie en MJ, écrire et envoyer en joueur, traiter la file et suivre les plis en route en MJ, recevoir, ouvrir, ranger et détruire en joueur. Ils vérifient aussi ce qui ne doit pas être possible : lire une lettre envoyée, lire le brouillon d'un autre, entrer chez le MJ en étant joueur, dépasser son quota, traiter deux fois la même lettre, modifier un pli arrivé, ouvrir un pli pas encore arrivé ou celui d'un autre, toucher aux dossiers d'un autre.
 
 Le geste d'ouverture au doigt est essayé avec de vrais événements tactiles envoyés au navigateur.
+
+Le parcours `notifications` appelle la tâche avec le secret d'essai, fait « arriver » des plis en avançant leur date, et remplace le service de notifications par un faux, qui déchiffre ce qu'il reçoit et vérifie la signature. Les autres parcours passent l'écran du premier choix en cliquant « Plus tard » (`essais/commun.cjs`).
 
 Ils tournent contre une base locale, jamais contre la base en ligne.
 
@@ -286,3 +339,9 @@ cargo sqlx prepare
 | `SMTP_FROM` | L'adresse d'expédition, si elle diffère de `SMTP_USER` (un alias). Facultatif |
 | `MJ_EMAIL` | L'adresse qui ouvre le compte du MJ, si ce n'est pas `SMTP_USER`. Facultatif |
 | `SITE_HOST` | Le nom de domaine du site, s'il ne finit pas par `.vercel.app`. Facultatif |
+| `CRON_SECRET` | Le secret que la planification joint à l'appel des tâches. Une longue valeur tirée au hasard. Obligatoire pour les notifications |
+| `VAPID_PUBLIC`, `VAPID_PRIVATE` | La paire de clés des notifications du navigateur. Sans elles, ce canal est indisponible ; les e-mails partent quand même |
+| `VAPID_SUJET` | L'adresse de contact donnée aux services de notifications : `mailto:` suivi d'une adresse |
+| `SITE_URL` | L'adresse du site, pour les liens des e-mails envoyés par la tâche. Facultatif : par défaut, celle que Vercel donne au site en ligne ou à l'aperçu |
+
+En local, `.env.exemple` donne un `CRON_SECRET` et une paire de clés VAPID d'essai, qui ne servent qu'aux essais.

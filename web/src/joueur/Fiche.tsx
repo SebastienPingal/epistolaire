@@ -6,6 +6,8 @@ import { useLecture } from '@/outils/useLecture';
 import { vocabulaire } from '@/theme/neutre';
 import type { MaFiche } from '@/types/MaFiche';
 
+import { ChoixDesNotifications } from './Notifications';
+
 const mots = vocabulaire.fiche;
 
 /** La fiche du personnage, telle que le MJ l'a rédigée. Le joueur la lit, sans la modifier. */
@@ -40,6 +42,9 @@ export function Fiche({ surDeconnexion }: { surDeconnexion: () => void }) {
           ))}
         </ul>
       )}
+
+      <h2 className="mt-10 mb-3 font-serif text-lg">{vocabulaire.notifications.titreFiche}</h2>
+      <ChoixDesNotifications />
 
       <Button variant="outline" className="mt-12 h-11" onClick={surDeconnexion}>
         {mots.deconnexion}

@@ -6,6 +6,8 @@
 #   essais/lancer.sh ecrire           l'écritoire du joueur
 #   essais/lancer.sh traiter          la file du MJ, les plis en route, la plume des PNJ
 #   essais/lancer.sh recevoir         la Réception, l'ouverture, les dossiers, le calendrier
+#   essais/lancer.sh notifications    le choix des canaux, la tâche planifiée, la pastille,
+#                                     les notifications du navigateur, le site installable
 #
 # Le script vide la base locale, y met le jeu de données du parcours, lance le serveur
 # et l'interface, déroule le parcours, puis arrête tout. Les captures d'écran et le
@@ -16,7 +18,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-parcours="${1:?Quel parcours ? connexion, preparation-mj, ecrire, traiter ou recevoir}"
+parcours="${1:?Quel parcours ? connexion, preparation-mj, ecrire, traiter, recevoir ou notifications}"
 sortie="${2:-essais/sortie}"
 export DATABASE_URL="${DATABASE_URL:-postgres://postgres:postgres@localhost:5432/epistolaire}"
 mkdir -p "$sortie"
@@ -34,6 +36,11 @@ arreter
 # Le fichier .env donne au serveur local le compte du MJ de l'essai (mj@exemple.fr)
 # et aucun identifiant SMTP : les e-mails vont donc dans le journal.
 [ -f .env ] || cp .env.exemple .env
+# Un .env plus ancien que l'étape 8 n'a pas le secret des tâches ni les clés d'essai :
+# on les reprend de .env.exemple.
+for variable in CRON_SECRET VAPID_PUBLIC VAPID_PRIVATE VAPID_SUJET; do
+    grep -q "^$variable=" .env || grep "^$variable=" .env.exemple >>.env
+done
 cargo run -q >"$sortie/serveur.log" 2>&1 &
 (cd web && npx vite --port 5173 >"../$sortie/vite.log" 2>&1) &
 for _ in $(seq 1 120); do

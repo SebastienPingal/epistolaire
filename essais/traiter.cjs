@@ -1,4 +1,5 @@
 const { chromium } = require('playwright');
+const { surveillerPremierChoix } = require('./commun.cjs');
 const fs = require('fs');
 const { execFileSync } = require('child_process');
 const [dossier, journal] = process.argv.slice(2);
@@ -23,7 +24,9 @@ const billet = (plus = {}) => ({ ecriture_id: null, texte: 'x', signe: true, sce
     await page.click('button[type=submit]');
     await page.waitForSelector('text=Code à 6 chiffres');
     await page.waitForTimeout(400);
+    const passer = surveillerPremierChoix(page);
     await page.locator('input[autocomplete="one-time-code"]').pressSequentially(dernier(/saisissez ce code : (\d{6})/g));
+    await passer();
   };
   const api = p.request;
   const file = async () => (await api.get(base + '/api/mj/a-traiter')).json();

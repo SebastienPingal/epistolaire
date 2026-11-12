@@ -1,0 +1,32 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        with dus as (\n            select e.id\n            from exemplaires e\n            join personnages p on p.id = e.destinataire_id\n            join preferences_notification pr on pr.compte_id = p.compte_id\n            where pr.email_rappel\n              and e.acheminement = 'en_route'\n              and e.notifie_le is not null\n              and e.ouvert_le is null\n              and e.detruit_le is null\n              and e.rappele_le is null\n              and e.livraison_le <= now() - make_interval(hours => pr.rappel_heures)\n            for update of e skip locked\n        ),\n        marques as (\n            update exemplaires e\n            set rappele_le = now()\n            from dus d\n            where e.id = d.id\n            returning e.destinataire_id\n        )\n        select distinct\n            c.id as \"compte_id!\",\n            c.email::text as \"email!\",\n            c.role as \"role!: Role\"\n        from marques m\n        join personnages p on p.id = m.destinataire_id\n        join comptes c on c.id = p.compte_id\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "compte_id!",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "email!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "role!: Role",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      null,
+      false
+    ]
+  },
+  "hash": "ca68662d57ac2cac21a0550d6c91c29b46dc50858c42d4125eb8fa6a44ae5713"
+}

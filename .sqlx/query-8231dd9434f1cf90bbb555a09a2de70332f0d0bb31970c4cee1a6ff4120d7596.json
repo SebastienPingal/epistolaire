@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        with proches as (\n            select id from plis\n            where etat = 'a_traiter'\n              and mj_alerte_le is null\n              and destinataire_genre is distinct from 'gazette'\n              and date_proposee <= now() + make_interval(mins => $1)\n            for update skip locked\n        )\n        update plis p set mj_alerte_le = now()\n        from proches x\n        where p.id = x.id\n        returning p.id\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "8231dd9434f1cf90bbb555a09a2de70332f0d0bb31970c4cee1a6ff4120d7596"
+}

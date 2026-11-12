@@ -17,7 +17,7 @@ Le détail de chaque étape restante (tâches, questions à poser au MJ, parcour
 | 5 | Le joueur écrit | Fait |
 | 6 | Le MJ traite | Fait |
 | 7 | Le joueur reçoit | Fait |
-| 8 | Notifications et site installable | À faire |
+| 8 | Notifications et site installable | En aperçu, à valider par le MJ |
 | 9 | Filet de sécurité | À faire |
 | L | Lancement : répétition générale et mise en jeu | À faire |
 | 10 | Altérations | Après le lancement |
@@ -37,12 +37,12 @@ La partie commence dès que les étapes 7, 8 et 9 sont en ligne, après la rép�
 
 ## Pour reprendre
 
-État au moment de cette note (12 novembre, après l'étape 7) :
+État au moment de cette note (12 novembre, étape 8 en aperçu) :
 
-- les étapes 1 à 7 sont en ligne sur `main`, avec le plan détaillé de la suite (`docs/taches/`). Les réponses du MJ à l'étape 7 (bonds datés, destruction des plis, mode choix, arrivée instantanée) sont dans `DECISIONS.md` ;
-- la suivante est l'étape 8 : lire `docs/taches/README.md`, puis `docs/taches/08-notifications.md`.
-
-Les questions à poser au MJ avant chaque étape sont dans sa fiche, avec une réponse recommandée. Celles qui sont déjà tranchées (calendrier, carnet, retard des notifications, ordre du lancement) sont dans `DECISIONS.md`.
+- les étapes 1 à 7 sont en ligne sur `main` ;
+- l'étape 8 est en aperçu sur sa branche. Les réponses du MJ (délai des alertes accepté jusqu'à 30 minutes, alerte 2 heures avant, message groupé, rappel à 24 heures, pastille en simple point) sont dans `DECISIONS.md` ;
+- restent pour la terminer : poser dans Vercel `CRON_SECRET` et les clés VAPID, l'essai réel avec le MJ (site installé, notification et e-mail reçus), puis vérifier sur le site en ligne que la planification passe bien toutes les 15 minutes ;
+- la suivante est l'étape 9 : lire `docs/taches/README.md`, puis `docs/taches/09-filet-de-securite.md`.
 
 ---
 

@@ -1,6 +1,7 @@
 // Parcours « recevoir » : la Réception, l'ouverture d'un pli, les dossiers, la destruction,
 // le carnet qui s'enrichit, et le calendrier du jeu.
 const { chromium } = require('playwright');
+const { surveillerPremierChoix } = require('./commun.cjs');
 const fs = require('fs');
 const { execFileSync } = require('child_process');
 const [dossier, journal] = process.argv.slice(2);
@@ -35,7 +36,9 @@ const HEURE = /\b\d{1,2}(:|\s?h\s?)\d{2}\b/;
     await page.click('button[type=submit]');
     await page.waitForSelector('text=Code à 6 chiffres');
     await page.waitForTimeout(400);
+    const passer = surveillerPremierChoix(page);
     await page.locator('input[autocomplete="one-time-code"]').pressSequentially(dernier(/saisissez ce code : (\d{6})/g));
+    await passer();
   };
   const lire = async (page, chemin) => (await page.request.get(base + '/api' + chemin)).json();
   const statut = async (requete) => (await requete).status();
