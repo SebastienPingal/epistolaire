@@ -177,7 +177,7 @@ La file contient les lettres envoyées par les joueurs, dans leur version origin
 
 Traiter une lettre, c'est décider de son sort. C'est à ce moment que ses exemplaires sont créés, et qu'elle quitte la file.
 
-- **Lettre à un joueur** : le bouton Valider la met en route en un clic, vers le destinataire visé, à la date proposée. Si cette date est passée, le pli arrive 10 minutes après la validation.
+- **Lettre à un joueur** : le bouton Valider la met en route en un clic, vers le destinataire visé, à la date proposée. Si cette date est passée, le pli arrive 10 minutes après la validation. Le bouton « Livrer maintenant » la fait arriver tout de suite.
 - **Ouvrir une lettre** permet de tout décider : le destinataire (le changer, c'est rediriger), des copies pour des tiers, la date, puis Livrer, Retenir ou Perdre.
 - **Lettre à un PNJ** : elle reste dans la file tant que le MJ n'y a pas répondu, ou ne l'a pas classée sans réponse. La réponse s'écrit sous la lettre. Elle part dans le même geste : si elle est refusée, rien n'est traité.
 - **Adresse libre** : le MJ choisit un personnage, ou crée un PNJ sans quitter l'écran. Le nom proposé est l'adresse écrite par le joueur.
@@ -189,6 +189,8 @@ Un PNJ ne « reçoit » pas à une date : c'est le MJ qui lit pour lui. Son exem
 ### En route
 
 Cet écran montre les exemplaires qui ne sont pas encore arrivés, le prochain en premier, puis ceux qui sont retenus, puis ceux qui sont perdus. Tant qu'un exemplaire n'est pas arrivé, le MJ peut changer sa date ou son destinataire, le retenir, le perdre, le remettre en route, ou en faire partir une copie pour un tiers. Une date placée dans le passé vaut « tout de suite ».
+
+Faire arriver une lettre instantanément : « Faire arriver maintenant » sur chaque pli d'En route (un pli retenu ou perdu est remis en route du même geste), et le bouton « Tout de suite » à côté de chaque champ de date (ouverture d'une lettre, plume des PNJ, modification d'un pli). Le serveur n'a rien de particulier à faire : il ramène toute date passée à l'instant où il reçoit la demande.
 
 Rien ne « livre » un pli : il est arrivé dès que sa date est passée. À partir de là, le serveur refuse toute modification.
 

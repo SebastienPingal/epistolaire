@@ -11,7 +11,14 @@ import type { LettreATraiter } from '@/types/LettreATraiter';
 import type { Traitement } from '@/types/Traitement';
 
 import { Attente, Confirmation, Entete, Section } from './commun';
-import { dateLisible, delaiLisible, Lettre, LienBouton, MINUTES_DE_RATTRAPAGE } from './courrier';
+import {
+  dateLisible,
+  delaiLisible,
+  Lettre,
+  LienBouton,
+  maintenant,
+  MINUTES_DE_RATTRAPAGE,
+} from './courrier';
 
 /** Le nom du destinataire que vise l'auteur, tel que le MJ le lit. */
 export function nomDuDestinataire(lettre: LettreATraiter): string {
@@ -45,14 +52,17 @@ export function ATraiter() {
     await recharger();
   }
 
-  /** La validation en un clic : au destinataire visé, à la date proposée. */
-  const valider = (lettre: LettreATraiter, succes: string) =>
+  /**
+   * La validation en un clic : au destinataire visé, à la date proposée,
+   * ou tout de suite (`immediat`).
+   */
+  const valider = (lettre: LettreATraiter, succes: string, immediat = false) =>
     agir(
       () =>
         appeler(`/mj/a-traiter/${lettre.id}/traitement`, {
           destinataire_id: null,
           decision: 'livrer',
-          livraison_le: null,
+          livraison_le: immediat ? maintenant() : null,
           copies: [],
           reponse: null,
         } satisfies Traitement),
@@ -78,6 +88,12 @@ export function ATraiter() {
           <>
             <Button onClick={() => valider(lettre, `En route vers ${nomDuDestinataire(lettre)}`)}>
               Valider
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => valider(lettre, `Arrivée chez ${nomDuDestinataire(lettre)}`, true)}
+            >
+              Livrer maintenant
             </Button>
             <LienBouton vers={ouvrir} variant="outline">
               Ouvrir

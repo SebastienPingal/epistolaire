@@ -28,6 +28,7 @@ import {
   dateLisible,
   delaiLisible,
   depuisChamp,
+  maintenant,
   Lettre,
   Pastille,
   versChamp,
@@ -49,10 +50,30 @@ export function EnRoute() {
     return <Attente erreur={erreur ?? personnages.erreur} />;
   }
 
+  /** Remet le pli en route s'il le faut, et le fait arriver tout de suite. */
+  async function faireArriver(exemplaire: ExemplaireMj) {
+    try {
+      await modifier(`/mj/exemplaires/${exemplaire.id}`, {
+        destinataire_id: exemplaire.destinataire_id,
+        acheminement: 'en_route',
+        livraison_le: maintenant(),
+      } satisfies ExemplaireModifie);
+      toast.success(`Arrivé chez ${exemplaire.destinataire_nom}`);
+    } catch (e) {
+      toast.error(messageErreur(e));
+    }
+    await recharger();
+  }
+
   const liste = (exemplaires: ExemplaireMj[]) => (
     <ul className="grid gap-4">
       {exemplaires.map((exemplaire) => (
-        <Ligne key={exemplaire.id} exemplaire={exemplaire} surOuverture={setOuvert} />
+        <Ligne
+          key={exemplaire.id}
+          exemplaire={exemplaire}
+          surOuverture={setOuvert}
+          surArrivee={faireArriver}
+        />
       ))}
     </ul>
   );
@@ -106,9 +127,11 @@ function titreDe(exemplaire: ExemplaireMj): string {
 function Ligne({
   exemplaire,
   surOuverture,
+  surArrivee,
 }: {
   exemplaire: ExemplaireMj;
   surOuverture: (exemplaire: ExemplaireMj) => void;
+  surArrivee: (exemplaire: ExemplaireMj) => void;
 }) {
   const { acheminement, livraison_le: date } = exemplaire;
   return (
@@ -132,9 +155,12 @@ function Ligne({
         sceau={exemplaire.sceau}
         tronquee
       />
-      <div className="mt-3">
+      <div className="mt-3 flex flex-wrap gap-2">
         <Button variant="outline" onClick={() => surOuverture(exemplaire)}>
           Modifier
+        </Button>
+        <Button variant="ghost" onClick={() => surArrivee(exemplaire)}>
+          Faire arriver maintenant
         </Button>
       </div>
     </li>
@@ -236,13 +262,23 @@ function Modification({
         </div>
 
         {sort === 'en_route' && (
-          <Champ libelle="Arrivée" pour="exemplaire-date">
-            <Input
-              id="exemplaire-date"
-              type="datetime-local"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-            />
+          <Champ
+            libelle="Arrivée"
+            pour="exemplaire-date"
+            aide="Une date passée, ou « Tout de suite », le fait arriver dès l'enregistrement."
+          >
+            <div className="flex flex-wrap gap-2">
+              <Input
+                id="exemplaire-date"
+                type="datetime-local"
+                className="flex-1"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+              />
+              <Button type="button" variant="outline" onClick={() => setDate(versChamp(maintenant()))}>
+                Tout de suite
+              </Button>
+            </div>
           </Champ>
         )}
 

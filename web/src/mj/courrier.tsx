@@ -88,6 +88,12 @@ export const MINUTES_DE_RATTRAPAGE = 10;
 
 export const dansQuelquesMinutes = () => new Date(Date.now() + MINUTES_DE_RATTRAPAGE * 60_000);
 
+/**
+ * « Tout de suite » : l'instant présent. Le serveur ramène toute date passée à l'instant
+ * où il reçoit la demande ; le pli arrive donc dès qu'elle est enregistrée.
+ */
+export const maintenant = () => new Date().toISOString();
+
 // ---------------------------------------------------------------------------
 // Un lien qui a l'allure d'un bouton
 // ---------------------------------------------------------------------------
@@ -429,15 +435,20 @@ export function ComposerBillet({
       <Champ
         libelle="Arrivée de ce billet"
         pour="billet-date"
-        aide="Vide : le délai habituel, plus ou moins le hasard. La date reste modifiable dans En route."
+        aide="Vide : le délai habituel, plus ou moins le hasard. Une date passée, ou « Tout de suite », le fait arriver dès l'envoi."
       >
-        <Input
-          id="billet-date"
-          type="datetime-local"
-          className="max-w-64"
-          value={billet.livraison_le ? versChamp(billet.livraison_le) : ''}
-          onChange={(e) => changer({ livraison_le: depuisChamp(e.target.value) })}
-        />
+        <div className="flex flex-wrap gap-2">
+          <Input
+            id="billet-date"
+            type="datetime-local"
+            className="max-w-64"
+            value={billet.livraison_le ? versChamp(billet.livraison_le) : ''}
+            onChange={(e) => changer({ livraison_le: depuisChamp(e.target.value) })}
+          />
+          <Button type="button" variant="outline" onClick={() => changer({ livraison_le: maintenant() })}>
+            Tout de suite
+          </Button>
+        </div>
       </Champ>
     </div>
   );

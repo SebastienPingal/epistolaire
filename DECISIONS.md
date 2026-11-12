@@ -101,6 +101,7 @@ Dernière mise à jour : 12 novembre, pendant l'étape 7 (bonds datés, dossiers
 - La file À traiter est triée par urgence : la lettre dont la date de livraison proposée est la plus proche vient en premier. Une alerte signale les dates déjà dépassées.
 - Une lettre validée après sa date proposée arrive 10 minutes après la validation, sauf si le MJ choisit une autre date.
 - Une date choisie dans le passé vaut « tout de suite ».
+- Le MJ peut faire arriver une lettre instantanément, en un clic : « Livrer maintenant » dans la file, « Faire arriver maintenant » dans En route, et « Tout de suite » partout où il choisit une date (décidé le 12 novembre).
 - Une lettre adressée à un joueur se valide en un clic : au destinataire visé, à la date proposée.
 - Une lettre adressée à un PNJ reste dans la file tant que le MJ n'y a pas répondu, ou ne l'a pas classée sans réponse. La réponse s'écrit sous la lettre, et part dans le même geste.
 - Un PNJ ne « reçoit » pas à une date : son exemplaire est arrivé et lu dès que le MJ répond ou classe. Il ne passe jamais par l'écran En route.

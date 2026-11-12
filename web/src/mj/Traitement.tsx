@@ -27,6 +27,7 @@ import {
   dansQuelquesMinutes,
   dateLisible,
   depuisChamp,
+  maintenant,
   Lettre,
   manqueAuBillet,
   MINUTES_DE_RATTRAPAGE,
@@ -297,16 +298,29 @@ function Decider({
                 : 'C’est la date proposée par le site. Changez-la librement.'
             }
           >
-            <Input
-              id="livraison"
-              type="datetime-local"
-              className="max-w-64"
-              value={date}
-              onChange={(e) => {
-                setDate(e.target.value);
-                setDateChoisie(e.target.value !== '');
-              }}
-            />
+            <div className="flex flex-wrap gap-2">
+              <Input
+                id="livraison"
+                type="datetime-local"
+                className="max-w-64"
+                value={date}
+                onChange={(e) => {
+                  setDate(e.target.value);
+                  setDateChoisie(e.target.value !== '');
+                }}
+              />
+              {/* Une date passée vaut « tout de suite » : le pli arrive dès la validation. */}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setDate(versChamp(maintenant()));
+                  setDateChoisie(true);
+                }}
+              >
+                Tout de suite
+              </Button>
+            </div>
           </Champ>
         </Section>
       )}

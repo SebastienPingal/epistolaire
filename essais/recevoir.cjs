@@ -212,19 +212,24 @@ const HEURE = /\b\d{1,2}(:|\s?h\s?)\d{2}\b/;
   ok('le dossier d\'Alix est intact', sql(`select nom from dossiers where id = '${intrigues}'`) === 'Intrigues');
   ok('un joueur n\'entre pas chez le MJ', await statut(bertrand.request.get(`${base}/api/mj/detruits`)) === 403 && await statut(bertrand.request.get(`${base}/api/mj/reglages/calendrier`)) === 403);
 
-  // 9. Le MJ met un pli en route ; il arrive dans la Réception
+  // 9. Le MJ fait arriver des plis instantanément
   const mj = await nouvellePage({ viewport: { width: 1200, height: 900 } });
   await connecter(mj, 'mj@exemple.fr');
   await mj.waitForURL('**/mj/a-traiter');
-  await mj.locator('li:has(h3:text-is("Clémence Hardy à Alix de Montfort"))').locator('button:text-is("Valider")').click();
-  await mj.waitForSelector('text=En route vers Alix de Montfort');
-  const enRoute = await lire(mj, '/mj/en-route');
-  const G = enRoute.en_route.find((x) => x.pli_id === id('d7')).id;
-  ok('validé par le MJ : pas encore dans la Réception', !(await lire(tel, '/joueur/reception')).plis.some((p) => p.id === G));
-  await mj.request.put(`${base}/api/mj/exemplaires/${G}`, { data: { destinataire_id: ALIX, acheminement: 'en_route', livraison_le: '2020-01-01T00:00:00Z' } });
+  await mj.locator('li:has(h3:text-is("Clémence Hardy à Alix de Montfort"))').locator('button:text-is("Livrer maintenant")').click();
+  await mj.waitForSelector('text=Arrivée chez Alix de Montfort');
+  const G = sql(`select id from exemplaires where pli_id = '${id('d7')}'`);
   reception = await lire(tel, '/joueur/reception');
-  ok('date avancée par le MJ : le pli arrive dans la Réception, en premier', reception.plis[0].id === G && reception.plis[0].arrive_le.jour === 10 && reception.non_ouverts === 1);
+  ok('« Livrer maintenant » dans la file : le pli est déjà dans la Réception, en premier', reception.plis[0].id === G && reception.plis[0].arrive_le.jour === 10 && reception.non_ouverts === 1);
   ok('poser_exemplaire retient qui signe', sql(`select signature_personnage_id from exemplaires where id = '${G}'`) === CLEMENCE);
+  await mj.goto(`${base}/mj/en-route`);
+  await mj.waitForSelector('h3');
+  ok('En route : (c) y est encore', (await lire(mj, '/mj/en-route')).en_route.some((x) => x.id === C));
+  await mj.locator('li:has(h3:text-is("Bertrand Lenoir à Alix de Montfort"))').first().locator('button:text-is("Faire arriver maintenant")').click();
+  await mj.waitForSelector('text=Arrivé chez Alix de Montfort');
+  reception = await lire(tel, '/joueur/reception');
+  ok('« Faire arriver maintenant » dans En route : (c) est dans la Réception', reception.plis.some((p) => p.id === C) && reception.non_ouverts === 2 && !(await lire(mj, '/mj/en-route')).en_route.some((x) => x.id === C));
+  ok('(d) retenu et (e) perdu restent où ils sont', sql(`select string_agg(acheminement, ',' order by id) from exemplaires where id in ('${D}', '${E}')`) === 'retenu,perdu');
 
   // 10. Animations réduites, et le clavier
   const calme = await nouvellePage({ viewport: { width: 1200, height: 900 }, reducedMotion: 'reduce' });
