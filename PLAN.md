@@ -15,7 +15,7 @@ Le détail de chaque étape restante (tâches, questions à poser au MJ, parcour
 | 3 | Connexion | Fait |
 | 4 | Administration minimale | Fait |
 | 5 | Le joueur écrit | Fait |
-| 6 | Le MJ traite | Validé par le MJ, à mettre en ligne |
+| 6 | Le MJ traite | Fait |
 | 7 | Le joueur reçoit | À faire (la prochaine) |
 | 8 | Notifications et site installable | À faire |
 | 9 | Filet de sécurité | À faire |
@@ -39,8 +39,7 @@ La partie commence dès que les étapes 7, 8 et 9 sont en ligne, après la rép�
 
 État au moment de cette note (12 novembre) :
 
-- les étapes 1 à 5 sont en ligne sur `main` ;
-- l'étape 6 est validée par le MJ, sur la branche `claude/site-epistolaire-etape-6-lhm8fk`. Sa mise en ligne (`git push origin claude/site-epistolaire-etape-6-lhm8fk:main`) a été refusée à Claude faute de permission : le MJ doit l'autoriser ou la faire ;
+- les étapes 1 à 6 sont en ligne sur `main`, avec le plan détaillé de la suite (`docs/taches/`) ;
 - la suivante est l'étape 7 : lire `docs/taches/README.md`, puis `docs/taches/07-le-joueur-recoit.md`.
 
 Les questions à poser au MJ avant chaque étape sont dans sa fiche, avec une réponse recommandée. Celles qui sont déjà tranchées (calendrier, carnet, retard des notifications, ordre du lancement) sont dans `DECISIONS.md`.
