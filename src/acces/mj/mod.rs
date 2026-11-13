@@ -54,6 +54,7 @@ pub fn routes() -> Router {
         // Être prévenu.
         .route("/pastille", get(notifications::pastille))
         .route("/notifications", get(notifications::lire).put(notifications::choisir))
+        .route("/notifications/essai", post(notifications::essayer))
         .route(
             "/abonnements",
             post(notifications::abonner).delete(notifications::desabonner),

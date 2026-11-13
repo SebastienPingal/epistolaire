@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 
-import { messageErreur } from '@/api';
+import { appeler, messageErreur } from '@/api';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { RefusNavigateur, useNotifications } from '@/outils/notifications';
+import type { EssaiNotifications } from '@/types/EssaiNotifications';
 import type { MesNotifications } from '@/types/MesNotifications';
 
 import { Attente, Entete, Section } from './commun';
@@ -80,6 +81,30 @@ function Formulaire({
     }
   }
 
+  async function essayer() {
+    setOccupe(true);
+    setErreur(null);
+    try {
+      const essai = await appeler<EssaiNotifications>('/mj/notifications/essai', {});
+      const parties = [
+        essai.navigateurs > 0 &&
+          (essai.navigateurs === 1 ? 'une notification' : `${essai.navigateurs} notifications`),
+        essai.email && 'un e-mail',
+      ].filter(Boolean);
+      if (parties.length === 0 && essai.echecs === 0) {
+        toast('Aucun canal actif : rien à envoyer.');
+      } else if (essai.echecs > 0) {
+        toast.error(`Envoi refusé par ${essai.echecs === 1 ? 'un navigateur' : `${essai.echecs} navigateurs`}.`);
+      } else {
+        toast.success(`Parti : ${parties.join(' et ')}.`);
+      }
+    } catch (e) {
+      setErreur(messageErreur(e));
+    } finally {
+      setOccupe(false);
+    }
+  }
+
   async function enregistrer(plusTard: boolean) {
     setOccupe(true);
     setErreur(null);
@@ -135,9 +160,13 @@ function Formulaire({
         <Button disabled={occupe} onClick={() => enregistrer(false)}>
           Enregistrer
         </Button>
-        {premierChoix && (
+        {premierChoix ? (
           <Button variant="outline" disabled={occupe} onClick={() => enregistrer(true)}>
             Plus tard
+          </Button>
+        ) : (
+          <Button variant="outline" disabled={occupe} onClick={essayer}>
+            M'envoyer un essai
           </Button>
         )}
       </div>

@@ -267,6 +267,15 @@ const passer = async () => {
   await mjTel.waitForSelector('text=Mes notifications');
   await photo(mjTel, 'tel-mj-reglages');
 
+  // L'essai du MJ : par ses canaux, vers son navigateur abonné et sa boîte.
+  const avantEssai = recus.filter((r) => r.chemin === '/abonne/mj').length;
+  const essai = await (await mj.request.post(base + '/api/mj/notifications/essai', { data: {} })).json();
+  await new Promise((r) => setTimeout(r, 300));
+  const recuEssai = recus.filter((r) => r.chemin === '/abonne/mj');
+  ok('essai du MJ : une notification et un e-mail', essai.navigateurs === 1 && essai.email === true && recuEssai.length === avantEssai + 1);
+  ok('essai du MJ : la notification se déchiffre', dechiffrer(mjNavigateur, recuEssai.at(-1).corps).texte.startsWith('Essai'));
+  ok('un joueur ne peut pas lancer l\'essai du MJ', await statut(tel.request.post(base + '/api/mj/notifications/essai', { data: {} })) === 403);
+
   // 12. Le site installable
   const manifeste = await (await fetch(base + '/manifest.webmanifest')).json();
   ok('le manifeste est servi', manifeste.name === 'Correspondance' && manifeste.display === 'standalone' && manifeste.icons.some((i) => i.purpose === 'maskable'));

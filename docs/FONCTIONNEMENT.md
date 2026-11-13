@@ -248,6 +248,8 @@ Un sceau est un objet, avec un nom gravé qui ne change pas quand il change de m
 - **Un e-mail à chaque arrivée** (pour le MJ : à chaque nouvelle lettre ou alerte).
 - **Un e-mail de rappel** quand un pli reste fermé (joueurs seulement), au bout d'un délai que le joueur choisit : un jour par défaut.
 
+Dans ses Réglages, le MJ a un bouton « M'envoyer un essai » : une notification à ses navigateurs abonnés et un e-mail, par ses canaux choisis, sur le même chemin que la tâche. Il sert à vérifier un appareil, y compris sur un aperçu.
+
 Sans aucun canal, il reste la pastille : un point sur « Réception » pour un joueur, le nombre de lettres à côté d'« À traiter » pour le MJ. Elle se relit au changement d'écran, au retour sur l'onglet, et chaque minute. Sur le site installé, l'icône la porte aussi, là où le téléphone le permet.
 
 ### La tâche planifiée
