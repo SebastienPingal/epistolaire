@@ -41,7 +41,8 @@ La partie commence dès que les étapes 7, 8 et 9 sont en ligne, après la rép�
 
 - les étapes 1 à 7 sont en ligne sur `main` ;
 - l'étape 8 est en aperçu sur sa branche. Les réponses du MJ (délai des alertes accepté jusqu'à 30 minutes, alerte 2 heures avant, message groupé, rappel à 24 heures, pastille en simple point) sont dans `DECISIONS.md` ;
-- restent pour la terminer : poser dans Vercel `CRON_SECRET` et les clés VAPID, l'essai réel avec le MJ (site installé, notification et e-mail reçus), puis vérifier sur le site en ligne que la planification passe bien toutes les 15 minutes ;
+- `CRON_SECRET` et les clés VAPID sont posés dans Vercel (site en ligne et aperçus) ;
+- restent pour la terminer : l'essai réel avec le MJ sur l'aperçu (site installé, notifications activées, bouton « M'envoyer un essai » des Réglages : notification et e-mail reçus), puis, une fois en ligne, vérifier dans les journaux de Vercel que la planification passe bien toutes les 15 minutes ;
 - la suivante est l'étape 9 : lire `docs/taches/README.md`, puis `docs/taches/09-filet-de-securite.md`.
 
 ---
