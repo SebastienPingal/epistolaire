@@ -341,7 +341,9 @@ cargo sqlx prepare
 | `SITE_HOST` | Le nom de domaine du site, s'il ne finit pas par `.vercel.app`. Facultatif |
 | `CRON_SECRET` | Le secret que la planification joint à l'appel des tâches. Une longue valeur tirée au hasard. Obligatoire pour les notifications |
 | `VAPID_PUBLIC`, `VAPID_PRIVATE` | La paire de clés des notifications du navigateur. Sans elles, ce canal est indisponible ; les e-mails partent quand même |
-| `VAPID_SUJET` | L'adresse de contact donnée aux services de notifications : `mailto:` suivi d'une adresse |
+| `VAPID_SUJET` | Le contact donné aux services de notifications : `mailto:` suivi d'une adresse, ou l'adresse `https://` du site. Sur Vercel, c'est l'adresse du site, pour ne pas confier l'e-mail du MJ à Google ou Apple |
+
+Ces quatre variables sont posées dans Vercel (site en ligne et aperçus) depuis l'étape 8. `CRON_SECRET` et `VAPID_PRIVATE` y sont de type « sensible » : personne ne peut plus les relire, pas même depuis le tableau de bord. Pour en changer, en tirer de nouvelles. Changer la paire VAPID oblige chacun à réactiver les notifications sur ses appareils.
 | `SITE_URL` | L'adresse du site, pour les liens des e-mails envoyés par la tâche. Facultatif : par défaut, celle que Vercel donne au site en ligne ou à l'aperçu |
 
 En local, `.env.exemple` donne un `CRON_SECRET` et une paire de clés VAPID d'essai, qui ne servent qu'aux essais.
