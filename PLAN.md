@@ -18,7 +18,7 @@ Le détail de chaque étape restante (tâches, questions à poser au MJ, parcour
 | 6 | Le MJ traite | Fait |
 | 7 | Le joueur reçoit | Fait |
 | 8 | Notifications et site installable | Fait |
-| 9 | Filet de sécurité | En aperçu |
+| 9 | Filet de sécurité | En ligne, à finir (stockage Blob, téléphones) |
 | L | Lancement : répétition générale et mise en jeu | À faire |
 | 10 | Altérations | Après le lancement |
 | 11 | Documents et gabarits | Après le lancement |
@@ -37,18 +37,18 @@ La partie commence dès que les étapes 7, 8 et 9 sont en ligne, après la rép�
 
 ## Pour reprendre
 
-État au moment de cette note (16 novembre, étape 9 en aperçu) :
+État au moment de cette note (16 novembre, étape 9 mise en ligne à la demande du MJ) :
 
-- les étapes 1 à 8 sont en ligne sur `main`. L'étape 9 est sur sa branche, en aperçu. Les réponses du MJ (copie à 4 h, e-mail en cas d'échec, stockage privé, section « Sauvegardes » avec téléchargement) sont dans `DECISIONS.md` ;
+- les étapes 1 à 9 sont en ligne sur `main` (l'étape 9 mise en ligne à la demande du MJ, après un aperçu construit et vérifié par `/api/sante`). Les réponses du MJ (copie à 4 h, e-mail en cas d'échec, stockage privé, section « Sauvegardes » avec téléchargement) sont dans `DECISIONS.md` ;
 - la planification des notifications passe sur le site en ligne (premier passage vu dans les journaux de Vercel le 16 novembre à 8 h 13 UTC, secret accepté). Reste l'essai réel sur le téléphone du MJ, à faire avec l'essai 9.5 ;
 - fait et vérifié en local : les tests de confidentialité (`essais/confidentialite.sh`, 68 routes essayées, et l'essai du filtre retiré), la sauvegarde et la restauration de bout en bout (`essais/restauration.sh`), le parcours `sauvegarde`, et tous les anciens parcours ;
-- **blocage** : l'aperçu de cette branche échoue chez Vercel avant toute compilation (« Resource provisioning failed », sans journal), même avec un `vercel.json` identique à celui du site en ligne. Piste la plus probable : l'intégration Neon, qui n'arrive pas à préparer une base pour cette nouvelle branche (limite de l'offre gratuite de Neon ?). À regarder par le MJ dans le tableau de bord de Vercel (le déploiement en erreur) et dans Neon (les branches) ;
+- les aperçus : une branche **nouvelle** est refusée par Vercel avant toute compilation (« Resource provisioning failed »), alors que le même commit se construit sur une branche déjà connue (`claude/vigilant-tesla-3to8mw`). Cause probable : l'intégration Neon n'arrive pas à préparer une base pour une nouvelle branche. En attendant d'avoir regardé côté Neon (à l'étape L, qui doit de toute façon donner leur propre base aux aperçus), publier les aperçus sur `claude/vigilant-tesla-3to8mw`, avec l'accord du MJ ;
 - reste à faire avec le MJ :
-  - créer le stockage Vercel Blob (l'outil Vercel de Claude n'en a pas la permission) : tableau de bord Vercel, projet `epistolaire`, Storage, Create, Blob, nom `epistolaire-sauvegardes`, accès **Private**, région Frankfurt (fra1), relié à tous les environnements. Vérifier ensuite que `BLOB_READ_WRITE_TOKEN` apparaît dans les variables du projet (nom seulement), puis reconstruire l'aperçu ;
-  - sur l'aperçu, « Faire une copie maintenant », télécharger la copie, et la restaurer en local avec `cargo run --bin restaurer` ;
-  - vérifier que Vercel accepte le fuseau horaire de la planification (`"timezone": "Europe/Paris"` dans `vercel.json`) : sinon, revenir à `0 3 * * *` en temps universel (4 h en hiver, 5 h en été) ;
+  - créer le stockage Vercel Blob (l'outil Vercel de Claude n'en a pas la permission) : tableau de bord Vercel, projet `epistolaire`, Storage, Create, Blob, nom `epistolaire-sauvegardes`, accès **Private**, région Frankfurt (fra1), relié à tous les environnements. Vérifier ensuite que `BLOB_READ_WRITE_TOKEN` apparaît dans les variables du projet (nom seulement), puis redéployer le site en ligne : une variable n'est prise qu'au déploiement suivant ;
+  - sur le site, dans les Réglages du MJ, « Faire une copie maintenant », télécharger la copie, et la restaurer en local avec `cargo run --bin restaurer` ;
+  - vérifier dans les journaux de Vercel que la copie de 4 h (heure de Paris) a bien tourné la première nuit : Vercel a accepté la planification avec son fuseau horaire ;
   - installer le site sur un Android et un iPhone, s'y connecter avec le code, et recevoir une notification (9.5) ;
-- après validation : `git push origin <branche>:main`, l'état « Fait » ci-dessus, puis l'étape L (`docs/taches/lancement.md`).
+- une fois ces points faits : l'état « Fait » ci-dessus, puis l'étape L (`docs/taches/lancement.md`).
 
 ---
 
