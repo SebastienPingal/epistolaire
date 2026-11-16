@@ -11,6 +11,7 @@ pub mod erreur;
 pub mod modele;
 pub mod notifications;
 pub mod sante;
+pub mod sauvegarde;
 pub mod taches;
 pub mod theme;
 

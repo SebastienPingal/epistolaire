@@ -28,6 +28,8 @@ Claude développe et maintient tout le code. Le MJ (propriétaire du repo) déci
 - **Dates des joueurs** : un joueur ne reçoit jamais d'horodatage de pli, seulement des dates du jeu (`DateJeu`, `src/calendrier.rs`). Le jour réel se calcule en SQL à Paris : `(horodatage at time zone r.fuseau)::date`.
 - **Porte du MJ** : tout ce qui est réservé au MJ est dans `src/acces/mj/`, sous `/api/mj`, et chaque traitement prend un `Mj` en paramètre.
 - **Porte des tâches** : les tâches planifiées sont dans `src/taches/`, sous `/api/taches`. Chacune prend une `Planification`, qui exige l'en-tête `Authorization: Bearer <CRON_SECRET>`. Hors du site en ligne (`VERCEL_ENV` différent de `production`), rien ne part vers un joueur : le message est écrit dans le journal (`src/notifications/envoi.rs`).
+- **Tests de confidentialité** : toute nouvelle route de joueur s'ajoute à `ROUTES_JOUEUR` dans `tests/confidentialite.rs`, et s'y essaie pour Alix (et Bertrand), avec ses gestes interdits ; tout nouveau secret reçoit un marqueur dans `tests/donnees/confidentialite.sql`. Une route de joueur oubliée fait échouer `cargo test`. Les routes du MJ et des tâches sont essayées automatiquement.
+- **Sauvegardes** : copie quotidienne de toute la base dans Vercel Blob, en accès privé (`src/sauvegarde/`). Une nouvelle table est copiée et restaurée sans rien faire, à condition de rester dans le schéma `public`. Jamais de restauration vers la base du site en ligne sans l'accord explicite du MJ.
 - **Notifications** : un message ne dit jamais qui écrit ni ce qui est écrit. Les mots que les joueurs lisent hors du site (e-mails, notifications) sont dans `src/theme.rs`, pendant serveur de `web/src/theme/neutre.ts`. On marque ce qui est signalé avant d'envoyer, sous verrou.
 - **Exemplaires** : un exemplaire ne se crée que par `poser_exemplaire` (`src/acces/mj/acheminement.rs`), qui recopie la version écrite par l'auteur. Tout geste du MJ sur un pli ajoute une ligne à son historique avec `noter`. Le MJ ne modifie plus un exemplaire arrivé.
 - **SQL** : requêtes vérifiées à la compilation (`sqlx::query!`). Après tout changement de requête ou de migration, relancer `cargo sqlx prepare` et commiter `.sqlx/`.
@@ -77,12 +79,16 @@ essais/lancer.sh ecrire
 essais/lancer.sh traiter
 essais/lancer.sh recevoir
 essais/lancer.sh notifications
+essais/lancer.sh sauvegarde
+essais/confidentialite.sh       # tests de confidentialité, sur la base à part epistolaire_tests
+essais/restauration.sh          # copie puis restauration d'une base, comparées ligne à ligne
 ```
 
 - Chaque étape ajoute son parcours, et met à jour les anciens quand un écran change.
 - À la première connexion d'un compte, l'écran du choix des notifications passe avant tout : les parcours le franchissent avec `surveillerPremierChoix` (`essais/commun.cjs`).
 - Sans identifiants SMTP en local, les e-mails sont écrits dans le journal du serveur : les parcours y lisent les codes de connexion.
 - `essais/vue-plis-recus.sql` vérifie ce que la vue des joueurs laisse voir d'un pli altéré.
+- Pour vérifier qu'un test de confidentialité attrape bien une faille en modifiant une requête, compiler avec `SQLX_OFFLINE=false` et `DATABASE_URL` sur la base locale, puis remettre le fichier.
 - Regarder aussi les captures d'écran (`essais/sortie/`), au format téléphone d'abord.
 
 ## Commandes

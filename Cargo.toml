@@ -21,11 +21,22 @@ path = "api/main.rs"
 name = "dev"
 path = "src/bin/dev.rs"
 
+# Copier une base dans un fichier, et restaurer une copie dans une base neuve.
+[[bin]]
+name = "sauvegarder"
+path = "src/bin/sauvegarder.rs"
+
+[[bin]]
+name = "restaurer"
+path = "src/bin/restaurer.rs"
+
 [dependencies]
 axum = "0.8"
 chrono = { version = "0.4", features = ["serde"] }
 base64 = "0.22"
 dotenvy = "0.15"
+# La compression des copies de la base (bibliothèque en Rust pur, sans OpenSSL).
+flate2 = "1"
 lettre = { version = "0.11", default-features = false, features = [
     "builder",
     "smtp-transport",

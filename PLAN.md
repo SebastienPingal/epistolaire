@@ -18,7 +18,7 @@ Le détail de chaque étape restante (tâches, questions à poser au MJ, parcour
 | 6 | Le MJ traite | Fait |
 | 7 | Le joueur reçoit | Fait |
 | 8 | Notifications et site installable | Fait |
-| 9 | Filet de sécurité | À faire |
+| 9 | Filet de sécurité | En aperçu |
 | L | Lancement : répétition générale et mise en jeu | À faire |
 | 10 | Altérations | Après le lancement |
 | 11 | Documents et gabarits | Après le lancement |
@@ -37,12 +37,16 @@ La partie commence dès que les étapes 7, 8 et 9 sont en ligne, après la rép�
 
 ## Pour reprendre
 
-État au moment de cette note (16 novembre, après l'étape 8) :
+État au moment de cette note (16 novembre, étape 9 en aperçu) :
 
-- les étapes 1 à 8 sont en ligne sur `main`. Les réponses du MJ à l'étape 8 (délai des alertes accepté jusqu'à 30 minutes, alerte 2 heures avant, message groupé, rappel à 24 heures, pastille en simple point, contact des services de notifications = son adresse) sont dans `DECISIONS.md` ;
-- `CRON_SECRET` et les clés VAPID sont posés dans Vercel ;
-- restent à vérifier sur le site en ligne : que la planification passe bien toutes les 15 minutes (journaux de Vercel), et l'essai réel sur le téléphone du MJ (sur son Android, les notifications étaient bloquées par les réglages du téléphone ; l'e-mail d'essai n'avait pas encore été essayé) ;
-- la suivante est l'étape 9 : lire `docs/taches/README.md`, puis `docs/taches/09-filet-de-securite.md`.
+- les étapes 1 à 8 sont en ligne sur `main`. L'étape 9 est sur sa branche, en aperçu. Les réponses du MJ (copie à 4 h, e-mail en cas d'échec, stockage privé, section « Sauvegardes » avec téléchargement) sont dans `DECISIONS.md` ;
+- fait et vérifié en local : les tests de confidentialité (`essais/confidentialite.sh`, 68 routes essayées, et l'essai du filtre retiré), la sauvegarde et la restauration de bout en bout (`essais/restauration.sh`), le parcours `sauvegarde`, et tous les anciens parcours ;
+- reste à faire avec le MJ :
+  - créer le stockage Vercel Blob (l'outil Vercel de Claude n'en a pas la permission) : tableau de bord Vercel, projet `epistolaire`, Storage, Create, Blob, nom `epistolaire-sauvegardes`, accès **Private**, région Frankfurt (fra1), relié à tous les environnements. Vérifier ensuite que `BLOB_READ_WRITE_TOKEN` apparaît dans les variables du projet (nom seulement), puis reconstruire l'aperçu ;
+  - sur l'aperçu, « Faire une copie maintenant », télécharger la copie, et la restaurer en local avec `cargo run --bin restaurer` ;
+  - vérifier que Vercel accepte le fuseau horaire de la planification (`"timezone": "Europe/Paris"` dans `vercel.json`) : sinon, revenir à `0 3 * * *` en temps universel (4 h en hiver, 5 h en été) ;
+  - installer le site sur un Android et un iPhone, s'y connecter avec le code, et recevoir une notification (9.5) ;
+- après validation : `git push origin <branche>:main`, l'état « Fait » ci-dessus, puis l'étape L (`docs/taches/lancement.md`).
 
 ---
 

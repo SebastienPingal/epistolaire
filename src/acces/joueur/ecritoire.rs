@@ -294,15 +294,19 @@ pub async fn enregistrer(
     Ok(StatusCode::NO_CONTENT)
 }
 
+/// Jette un brouillon. Celui d'un autre, ou une lettre déjà envoyée : introuvable.
 pub async fn jeter(joueur: Joueur, Path(id): Path<Uuid>) -> Result<StatusCode, Erreur> {
     let pool = base::pool().await?;
-    sqlx::query!(
+    let jete = sqlx::query!(
         "delete from brouillons where id = $1 and auteur_id = $2",
         id,
         joueur.personnage_id(),
     )
     .execute(pool)
     .await?;
+    if jete.rows_affected() == 0 {
+        return Err(Erreur::Introuvable);
+    }
     Ok(StatusCode::NO_CONTENT)
 }
 

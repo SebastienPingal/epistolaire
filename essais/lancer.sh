@@ -8,6 +8,8 @@
 #   essais/lancer.sh recevoir         la Réception, l'ouverture, les dossiers, le calendrier
 #   essais/lancer.sh notifications    le choix des canaux, la tâche planifiée, la pastille,
 #                                     les notifications du navigateur, le site installable
+#   essais/lancer.sh sauvegarde       la section Sauvegardes du MJ, la tâche quotidienne,
+#                                     le ménage des vieilles copies, l'e-mail en cas d'échec
 #
 # Le script vide la base locale, y met le jeu de données du parcours, lance le serveur
 # et l'interface, déroule le parcours, puis arrête tout. Les captures d'écran et le
@@ -18,7 +20,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-parcours="${1:?Quel parcours ? connexion, preparation-mj, ecrire, traiter, recevoir ou notifications}"
+parcours="${1:?Quel parcours ? connexion, preparation-mj, ecrire, traiter, recevoir, notifications ou sauvegarde}"
 sortie="${2:-essais/sortie}"
 export DATABASE_URL="${DATABASE_URL:-postgres://postgres:postgres@localhost:5432/epistolaire}"
 mkdir -p "$sortie"
@@ -41,6 +43,14 @@ arreter
 for variable in CRON_SECRET VAPID_PUBLIC VAPID_PRIVATE VAPID_SUJET; do
     grep -q "^$variable=" .env || grep "^$variable=" .env.exemple >>.env
 done
+# Le parcours « sauvegarde » remplace le stockage Vercel Blob par un faux, lancé par le
+# parcours lui-même sur cette machine. Les autres parcours n'ont pas de stockage.
+if [ "$parcours" = sauvegarde ]; then
+    export BLOB_READ_WRITE_TOKEN=vercel_blob_rw_essai_secret
+    export VERCEL_BLOB_API_URL=http://localhost:8791
+else
+    unset BLOB_READ_WRITE_TOKEN VERCEL_BLOB_API_URL
+fi
 cargo run -q >"$sortie/serveur.log" 2>&1 &
 (cd web && npx vite --port 5173 >"../$sortie/vite.log" 2>&1) &
 for _ in $(seq 1 120); do

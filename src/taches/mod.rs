@@ -5,8 +5,9 @@
 //! Tout appel sans ce secret est refusé (401), qu'il vienne d'un inconnu ou d'un joueur
 //! connecté.
 //!
-//! Une tâche ne livre rien : un pli est arrivé dès que sa date est passée. Elle ne fait
-//! que prévenir de ce qui est déjà arrivé.
+//! Une tâche ne livre rien : un pli est arrivé dès que sa date est passée. Les tâches
+//! préviennent de ce qui est déjà arrivé (`/notifications`, toutes les 15 minutes), et
+//! copient la base (`/sauvegarde`, chaque jour à 4 h, heure de Paris).
 //!
 //! Règles :
 //! * on marque **avant** d'envoyer, sous verrou : deux passages simultanés ne préviennent
@@ -23,11 +24,14 @@ use sha2::{Digest, Sha256};
 use sqlx::PgPool;
 
 use crate::base;
+use crate::connexion::adresse_du_mj;
+use crate::courriel::{self, Courriel};
 use crate::erreur::Erreur;
 use crate::modele::Role;
 use crate::notifications::chiffrement::Vapid;
 use crate::notifications::envoi::{self, Destinataire, Notification};
 use crate::notifications::adresse_du_site;
+use crate::sauvegarde::{self, CopieFaite};
 use crate::theme;
 
 /// Le MJ est alerté quand une date de livraison proposée est à moins de ce délai,
@@ -35,7 +39,9 @@ use crate::theme;
 const MINUTES_ALERTE_MJ: i32 = 120;
 
 pub fn routes() -> Router {
-    Router::new().route("/notifications", get(notifications))
+    Router::new()
+        .route("/notifications", get(notifications))
+        .route("/sauvegarde", get(sauvegarde))
 }
 
 /// La preuve qu'un appel vient de la planification : il connaît `CRON_SECRET`.
@@ -98,6 +104,51 @@ pub async fn notifications(_: Planification) -> Result<Json<Resume>, Erreur> {
 
     println!("tâche des notifications : {resume:?}");
     Ok(Json(resume))
+}
+
+/// `GET /api/taches/sauvegarde` : copie la base dans le stockage, et supprime les copies
+/// de plus de 30 jours. Si la copie échoue, le MJ reçoit un e-mail (décision du MJ).
+pub async fn sauvegarde(_: Planification) -> Result<Json<CopieFaite>, Erreur> {
+    let resultat = async { sauvegarde::faire(base::pool().await?).await }.await;
+    match resultat {
+        Ok(copie) => {
+            println!("tâche de sauvegarde : {copie:?}");
+            Ok(Json(copie))
+        }
+        Err(erreur) => {
+            eprintln!("tâche de sauvegarde : échec : {erreur:?}");
+            prevenir_de_l_echec(&erreur).await;
+            Err(erreur)
+        }
+    }
+}
+
+/// L'e-mail au MJ quand la copie du jour a échoué. Son adresse vient des variables
+/// d'environnement, pas de la base : la base est peut-être justement en cause.
+async fn prevenir_de_l_echec(erreur: &Erreur) {
+    let Some(adresse) = adresse_du_mj() else {
+        eprintln!("échec de la sauvegarde : aucune adresse de MJ pour le prévenir");
+        return;
+    };
+    let detail = match erreur {
+        Erreur::Refus(message) => (*message).to_owned(),
+        Erreur::Interne(detail) => detail.clone(),
+        autre => format!("{autre:?}"),
+    };
+    let courriel = Courriel {
+        destinataire: adresse,
+        sujet: "La copie de la base a échoué".to_owned(),
+        texte: format!(
+            "La copie quotidienne de la base n'a pas pu se faire.\n\n\
+             Ce qui s'est passé : {detail}\n\n\
+             Les copies précédentes sont intactes : aucune n'est supprimée tant que la copie \
+             du jour échoue. Vous pouvez en faire une à la main dans vos Réglages, section \
+             « Sauvegardes ».\n"
+        ),
+    };
+    if let Err(envoi) = courriel::envoyer(courriel).await {
+        eprintln!("échec de la sauvegarde : l'e-mail au MJ n'est pas parti : {envoi:?}");
+    }
 }
 
 /// Les plis arrivés depuis le dernier passage : chaque compte concerné est prévenu

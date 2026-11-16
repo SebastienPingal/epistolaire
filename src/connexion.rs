@@ -410,12 +410,7 @@ async fn trouver_compte(pool: &PgPool, email: &str) -> Result<Option<Uuid>, Erre
         return Ok(existant);
     }
 
-    // Les e-mails partent de la boîte du MJ : sans autre précision, c'est son adresse.
-    let est_le_mj = std::env::var("MJ_EMAIL")
-        .or_else(|_| std::env::var("SMTP_USER"))
-        .ok()
-        .and_then(|adresse| normaliser_email(&adresse))
-        .is_some_and(|adresse| adresse == email);
+    let est_le_mj = adresse_du_mj().is_some_and(|adresse| adresse == email);
     if !est_le_mj {
         return Ok(None);
     }
@@ -442,6 +437,15 @@ async fn faire_le_menage(pool: &PgPool) -> Result<(), Erreur> {
         .execute(pool)
         .await?;
     Ok(())
+}
+
+/// L'adresse du MJ. Les e-mails partent de sa boîte : sans autre précision (`MJ_EMAIL`),
+/// c'est l'adresse de la boîte d'envoi (`SMTP_USER`).
+pub fn adresse_du_mj() -> Option<String> {
+    std::env::var("MJ_EMAIL")
+        .or_else(|_| std::env::var("SMTP_USER"))
+        .ok()
+        .and_then(|adresse| normaliser_email(&adresse))
 }
 
 /// Met l'adresse en forme, ou la refuse si elle n'en a pas l'allure.

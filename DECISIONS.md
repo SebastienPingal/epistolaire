@@ -1,7 +1,7 @@
 # Jeu de rôle épistolaire : décisions de conception
 
 Ce document est tenu à jour au fil des échanges de conception.
-Dernière mise à jour : 12 novembre, au début de l'étape 8 (notifications).
+Dernière mise à jour : 16 novembre, au début de l'étape 9 (filet de sécurité).
 
 ## Avancement
 
@@ -269,6 +269,11 @@ Dernière mise à jour : 12 novembre, au début de l'étape 8 (notifications).
 - Le tri de ce qu'un joueur voit est aussi inscrit dans la base : une vue ne contient que les exemplaires arrivés, en version livrée, avec les seules altérations remarquées.
 - Déploiement : repo GitHub relié à Vercel. La branche principale met le site en ligne ; les autres branches ont une adresse d'aperçu pour tester.
 - Sauvegardes : l'historique court de Neon, plus une copie quotidienne automatique de la base dans Vercel Blob, conservée 30 jours.
+  - La copie se fait chaque jour à 4 h du matin, heure de Paris : personne n'écrit à cette heure-là (décidé le 16 novembre). Le MJ a demandé pourquoi la faire : l'historique de Neon ne permet de revenir en arrière que de quelques heures, alors qu'une erreur peut n'être remarquée qu'après plusieurs jours. Il l'a gardée.
+  - Si une copie échoue, le MJ reçoit un e-mail (décidé le 16 novembre).
+  - Le stockage Vercel Blob est en accès privé : les copies contiennent les adresses e-mail des joueurs, et ne se lisent qu'avec le jeton du projet (décidé le 16 novembre). Le MJ avait demandé à Claude de le créer, mais l'outil Vercel de Claude n'en a pas la permission : c'est le MJ qui le crée.
+  - Les Réglages du MJ ont une section « Sauvegardes » : la liste des copies, un bouton « Faire une copie maintenant », et le téléchargement d'une copie (décidé le 16 novembre).
+  - Une restauration vers la base du site en ligne ne se fait jamais sans l'accord explicite du MJ.
 - Mises à jour pendant la partie : testées sur un aperçu avant la mise en ligne. Les changements de structure de la base ne doivent jamais perdre une lettre en route.
 - Documentation du repo : ce `DECISIONS.md`, le plan de réalisation (`PLAN.md`), un guide de fonctionnement (`docs/FONCTIONNEMENT.md`), et un fichier d'instructions pour les prochaines sessions de Claude (`CLAUDE.md`).
 - Les joueurs voient l'adresse personnelle du MJ comme expéditeur des e-mails. Un alias est possible.

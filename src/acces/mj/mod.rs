@@ -12,6 +12,7 @@ mod notifications;
 mod personnages;
 mod plume;
 mod reglages;
+mod sauvegardes;
 mod sceaux;
 
 use axum::Router;
@@ -51,6 +52,8 @@ pub fn routes() -> Router {
         .route("/reglages/calendrier", get(reglages::calendrier))
         .route("/reglages/bonds", post(reglages::ajouter_bond))
         .route("/reglages/bonds/{id}", delete(reglages::retirer_bond))
+        .route("/sauvegardes", get(sauvegardes::lister).post(sauvegardes::faire))
+        .route("/sauvegardes/{nom}", get(sauvegardes::telecharger))
         // Être prévenu.
         .route("/pastille", get(notifications::pastille))
         .route("/notifications", get(notifications::lire).put(notifications::choisir))

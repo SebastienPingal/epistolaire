@@ -14,6 +14,12 @@ static MIGRATIONS: Migrator = sqlx::migrate!();
 
 static POOL: OnceCell<PgPool> = OnceCell::const_new();
 
+/// Toutes les migrations connues de ce programme. La restauration d'une copie s'en sert
+/// pour ne rejouer que celles qu'avait la base copiée.
+pub fn migrations() -> &'static Migrator {
+    &MIGRATIONS
+}
+
 /// La connexion partagée. Au premier appel, la structure de la base est mise à jour
 /// si le programme connaît une migration que la base n'a pas encore reçue.
 pub async fn pool() -> Result<&'static PgPool, sqlx::Error> {

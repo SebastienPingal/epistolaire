@@ -1,7 +1,7 @@
 # Guide de fonctionnement
 
 Ce guide décrit comment le site est construit. Il est mis à jour à la fin de chaque étape de `PLAN.md`.
-État décrit : étape 8 (notifications et site installable).
+État décrit : étape 9 (filet de sécurité).
 
 ## Vue d'ensemble
 
@@ -24,11 +24,14 @@ Les deux sont hébergés sur Vercel. L'interface est un ensemble de fichiers sta
 | `src/acces/mj/` | La porte du MJ : la file, les plis en route, la plume des PNJ, les plis détruits, puis personnages, écritures, sceaux, réglages |
 | `src/taches/` | La troisième porte : les tâches planifiées, appelées par Vercel |
 | `src/notifications/` | Les choix de notification de chaque compte, ses navigateurs abonnés, l'envoi, et le chiffrement des notifications du navigateur |
+| `src/sauvegarde/` | La copie quotidienne de la base, son dépôt dans Vercel Blob, et sa restauration |
 | `src/theme.rs` | Les mots que les joueurs lisent hors du site (e-mails, notifications) |
 | `src/connexion.rs` | La connexion par e-mail et les sessions |
 | `src/courriel.rs` | L'envoi des e-mails |
 | `src/erreur.rs` | Les erreurs renvoyées à l'interface |
 | `src/bin/dev.rs` | Le serveur local, pour développer |
+| `src/bin/sauvegarder.rs`, `src/bin/restaurer.rs` | Copier une base dans un fichier, et restaurer une copie dans une base neuve |
+| `tests/confidentialite.rs` | Les tests de confidentialité, et leur jeu de données (`tests/donnees/`) |
 | `migrations/` | La structure de la base, étape par étape |
 | `.sqlx/` | La description des requêtes SQL, qui sert à les vérifier à la compilation |
 | `web/` | L'interface |
@@ -224,7 +227,7 @@ Chaque geste du MJ sur un pli (traitement, changement de date ou de destinataire
 - **Personnages** : créer les personnages des joueurs et les PNJ, remplir leur fiche, donner à chaque joueur son adresse e-mail (c'est ce qui lui ouvre le site), choisir son écriture, tenir son carnet d'adresses.
 - **Écritures** : voir les 14 écritures fournies, les renommer, marquer celles qui sont génériques.
 - **Sceaux** : créer des sceaux, changer leur nom gravé ou leurs initiales, les faire changer de mains.
-- **Réglages** : longueur d'un billet, quota, délai et hasard de livraison, premier jour du jeu. En bas, « Le temps du jeu » : la date du jeu d'aujourd'hui, et les bonds dans le temps (ajouter, retirer).
+- **Réglages** : longueur d'un billet, quota, délai et hasard de livraison, premier jour du jeu. En bas, « Le temps du jeu » : la date du jeu d'aujourd'hui, et les bonds dans le temps (ajouter, retirer). Puis « Mes notifications », et « Sauvegardes » (voir plus bas).
 
 Toutes les adresses de cet espace commencent par `/api/mj` côté serveur, et chacune vérifie que c'est bien le MJ qui demande. Un joueur connecté qui essaierait d'y entrer est refusé.
 
@@ -284,10 +287,61 @@ Le site s'installe sur l'écran d'accueil comme une application : manifeste `web
 
 L'icône est un cachet de cire qui porte une enveloppe, aux couleurs du thème neutre. Sa source est `web/src/theme/icone.svg` ; après l'avoir changée, relancer `node web/scripts/icones.cjs`.
 
+## Sauvegarde et restauration
+
+### La copie quotidienne
+
+Chaque jour à 4 h du matin, heure de Paris, une tâche planifiée (`GET /api/taches/sauvegarde`, déclarée dans `vercel.json` avec le fuseau `Europe/Paris`) copie toute la base :
+
+1. Toutes les tables du schéma `public` sont lues dans une seule transaction en lecture seule : la copie montre la base telle qu'elle était à un instant précis, sans lettre à moitié envoyée.
+2. Elles forment un seul document JSON (`structure` : le numéro de la dernière migration ; `faite_le` ; `tables` : chaque table et toutes ses lignes), compressé en gzip. Quelques kilo-octets aujourd'hui.
+3. Il est déposé dans le stockage **Vercel Blob** du projet, **en accès privé** : les copies contiennent les adresses e-mail des joueurs. Nom : `sauvegardes/AAAA-MM-JJ-HHMMSS-mmm.json.gz`, à l'heure de Paris. Un nom déjà pris n'est jamais écrasé.
+4. Ensuite seulement, les copies de plus de 30 jours sont supprimées. Si la copie du jour échoue, rien n'est supprimé.
+5. Si quelque chose échoue, le MJ reçoit un e-mail « La copie de la base a échoué », à l'adresse de `MJ_EMAIL` (ou de `SMTP_USER`) : elle ne dépend pas de la base, qui est peut-être en cause.
+
+La tâche a la même garde que celle des notifications (`CRON_SECRET`). Vercel n'a pas de bibliothèque Blob en Rust : `src/sauvegarde/blob.rs` parle directement à son API, comme la bibliothèque officielle `@vercel/blob`. Le jeton `BLOB_READ_WRITE_TOKEN` n'est jamais envoyé ailleurs qu'à Vercel.
+
+En plus de ces copies, Neon garde un historique court de la base (quelques heures) : il permet de revenir à un instant précis, s'il est encore temps.
+
+### Ce que voit le MJ
+
+Dans ses Réglages, la section « Sauvegardes » liste les copies (date, taille), avec un bouton « Faire une copie maintenant » (à faire avant toute manipulation risquée) et un bouton « Télécharger » par copie. Le téléchargement passe par le serveur, qui seul a le jeton du stockage. Une fonction Vercel ne renvoie pas plus de 4,5 Mo : au-delà, il faudra télécharger depuis le tableau de bord de Vercel (Storage, puis le stockage `epistolaire-sauvegardes`).
+
+### Restaurer, pas à pas
+
+On ne restaure **jamais** vers la base du site en ligne sans l'accord explicite du MJ. On restaure dans une base neuve, puis on décide.
+
+1. Récupérer la copie : bouton « Télécharger » des Réglages, ou tableau de bord de Vercel.
+2. Créer une base vide : une base PostgreSQL locale (`createdb epistolaire_restauree`), ou une branche Neon vide.
+3. Lancer : `cargo run --bin restaurer -- <fichier.json.gz> <adresse de la base>`.
+4. Le programme refuse une base qui contient déjà du courrier, ou dont la structure est plus récente que la copie. Il applique les migrations jusqu'au numéro de la copie (pas au-delà), vérifie que la copie contient toutes les tables de cette structure et que chaque ligne a les bonnes colonnes, charge tout dans une seule transaction, dans l'ordre des dépendances (un personnage avant ses plis), remet les compteurs à niveau, et compare le nombre de lignes de chaque table avant de valider. Au moindre problème, aucune donnée n'est chargée.
+5. Regarder la base restaurée. Pour la mettre en service, il suffit de faire pointer `DATABASE_URL` et `DATABASE_URL_UNPOOLED` dessus : au démarrage, le site appliquera les migrations plus récentes que la copie.
+
+Le programme `sauvegarder` fait l'inverse, sans passer par Blob : `cargo run --bin sauvegarder -- <adresse de la base> <fichier.json.gz>`.
+
+La restauration n'exige pas les droits d'administrateur de la base : charger les tables dans l'ordre de leurs dépendances évite de suspendre les contrôles de clés, ce que Neon n'autorise pas forcément.
+
 ## Les garde-fous automatiques
 
 - **Requêtes SQL vérifiées à la compilation.** Une requête qui ne correspond pas à la base empêche le site de se construire. La vérification s'appuie sur le dossier `.sqlx/`, donc elle marche aussi sur Vercel, sans base à portée de main.
 - **Types partagés.** Les types de l'interface sont générés depuis ceux du serveur. Si le serveur change une réponse, l'interface ne se construit plus tant qu'elle n'a pas suivi.
+
+### Les tests de confidentialité
+
+`tests/confidentialite.rs` prouve qu'un joueur ne reçoit jamais ce qu'il ne doit pas voir. Deux parties :
+
+- **Sans base**, à chaque `cargo test` :
+  - l'inventaire des routes : le test lit `src/acces/joueur/mod.rs` et `src/lib.rs`, et échoue si une route n'est pas dans sa liste de routes vérifiées. Une route de joueur ajoutée sans test fait donc échouer `cargo test` ;
+  - la règle du code : aucun fichier de `src/acces/joueur/` ne lit ni n'écrit les tables `plis` et `exemplaires` (`from`, `join`, `update`, `into`), sauf les deux requêtes permises de `ecritoire.rs` (le compte du quota, l'envoi).
+- **Avec base**, par `essais/confidentialite.sh` : une base à part, `epistolaire_tests`, est vidée et remplie de `tests/donnees/confidentialite.sql`. Ce jeu couvre chaque état d'un pli (brouillon, dans la file, en route, retenu, perdu, arrivé fermé, ouvert, altéré sans que ce soit remarqué, redirigé, détruit), les affaires d'un autre joueur, les notes du MJ, une information étiquetée, et chaque secret porte un marqueur facile à chercher. Le test appelle alors **chaque** route des joueurs, pour Alix et pour Bertrand, avec tous les identifiants du jeu (les siens et ceux des autres), et vérifie :
+  - qu'aucune réponse ne contient un marqueur interdit, une adresse e-mail (pas même la sienne), l'identifiant d'un auteur caché, d'un pli, d'un exemplaire qui n'est pas arrivé chez lui, ni une date réelle (seuls ses brouillons ont la leur) ;
+  - qu'un pli altéré paraît intact quand rien n'est remarqué ;
+  - que les gestes interdits (ouvrir, ranger, détruire le pli d'un autre ou un pli pas encore arrivé ; lire, modifier, envoyer, jeter le brouillon d'un autre ou une lettre envoyée ; toucher le dossier d'un autre) répondent « introuvable » et ne changent **rien** dans la base (empreinte de toutes les tables avant et après) ;
+  - que chaque route du MJ répond 403 à un joueur et 401 sans session, et chaque tâche 401 sans le secret, même pour le MJ connecté. Ces deux listes sont relues automatiquement dans le code.
+
+Le test ne touche jamais une base dont le nom ne finit pas par `_tests`. Il a été vérifié une fois en retirant volontairement le filtre « ce pli est-il à lui ? » : il échoue alors, comme prévu.
+
+Sans `EPISTOLAIRE_TESTS_BASE`, la partie avec base s'annonce « ignorée » et réussit : `cargo test` sert aussi à générer les types, il doit marcher sans base.
 
 ## Les essais
 
@@ -296,6 +350,8 @@ Le dossier `essais/` contient des parcours qui utilisent le site comme le ferait
 Le geste d'ouverture au doigt est essayé avec de vrais événements tactiles envoyés au navigateur.
 
 Le parcours `notifications` appelle la tâche avec le secret d'essai, fait « arriver » des plis en avançant leur date, et remplace le service de notifications par un faux, qui déchiffre ce qu'il reçoit et vérifie la signature. Les autres parcours passent l'écran du premier choix en cliquant « Plus tard » (`essais/commun.cjs`).
+
+Le parcours `sauvegarde` remplace le stockage Vercel Blob par un faux, lancé sur la machine (variable `VERCEL_BLOB_API_URL`). Il vérifie la liste, la copie à la main, le ménage des copies de plus de 30 jours, le téléchargement, la garde de la tâche, et l'e-mail au MJ quand le stockage est en panne. `essais/restauration.sh` copie une base remplie, la restaure dans une base neuve et compare chaque table ligne à ligne, puis vérifie les refus (base qui contient déjà du courrier, copie à laquelle il manque une table).
 
 Ils tournent contre une base locale, jamais contre la base en ligne.
 
@@ -346,6 +402,8 @@ cargo sqlx prepare
 | `VAPID_SUJET` | Le contact donné aux services de notifications : `mailto:` suivi d'une adresse, ou l'adresse `https://` du site. Sur Vercel, c'est l'adresse e-mail du MJ, à sa demande : les services de notifications (Google, Apple…) le contactent en cas de souci avec les envois |
 
 Ces quatre variables sont posées dans Vercel (site en ligne et aperçus) depuis l'étape 8. `CRON_SECRET` et `VAPID_PRIVATE` y sont de type « sensible » : personne ne peut plus les relire, pas même depuis le tableau de bord. Pour en changer, en tirer de nouvelles. Changer la paire VAPID oblige chacun à réactiver les notifications sur ses appareils.
+| `BLOB_READ_WRITE_TOKEN` | Le jeton du stockage Vercel Blob des sauvegardes. Vercel l'ajoute tout seul quand le stockage est relié au projet. Sans lui, aucune copie ne se fait, et la section « Sauvegardes » le dit |
+| `VERCEL_BLOB_API_URL` | Pour les essais seulement : l'adresse d'un faux stockage. Jamais sur Vercel |
 | `SITE_URL` | L'adresse du site, pour les liens des e-mails envoyés par la tâche. Facultatif : par défaut, celle que Vercel donne au site en ligne ou à l'aperçu |
 
 En local, `.env.exemple` donne un `CRON_SECRET` et une paire de clés VAPID d'essai, qui ne servent qu'aux essais.
