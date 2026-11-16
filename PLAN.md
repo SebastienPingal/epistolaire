@@ -17,7 +17,7 @@ Le détail de chaque étape restante (tâches, questions à poser au MJ, parcour
 | 5 | Le joueur écrit | Fait |
 | 6 | Le MJ traite | Fait |
 | 7 | Le joueur reçoit | Fait |
-| 8 | Notifications et site installable | En aperçu, à valider par le MJ |
+| 8 | Notifications et site installable | Fait |
 | 9 | Filet de sécurité | À faire |
 | L | Lancement : répétition générale et mise en jeu | À faire |
 | 10 | Altérations | Après le lancement |
@@ -37,12 +37,11 @@ La partie commence dès que les étapes 7, 8 et 9 sont en ligne, après la rép�
 
 ## Pour reprendre
 
-État au moment de cette note (12 novembre, étape 8 en aperçu) :
+État au moment de cette note (16 novembre, après l'étape 8) :
 
-- les étapes 1 à 7 sont en ligne sur `main` ;
-- l'étape 8 est en aperçu sur sa branche. Les réponses du MJ (délai des alertes accepté jusqu'à 30 minutes, alerte 2 heures avant, message groupé, rappel à 24 heures, pastille en simple point) sont dans `DECISIONS.md` ;
-- `CRON_SECRET` et les clés VAPID sont posés dans Vercel (site en ligne et aperçus) ;
-- restent pour la terminer : l'essai réel avec le MJ sur l'aperçu (site installé, notifications activées, bouton « M'envoyer un essai » des Réglages : notification et e-mail reçus), puis, une fois en ligne, vérifier dans les journaux de Vercel que la planification passe bien toutes les 15 minutes ;
+- les étapes 1 à 8 sont en ligne sur `main`. Les réponses du MJ à l'étape 8 (délai des alertes accepté jusqu'à 30 minutes, alerte 2 heures avant, message groupé, rappel à 24 heures, pastille en simple point, contact des services de notifications = son adresse) sont dans `DECISIONS.md` ;
+- `CRON_SECRET` et les clés VAPID sont posés dans Vercel ;
+- restent à vérifier sur le site en ligne : que la planification passe bien toutes les 15 minutes (journaux de Vercel), et l'essai réel sur le téléphone du MJ (sur son Android, les notifications étaient bloquées par les réglages du téléphone ; l'e-mail d'essai n'avait pas encore été essayé) ;
 - la suivante est l'étape 9 : lire `docs/taches/README.md`, puis `docs/taches/09-filet-de-securite.md`.
 
 ---

@@ -1,7 +1,7 @@
 # Guide de fonctionnement
 
 Ce guide décrit comment le site est construit. Il est mis à jour à la fin de chaque étape de `PLAN.md`.
-État décrit : étape 8 (notifications et site installable), en aperçu.
+État décrit : étape 8 (notifications et site installable).
 
 ## Vue d'ensemble
 

@@ -48,7 +48,8 @@ function ChoixMj({ premierChoix = false, surFin }: { premierChoix?: boolean; sur
 const AIDE_NAVIGATEUR = {
   'a-installer':
     "Sur iPhone et iPad, il faut d'abord ajouter le site à l'écran d'accueil (bouton Partager, puis « Sur l'écran d'accueil »), puis l'ouvrir depuis son icône.",
-  refuse: 'Les notifications sont bloquées pour ce site dans les réglages du navigateur.',
+  refuse:
+    "Les notifications sont bloquées. Sur Android : réglages du téléphone, Applications, Chrome (ou Correspondance si le site est installé), Notifications, les activer ; vérifier aussi que ce site n'est pas bloqué dans les réglages de Chrome (Paramètres des sites, Notifications). Puis rouvrir le site.",
   indisponible: 'Ce navigateur ne peut pas recevoir de notifications.',
 } as const;
 
@@ -85,6 +86,10 @@ function Formulaire({
     setOccupe(true);
     setErreur(null);
     try {
+      // Un choix d'e-mail pas encore enregistré compte pour l'essai : on l'enregistre d'abord.
+      if (email !== mes.email_arrivee) {
+        await choisir({ email_arrivee: email, email_rappel: false, rappel_heures: mes.rappel_heures });
+      }
       const essai = await appeler<EssaiNotifications>('/mj/notifications/essai', {});
       const parties = [
         essai.navigateurs > 0 &&
@@ -92,7 +97,9 @@ function Formulaire({
         essai.email && 'un e-mail',
       ].filter(Boolean);
       if (parties.length === 0 && essai.echecs === 0) {
-        toast('Aucun canal actif : rien à envoyer.');
+        toast(
+          'Aucun canal actif : activez « Notifications sur cet appareil » ou « Un e-mail à chaque fois », puis réessayez.',
+        );
       } else if (essai.echecs > 0) {
         toast.error(`Envoi refusé par ${essai.echecs === 1 ? 'un navigateur' : `${essai.echecs} navigateurs`}.`);
       } else {

@@ -180,7 +180,7 @@ export const vocabulaire = {
     aInstaller:
       'Sur iPhone et iPad, il faut d’abord ajouter le site à l’écran d’accueil : touchez le bouton Partager, puis « Sur l’écran d’accueil ». Ouvrez ensuite le site depuis son icône, et revenez ici.',
     refuse:
-      'Les notifications sont bloquées pour ce site. Vous pouvez les autoriser dans les réglages de votre navigateur.',
+      'Les notifications sont bloquées. Sur Android, ouvrez les réglages du téléphone, puis Applications, Chrome (ou Correspondance si le site est installé), Notifications, et activez-les. Vérifiez aussi que ce site n’est pas bloqué dans les réglages de Chrome. Rouvrez ensuite le site.',
     indisponible: 'Ce navigateur ne peut pas recevoir de notifications.',
     emailArrivee: 'Un e-mail à chaque arrivée',
     emailRappel: 'Un e-mail de rappel quand un pli reste fermé',
