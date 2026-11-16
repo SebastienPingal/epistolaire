@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        update exemplaires\n        set contenu = jsonb_set(contenu, '{texte}', to_jsonb($2::text)),\n            passages_abimes = $3,\n            passages_reecrits = $4,\n            sceau_id = $5,\n            sceau_etat = $6,\n            signature_etat = $7,\n            signature_nom = $8,\n            signature_ecriture_id = $9,\n            signature_personnage_id = $10,\n            faussaire_personnage_id = $11,\n            faussaire_ecriture_id = $12,\n            remarque_texte = $13,\n            remarque_sceau = $14,\n            remarque_signature = $15,\n            modifie_le = now()\n        where id = $1\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Jsonb",
+        "Jsonb",
+        "Uuid",
+        "Text",
+        "Text",
+        "Text",
+        "Uuid",
+        "Uuid",
+        "Uuid",
+        "Uuid",
+        "Bool",
+        "Bool",
+        "Bool"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "c190461d94715dbf099e092c2c8b41bf790180f805b8353b11c113f5d82e7695"
+}

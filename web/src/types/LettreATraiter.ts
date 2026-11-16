@@ -9,7 +9,11 @@ export type LettreATraiter = { id: string, auteur_id: string, auteur_nom: string
 /**
  * La police de l'écriture de l'auteur, s'il en a une.
  */
-police: string | null, texte: string, signe: boolean, sceau: SceauPose | null, destinataire: DestinataireVise, envoye_le: string, 
+police: string | null, texte: string, signe: boolean, 
+/**
+ * Le sceau posé par l'auteur, s'il a scellé.
+ */
+sceau_id: string | null, sceau: SceauPose | null, destinataire: DestinataireVise, envoye_le: string, 
 /**
  * La date de livraison que le site propose.
  */

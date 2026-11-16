@@ -4,6 +4,7 @@
 //! C'est ce qui garantit qu'un joueur, même connecté, n'obtient rien d'ici.
 
 mod acheminement;
+mod alterations;
 mod detruits;
 mod ecritures;
 mod en_route;
@@ -28,7 +29,11 @@ pub fn routes() -> Router {
             post(file::ecarter).delete(file::reprendre),
         )
         .route("/en-route", get(en_route::lister))
-        .route("/exemplaires/{id}", put(en_route::modifier))
+        .route(
+            "/exemplaires/{id}",
+            get(alterations::lire).put(en_route::modifier),
+        )
+        .route("/exemplaires/{id}/version", put(alterations::alterer))
         .route("/exemplaires/{id}/copie", post(en_route::copier))
         .route("/lettres", post(plume::ecrire))
         .route("/detruits", get(detruits::lister))

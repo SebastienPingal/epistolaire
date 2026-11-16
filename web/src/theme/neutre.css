@@ -47,9 +47,28 @@
   /* Variables propres au jeu */
   --bon: #3d6b45;
   --sceau: #7a2e2e;
+  --tache: #5b4a36;
 
   /* Polices : l'interface, et le texte courant des documents.
      Les écritures manuscrites des personnages sont gérées à part. */
   --police-interface: 'Geist Variable', system-ui, sans-serif;
   --police-texte: Georgia, 'Times New Roman', serif;
+}
+
+/* Un passage abîmé : une tache sur le papier. On voit qu'il y avait du texte, et à peu près
+   combien ; on ne peut rien en lire. Le texte lui-même n'est pas dans la page : il n'y a
+   sous la tache que des points, que le serveur a mis à sa place. */
+.tache {
+  color: transparent;
+  letter-spacing: 0.22em;
+  overflow-wrap: anywhere;
+  user-select: none;
+  padding: 0 0.15em;
+  border-radius: 0.5em 0.3em 0.6em 0.35em / 0.35em 0.6em 0.3em 0.5em;
+  background:
+    radial-gradient(ellipse at 22% 45%, color-mix(in oklab, var(--tache) 70%, transparent) 0 30%, transparent 72%),
+    radial-gradient(ellipse at 74% 58%, color-mix(in oklab, var(--tache) 60%, transparent) 0 34%, transparent 78%),
+    color-mix(in oklab, var(--tache) 38%, transparent);
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
 }

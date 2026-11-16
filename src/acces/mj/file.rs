@@ -3,6 +3,10 @@
 //! Traiter une lettre, c'est décider de son sort : à qui elle va, quand, et si des tiers
 //! en reçoivent une copie. C'est à ce moment que ses exemplaires sont créés.
 //!
+//! Le MJ peut altérer la lettre dans le même geste : la version altérée part alors vers
+//! tous les destinataires, copies comprises, sans que rien ne soit remarqué. Il décide
+//! ensuite, destinataire par destinataire, dans l'écran En route.
+//!
 //! Une lettre adressée à un PNJ reste dans la file tant que le MJ n'y a pas répondu,
 //! ou ne l'a pas classée sans réponse.
 
@@ -18,6 +22,7 @@ use uuid::Uuid;
 use super::acheminement::{
     MINUTES_DE_RATTRAPAGE, SceauPose, noter, origine_pour, poser_exemplaire,
 };
+use super::alterations::{VersionLivree, appliquer_version};
 use super::plume::{self, BilletPnj};
 use crate::acces::Mj;
 use crate::base;
@@ -51,6 +56,8 @@ pub struct LettreATraiter {
     pub police: Option<String>,
     pub texte: String,
     pub signe: bool,
+    /// Le sceau posé par l'auteur, s'il a scellé.
+    pub sceau_id: Option<Uuid>,
     pub sceau: Option<SceauPose>,
     pub destinataire: DestinataireVise,
     pub envoye_le: DateTime<Utc>,
@@ -95,6 +102,9 @@ pub struct Traitement {
     pub copies: Vec<Uuid>,
     /// La réponse du PNJ qui reçoit la lettre, écrite dans la foulée.
     pub reponse: Option<BilletPnj>,
+    /// La version altérée, livrée à tous les destinataires. Vide : celle de l'auteur.
+    /// Rien n'y est remarqué : cela se décide ensuite, pour chacun, dans En route.
+    pub version: Option<VersionLivree>,
 }
 
 // ---------------------------------------------------------------------------
@@ -112,6 +122,7 @@ pub async fn lister(_mj: Mj) -> Result<Json<FileMj>, Erreur> {
             e.police as "police?",
             coalesce(p.contenu->>'texte', '') as "texte!",
             p.signe,
+            p.sceau_id,
             s.nom_grave as "sceau_nom?",
             s.initiales as "sceau_initiales?",
             s.image_url as "sceau_image?",
@@ -166,6 +177,7 @@ pub async fn lister(_mj: Mj) -> Result<Json<FileMj>, Erreur> {
             police: ligne.police,
             texte: ligne.texte,
             signe: ligne.signe,
+            sceau_id: ligne.sceau_id,
             sceau: SceauPose::depuis(ligne.sceau_nom, ligne.sceau_initiales, ligne.sceau_image),
             destinataire,
             envoye_le: ligne.envoye_le,
@@ -243,10 +255,13 @@ pub async fn traiter(
         pli.livraison_le,
     )
     .await?;
+    if let Some(version) = &saisie.version {
+        appliquer_version(&mut transaction, &mj, exemplaire_id, version, false).await?;
+    }
 
     // Les copies partent même si l'exemplaire du destinataire est retenu ou perdu.
     for copie in &copies {
-        poser_exemplaire(
+        let copie_id = poser_exemplaire(
             &mut transaction,
             id,
             *copie,
@@ -255,6 +270,9 @@ pub async fn traiter(
             pli.livraison_le,
         )
         .await?;
+        if let Some(version) = &saisie.version {
+            appliquer_version(&mut transaction, &mj, copie_id, version, false).await?;
+        }
     }
 
     sqlx::query!(
@@ -275,6 +293,7 @@ pub async fn traiter(
             "destinataire_id": destinataire_id,
             "livraison_le": pli.livraison_le,
             "copies": copies,
+            "alteree": saisie.version.is_some(),
         }),
     )
     .await?;

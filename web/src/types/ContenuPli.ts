@@ -22,4 +22,9 @@ passages_reecrits: Array<Passage>,
 /**
  * L'écriture de ces passages : celle du faussaire.
  */
-police_reecriture: string | null, };
+police_reecriture: string | null, 
+/**
+ * Les passages abîmés : toujours visibles, jamais lisibles. Dans `texte`, leurs
+ * caractères sont déjà remplacés par des « · ».
+ */
+passages_abimes: Array<Passage>, };

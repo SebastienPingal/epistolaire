@@ -111,6 +111,7 @@ function LecturePli({ id }: { id: string }) {
             sceau={exterieur.sceau}
             passages={contenu.passages_reecrits}
             policeReecriture={contenu.police_reecriture}
+            passagesAbimes={contenu.passages_abimes}
           />
           <p className="mt-3 text-sm text-muted-foreground">{mots.recu(arrive)}</p>
 

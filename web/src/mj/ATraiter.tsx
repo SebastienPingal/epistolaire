@@ -65,6 +65,7 @@ export function ATraiter() {
           livraison_le: immediat ? maintenant() : null,
           copies: [],
           reponse: null,
+          version: null,
         } satisfies Traitement),
       succes,
     );

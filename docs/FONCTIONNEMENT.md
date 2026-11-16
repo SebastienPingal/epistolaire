@@ -1,7 +1,7 @@
 # Guide de fonctionnement
 
 Ce guide décrit comment le site est construit. Il est mis à jour à la fin de chaque étape de `PLAN.md`.
-État décrit : étape 9 (filet de sécurité).
+État décrit : étape 10 (altérations).
 
 ## Vue d'ensemble
 
@@ -20,8 +20,9 @@ Les deux sont hébergés sur Vercel. L'interface est un ensemble de fichiers sta
 | `src/` | Le serveur : routeur, accès à la base, logique du jeu |
 | `src/modele.rs` | Le vocabulaire du jeu : gabarits, états d'un pli, d'un sceau… |
 | `src/calendrier.rs` | Le calendrier du jeu : d'un jour réel à une date du jeu |
+| `src/passages.rs` | Les passages d'un texte, réécrits ou abîmés : leur format, le repérage des réécritures, la vérification des passages abîmés |
 | `src/acces/joueur/` | La porte des joueurs : écritoire, fiche, courrier reçu, dossiers |
-| `src/acces/mj/` | La porte du MJ : la file, les plis en route, la plume des PNJ, les plis détruits, puis personnages, écritures, sceaux, réglages |
+| `src/acces/mj/` | La porte du MJ : la file, les plis en route, les altérations, la plume des PNJ, les plis détruits, puis personnages, écritures, sceaux, réglages |
 | `src/taches/` | La troisième porte : les tâches planifiées, appelées par Vercel |
 | `src/notifications/` | Les choix de notification de chaque compte, ses navigateurs abonnés, l'envoi, et le chiffrement des notifications du navigateur |
 | `src/sauvegarde/` | La copie quotidienne de la base, son dépôt dans Vercel Blob, et sa restauration |
@@ -40,6 +41,7 @@ Les deux sont hébergés sur Vercel. L'interface est un ensemble de fichiers sta
 | `web/src/mj/` | Les écrans du MJ |
 | `web/src/composants/` | Les éléments du jeu réutilisés partout : une écriture, un cachet, une enveloppe |
 | `web/src/composants/gabarits/` | Le rendu des gabarits, tels qu'on les lit : pour l'instant le billet |
+| `web/src/outils/passages.ts` | Les passages côté navigateur : conversion des positions, aperçu des réécritures, découpage d'un texte en morceaux |
 | `web/src/types/` | Les types générés depuis le serveur. Ne pas les modifier à la main |
 | `web/src/components/ui/` | Les composants shadcn/ui, ajoutés au fur et à mesure |
 | `web/src/theme/` | Le thème : apparence et vocabulaire de l'univers, et la source de l'icône du site |
@@ -90,7 +92,7 @@ Toute autre adresse renvoie l'interface.
 Un pli est écrit une fois : la table `plis` garde l'original, que seul le MJ voit.
 Quand le MJ le traite, il crée un exemplaire par destinataire dans `exemplaires`.
 L'exemplaire porte la version livrée (éventuellement réécrite), sa date de livraison, et ce que ce destinataire remarque.
-Pour l'instant la version livrée est toujours celle que l'auteur a écrite : son texte, son écriture, sa signature s'il a signé, son sceau s'il a scellé. Les altérations viendront à l'étape 10.
+À sa création, la version livrée est celle que l'auteur a écrite : son texte, son écriture, sa signature s'il a signé, son sceau s'il a scellé. Le MJ peut ensuite l'altérer, tant que l'exemplaire n'est pas arrivé : voir « Les altérations ».
 
 Chaque exemplaire dit pourquoi il existe : c'est celui du destinataire, une redirection, ou une copie pour un tiers. Un personnage n'a jamais deux exemplaires du même pli.
 
@@ -102,7 +104,8 @@ Un joueur ne lit jamais les tables `plis` et `exemplaires`. Tout son courrier re
 
 - les exemplaires déjà arrivés ;
 - leur version livrée, sans l'original ni le vrai auteur ;
-- les altérations que ce destinataire a remarquées, et aucune autre.
+- les altérations que ce destinataire a remarquées, et aucune autre ;
+- un texte où les passages abîmés sont déjà voilés : la vue remplace elle-même chaque caractère abîmé par « · » (fonction `voiler_passages`). Le texte abîmé ne quitte donc jamais la base par la porte des joueurs, quel que soit le code qui lit la vue.
 
 Un pli détruit par son destinataire sort aussi de la vue, sans quitter la base.
 
@@ -198,11 +201,66 @@ Un PNJ ne « reçoit » pas à une date : c'est le MJ qui lit pour lui. Son exem
 
 ### En route
 
-Cet écran montre les exemplaires qui ne sont pas encore arrivés, le prochain en premier, puis ceux qui sont retenus, puis ceux qui sont perdus. Tant qu'un exemplaire n'est pas arrivé, le MJ peut changer sa date ou son destinataire, le retenir, le perdre, le remettre en route, ou en faire partir une copie pour un tiers. Une date placée dans le passé vaut « tout de suite ».
+Cet écran montre les exemplaires qui ne sont pas encore arrivés, le prochain en premier, puis ceux qui sont retenus, puis ceux qui sont perdus. Tant qu'un exemplaire n'est pas arrivé, le MJ peut changer sa date ou son destinataire, le retenir, le perdre, le remettre en route, en faire partir une copie pour un tiers, ou l'altérer. Une date placée dans le passé vaut « tout de suite ».
+
+Un exemplaire altéré porte un repère : « Altéré », ou « Altéré · remarqué » si son destinataire remarquera quelque chose. Une copie faite depuis cet écran reprend la version livrée de l'exemplaire copié, altérations comprises ; rien n'y est remarqué tant que le MJ ne le décide pas pour ce tiers.
 
 Faire arriver une lettre instantanément : « Faire arriver maintenant » sur chaque pli d'En route (un pli retenu ou perdu est remis en route du même geste), et le bouton « Tout de suite » à côté de chaque champ de date (ouverture d'une lettre, plume des PNJ, modification d'un pli). Le serveur n'a rien de particulier à faire : il ramène toute date passée à l'instant où il reçoit la demande.
 
 Rien ne « livre » un pli : il est arrivé dès que sa date est passée. À partir de là, le serveur refuse toute modification.
+
+### Les altérations
+
+Tant qu'un exemplaire n'est pas arrivé, le MJ peut falsifier sa version livrée. L'original, lui, ne change jamais : `plis.contenu` n'est écrit nulle part dans ce code.
+
+**Où.** À deux moments :
+
+- au traitement d'une lettre (« Altérer cette lettre ») : la version altérée part vers tous les destinataires, copies comprises, sans que rien ne soit remarqué ;
+- dans En route (« Altérer »), pour l'exemplaire d'un seul destinataire. C'est là que le MJ décide de ce que ce destinataire remarque.
+
+**Quoi.** L'atelier (`web/src/mj/Alteration.tsx`) montre l'original à gauche et la version livrée à droite, puis :
+
+- le texte, réécrit librement. Les passages réécrits sont surlignés pendant la frappe ;
+- « Abîmer la sélection » : le passage sélectionné dans la version livrée devient une tache ;
+- le sceau : intact, brisé, recollé, ou contrefait. Les trois premiers ne valent que pour le sceau posé par l'auteur. Un sceau contrefait imite n'importe quel sceau, même sur un pli qui n'était pas scellé ;
+- la signature : intacte, retirée, ou contrefaite. Une signature contrefaite imite un personnage (qui entrera dans le carnet du destinataire) et trace un nom ;
+- le faussaire : un personnage, ou une main inconnue. Pour une main inconnue, le MJ choisit une écriture parmi celles qu'aucun personnage n'utilise ;
+- « Remarqué par… » : trois interrupteurs (texte, sceau, signature), éteints par défaut. Un interrupteur ne s'allume que s'il y a quelque chose à remarquer ;
+- un aperçu, avec le rendu des joueurs : la lettre telle que la lira le destinataire.
+
+« Rétablir l'original » remet la version livrée telle que l'auteur l'a écrite.
+
+**Ce que voit le destinataire.** C'est la vue `plis_recus` qui en décide, pas l'interface :
+
+| Altération | Rien n'est remarqué | C'est remarqué |
+|---|---|---|
+| Passage réécrit | Dans l'écriture de l'auteur, comme le reste | Dans l'écriture du faussaire |
+| Signature contrefaite | Dans l'écriture du personnage imité | Dans l'écriture du faussaire |
+| Signature retirée | Pas de signature | Pas de signature |
+| Sceau brisé, recollé, contrefait | Le cachet paraît intact | Le dessin du cachet le montre : une fêlure, une ligne de cire plus sombre, un cachet un peu de travers |
+| Passage abîmé | Une tache, toujours | Une tache, toujours |
+
+Aucun mot n'explique jamais une altération : seul le rendu la montre.
+
+**Les passages.** Un passage désigne des caractères d'une case du gabarit, et s'écrit partout de la même façon, dans la base comme dans l'interface :
+
+```json
+{ "champ": "texte", "debut": 12, "fin": 30 }
+```
+
+- `debut` et `fin` comptent les **caractères Unicode**, `fin` exclue. C'est ce que comptent Rust (`chars()`) et PostgreSQL. Un champ de texte du navigateur compte autrement (en unités UTF-16, où un émoji en vaut deux) : `web/src/outils/passages.ts` convertit à chaque passage de la frontière ;
+- `champ` nomme la case du gabarit. Un billet n'a que `texte` ; un passage enregistré sans `champ` vaut `texte` ;
+- les **passages réécrits** ne viennent jamais de l'interface. Le serveur les repère seul à chaque enregistrement (`src/passages.rs`), en comparant l'original et la version livrée mot par mot, avec la bibliothèque `similar`. Tout mot ajouté ou remplacé fait partie d'un passage ; des mots voisins n'en font qu'un. Un mot simplement supprimé ne laisse rien à montrer, et l'écran le dit. Le surlignage pendant la frappe est un aperçu calculé dans le navigateur (bibliothèque `diff`) ; une fois enregistré, c'est le repérage du serveur qui s'affiche ;
+- les **passages abîmés** sont choisis par le MJ, et vérifiés par le serveur : dans les limites du texte, réunis s'ils se touchent. Le texte abîmé reste dans la base (le MJ le voit), mais la vue des joueurs le remplace par des « · », en gardant la longueur et les retours à la ligne. Si la liste est mal formée, la vue voile tout le texte plutôt que de risquer d'en laisser passer.
+
+**Les garanties du serveur** (`src/acces/mj/alterations.rs`) :
+
+- la version livrée d'un exemplaire ne se modifie que par `appliquer_version`, et `recopier_version` pour une copie ;
+- un exemplaire arrivé ne s'altère plus ;
+- ce qui est remarqué exige un faussaire désigné : sans lui, il n'y aurait pas d'écriture où le montrer ;
+- chaque altération ajoute une ligne à l'historique, avec la version d'avant et celle d'après. Enregistrer deux fois la même version n'ajoute rien.
+
+L'atelier affiche aussi l'historique du pli, et reste lisible une fois le pli arrivé : on n'y change plus rien, mais on y voit l'original, ce qui a été reçu, et ce qui s'est passé.
 
 ### Écrire au nom d'un PNJ
 
@@ -212,7 +270,7 @@ Le MJ choisit un PNJ (ou en crée un), un destinataire, et écrit un billet. Les
 - le MJ peut dépasser la longueur d'un billet ;
 - un PNJ qui n'a pas encore d'écriture reçoit celle que le MJ choisit à ce moment, et la garde.
 
-Le MJ n'écrit qu'au nom d'un PNJ. Ses lettres ne comptent dans aucun quota.
+Le MJ n'écrit qu'au nom d'un PNJ. Ses lettres ne comptent dans aucun quota. Écrire une lettre entièrement fausse au nom d'un joueur n'est pas possible pour l'instant : cela viendra avec les compétences des personnages.
 
 ### Détruites
 
@@ -220,7 +278,7 @@ La liste des plis que les joueurs ont détruits, le plus récent en premier : qu
 
 ### L'historique
 
-Chaque geste du MJ sur un pli (traitement, changement de date ou de destinataire, copie, mise à l'écart), et chaque destruction par un joueur, ajoute une ligne à la table `evenements`, avec l'état d'avant et d'après. Rien n'y est jamais effacé. Cet historique sera affiché à l'étape 13.
+Chaque geste du MJ sur un pli (traitement, changement de date ou de destinataire, copie, altération, mise à l'écart), et chaque destruction par un joueur, ajoute une ligne à la table `evenements`, avec l'état d'avant et d'après. Rien n'y est jamais effacé. L'atelier des altérations affiche l'historique d'un pli ; l'écran Correspondances (étape 13) le reprendra.
 
 ### La préparation
 
@@ -335,7 +393,7 @@ La restauration n'exige pas les droits d'administrateur de la base : charger les
   - la règle du code : aucun fichier de `src/acces/joueur/` ne lit ni n'écrit les tables `plis` et `exemplaires` (`from`, `join`, `update`, `into`), sauf les deux requêtes permises de `ecritoire.rs` (le compte du quota, l'envoi).
 - **Avec base**, par `essais/confidentialite.sh` : une base à part, `epistolaire_tests`, est vidée et remplie de `tests/donnees/confidentialite.sql`. Ce jeu couvre chaque état d'un pli (brouillon, dans la file, en route, retenu, perdu, arrivé fermé, ouvert, altéré sans que ce soit remarqué, redirigé, détruit), les affaires d'un autre joueur, les notes du MJ, une information étiquetée, et chaque secret porte un marqueur facile à chercher. Le test appelle alors **chaque** route des joueurs, pour Alix et pour Bertrand, avec tous les identifiants du jeu (les siens et ceux des autres), et vérifie :
   - qu'aucune réponse ne contient un marqueur interdit, une adresse e-mail (pas même la sienne), l'identifiant d'un auteur caché, d'un pli, d'un exemplaire qui n'est pas arrivé chez lui, ni une date réelle (seuls ses brouillons ont la leur) ;
-  - qu'un pli altéré paraît intact quand rien n'est remarqué ;
+  - qu'un pli altéré paraît intact quand rien n'est remarqué, et que le texte d'un passage abîmé ne sort jamais (ni à la lecture du pli, ni dans les listes) ;
   - que les gestes interdits (ouvrir, ranger, détruire le pli d'un autre ou un pli pas encore arrivé ; lire, modifier, envoyer, jeter le brouillon d'un autre ou une lettre envoyée ; toucher le dossier d'un autre) répondent « introuvable » et ne changent **rien** dans la base (empreinte de toutes les tables avant et après) ;
   - que chaque route du MJ répond 403 à un joueur et 401 sans session, et chaque tâche 401 sans le secret, même pour le MJ connecté. Ces deux listes sont relues automatiquement dans le code.
 
@@ -352,6 +410,8 @@ Le geste d'ouverture au doigt est essayé avec de vrais événements tactiles en
 Le parcours `notifications` appelle la tâche avec le secret d'essai, fait « arriver » des plis en avançant leur date, et remplace le service de notifications par un faux, qui déchiffre ce qu'il reçoit et vérifie la signature. Les autres parcours passent l'écran du premier choix en cliquant « Plus tard » (`essais/commun.cjs`).
 
 Le parcours `sauvegarde` remplace le stockage Vercel Blob par un faux, lancé sur la machine (variable `VERCEL_BLOB_API_URL`). Il vérifie la liste, la copie à la main, le ménage des copies de plus de 30 jours, le téléchargement, la garde de la tâche, et l'e-mail au MJ quand le stockage est en panne. `essais/restauration.sh` copie une base remplie, la restaure dans une base neuve et compare chaque table ligne à ligne, puis vérifie les refus (base qui contient déjà du courrier, copie à laquelle il manque une table).
+
+Le parcours `alterer` falsifie une lettre dans l'atelier (réécriture, passage abîmé, sceau recollé, signature contrefaite, faussaire), pour deux destinataires dont un seul remarque quelque chose, puis lit la lettre de chacun. Il garde toutes les réponses faites aux joueurs et y cherche l'original et le texte abîmé : ils ne doivent être nulle part. La lettre d'essai contient un émoji, pour que les positions des passages soient vérifiées là où le navigateur et le serveur ne comptent pas pareil. `essais/vue-plis-recus.sql` montre ce que la vue laisse voir de chaque cas, passages abîmés et mal formés compris.
 
 Ils tournent contre une base locale, jamais contre la base en ligne.
 

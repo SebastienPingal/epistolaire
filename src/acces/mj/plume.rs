@@ -21,7 +21,7 @@ use crate::erreur::{Erreur, refus_de_la_base};
 use crate::modele::{Acheminement, GenrePersonnage, OrigineExemplaire};
 
 /// Le MJ peut dépasser la longueur d'un billet de joueur, mais pas sans fin.
-const LONGUEUR_MAX: usize = 20_000;
+pub(super) const LONGUEUR_MAX: usize = 20_000;
 
 /// Ce que le MJ écrit sur le billet d'un PNJ.
 #[derive(Deserialize, TS)]

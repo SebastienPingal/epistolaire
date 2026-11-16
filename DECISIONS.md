@@ -1,7 +1,7 @@
 # Jeu de rôle épistolaire : décisions de conception
 
 Ce document est tenu à jour au fil des échanges de conception.
-Dernière mise à jour : 16 novembre, au début de l'étape 9 (filet de sécurité).
+Dernière mise à jour : 16 novembre, à l'étape 10 (altérations).
 
 ## Avancement
 
@@ -111,7 +111,7 @@ Dernière mise à jour : 16 novembre, au début de l'étape 9 (filet de sécurit
 - Les copies pour des tiers partent même si l'exemplaire du destinataire est retenu ou perdu.
 - Un personnage ne reçoit jamais deux exemplaires du même pli.
 - Tant qu'un exemplaire n'est pas arrivé, le MJ peut changer sa date et son destinataire, le retenir, le perdre, le remettre en route, ou en faire partir une copie. Un pli retenu ou perdu peut toujours être remis en route. Une fois arrivé, il ne se modifie plus.
-- Le MJ n'écrit qu'au nom d'un PNJ. Écrire au nom d'un joueur est une contrefaçon : elle viendra avec les altérations.
+- Le MJ n'écrit qu'au nom d'un PNJ. Écrire une lettre entièrement fausse au nom d'un joueur n'est pas possible pour l'instant : cela viendra plus tard, quand un joueur en aura la compétence ou fera appel à quelqu'un qui l'a (décidé le 16 novembre).
 - Une lettre de PNJ ne passe pas par la file : elle part aussitôt, avec le délai habituel (plus ou moins le hasard) ou la date choisie par le MJ.
 - Un PNJ sans écriture reçoit celle que le MJ choisit au moment d'écrire, et la garde. Les écritures génériques sont proposées en premier ; celles des joueurs ne le sont pas. Un PNJ sans sceau envoie un pli non scellé.
 - Le MJ peut dépasser la longueur d'un billet : l'écran le lui signale, sans le bloquer.
@@ -129,8 +129,14 @@ Dernière mise à jour : 16 novembre, au début de l'étape 9 (filet de sécurit
 - Rien n'est remarqué : tout paraît normal.
 - Une altération est remarquée : les passages réécrits et la signature apparaissent dans la main du faussaire, et le sceau montre qu'il a été trafiqué. Aucun message ne l'explique.
 - Le MJ choisit la main du faussaire : un personnage précis ou une main inconnue.
-- Le site repère seul les passages réécrits.
-- Un passage abîmé est toujours visible.
+- Pour une main inconnue, le MJ choisit l'écriture à chaque fois, parmi celles qu'aucun personnage n'utilise (décidé le 16 novembre). Deux faux d'une même main inconnue peuvent ainsi se ressembler, ou non.
+- Le site repère seul les passages réécrits : tout mot ajouté ou remplacé. Un mot simplement supprimé ne laisse rien à voir.
+- Un passage abîmé est toujours visible. C'est une tache : on voit qu'il y avait du texte, et à peu près combien, mais on ne peut rien en lire (décidé le 16 novembre). Son texte n'est jamais envoyé au joueur.
+- Le MJ altère à deux moments (décidé le 16 novembre) : au traitement, où la version altérée part vers tous les destinataires, copies comprises, sans que rien ne soit remarqué ; et dans En route, pour un seul destinataire, jusqu'à l'arrivée. C'est là qu'il décide de ce que chacun remarque.
+- Le sceau posé par l'auteur peut être brisé ou recollé, pas retiré. Un sceau contrefait imite n'importe quel sceau, même sur un pli qui n'était pas scellé.
+- Une signature contrefaite imite un personnage : tant que rien n'est remarqué, elle paraît de sa main, et il entre dans le carnet du destinataire à l'ouverture.
+- Une copie faite depuis En route reprend la version livrée de l'exemplaire copié, altérations comprises, sans que le tiers ne remarque rien. « Rétablir l'original » permet de lui envoyer la vraie lettre.
+- Une lettre entièrement fausse, écrite au nom d'un joueur, n'est pas possible pour l'instant (voir « Traitement par le MJ »).
 
 ## PNJ et documents
 

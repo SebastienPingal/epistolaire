@@ -97,6 +97,8 @@ export const vocabulaire = {
     ranger: 'Ranger',
     detruire: 'Détruire',
     introuvable: 'Ce pli n’est pas ici.',
+    /** Lu à la place d'un passage abîmé par les lecteurs d'écran. */
+    illisible: 'passage illisible',
   },
 
   ecritoire: {

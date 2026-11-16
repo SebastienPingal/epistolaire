@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select nom, ecriture_id from personnages where id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "nom",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "ecriture_id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      true
+    ]
+  },
+  "hash": "2c258c9ed639e6cb0fc16ade8400d0ee595b87e2a87185a758bb12e4b0413eee"
+}

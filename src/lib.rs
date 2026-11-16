@@ -10,6 +10,7 @@ pub mod courriel;
 pub mod erreur;
 pub mod modele;
 pub mod notifications;
+pub mod passages;
 pub mod sante;
 pub mod sauvegarde;
 pub mod taches;

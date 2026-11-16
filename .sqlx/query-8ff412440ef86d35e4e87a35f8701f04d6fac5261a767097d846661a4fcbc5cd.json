@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        select\n            r.id                                   as \"id!\",\n            r.gabarit                              as \"gabarit!: Gabarit\",\n            (r.arrive_le at time zone g.fuseau)::date as \"arrive_jour!\",\n            (r.ecrit_le at time zone g.fuseau)::date  as \"ecrit_jour!\",\n            r.ouvert_le is not null                as \"ouvert!\",\n            r.dossier_id,\n            coalesce(r.contenu->>'texte', '')      as \"texte!\",\n            texte.police                           as \"police?\",\n            r.sceau_nom,\n            r.sceau_initiales,\n            r.sceau_image,\n            r.sceau_etat                           as \"sceau_etat: EtatSceau\",\n            r.signature_nom,\n            signature.police                       as \"signature_police?\",\n            r.passages_reecrits                    as \"passages!: Value\",\n            reecriture.police                      as \"police_reecriture?\"\n        from plis_recus r\n        cross join reglages g\n        left join ecritures texte on texte.id = r.ecriture_id\n        left join ecritures signature on signature.id = r.signature_ecriture_id\n        left join ecritures reecriture on reecriture.id = r.reecriture_ecriture_id\n        where r.id = $1 and r.destinataire_id = $2\n        ",
+  "query": "\n        select\n            r.id                                   as \"id!\",\n            r.gabarit                              as \"gabarit!: Gabarit\",\n            (r.arrive_le at time zone g.fuseau)::date as \"arrive_jour!\",\n            (r.ecrit_le at time zone g.fuseau)::date  as \"ecrit_jour!\",\n            r.ouvert_le is not null                as \"ouvert!\",\n            r.dossier_id,\n            coalesce(r.contenu->>'texte', '')      as \"texte!\",\n            texte.police                           as \"police?\",\n            r.sceau_nom,\n            r.sceau_initiales,\n            r.sceau_image,\n            r.sceau_etat                           as \"sceau_etat: EtatSceau\",\n            r.signature_nom,\n            signature.police                       as \"signature_police?\",\n            r.passages_reecrits                    as \"passages!: Value\",\n            reecriture.police                      as \"police_reecriture?\",\n            r.passages_abimes                      as \"passages_abimes!: Value\"\n        from plis_recus r\n        cross join reglages g\n        left join ecritures texte on texte.id = r.ecriture_id\n        left join ecritures signature on signature.id = r.signature_ecriture_id\n        left join ecritures reecriture on reecriture.id = r.reecriture_ecriture_id\n        where r.id = $1 and r.destinataire_id = $2\n        ",
   "describe": {
     "columns": [
       {
@@ -82,6 +82,11 @@
         "ordinal": 15,
         "name": "police_reecriture?",
         "type_info": "Text"
+      },
+      {
+        "ordinal": 16,
+        "name": "passages_abimes!: Value",
+        "type_info": "Jsonb"
       }
     ],
     "parameters": {
@@ -106,8 +111,9 @@
       true,
       false,
       true,
-      false
+      false,
+      true
     ]
   },
-  "hash": "cb129b28cdd207cf73798da0f61dc94a81cd9655c2435c8fd072c344674b0207"
+  "hash": "8ff412440ef86d35e4e87a35f8701f04d6fac5261a767097d846661a4fcbc5cd"
 }

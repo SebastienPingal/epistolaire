@@ -1,0 +1,35 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        select genre, details, cree_le\n        from evenements\n        where pli_id = $1 and (exemplaire_id is null or exemplaire_id = $2)\n        order by cree_le, id\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "genre",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "details",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 2,
+        "name": "cree_le",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "8795c0198f16ad27f8c716b097546cce9f76ac377e574f8f38f6d446c37f0892"
+}

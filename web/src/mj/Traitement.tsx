@@ -17,7 +17,15 @@ import type { PersonnageResume } from '@/types/PersonnageResume';
 import type { Reglages } from '@/types/Reglages';
 import type { SceauMj } from '@/types/SceauMj';
 import type { Traitement as TraitementSaisi } from '@/types/Traitement';
+import type { VersionLivree } from '@/types/VersionLivree';
 
+import {
+  EditeurVersion,
+  estAlteree,
+  manqueALaVersion,
+  type OriginalVu,
+  versionOriginale,
+} from './Alteration';
 import { nomDuDestinataire } from './ATraiter';
 import { Attente, Champ, Section } from './commun';
 import {
@@ -171,6 +179,9 @@ function Decider({
   );
   const [dateChoisie, setDateChoisie] = useState(false);
   const [reponse, setReponse] = useState<BilletPnj>(BILLET_VIERGE);
+  // L'altération : vide tant que le MJ ne touche pas à la lettre.
+  const [version, setVersion] = useState<VersionLivree | null>(null);
+  const [mainInconnue, setMainInconnue] = useState(false);
   const [creation, setCreation] = useState(false);
   const [occupe, setOccupe] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
@@ -185,6 +196,18 @@ function Decider({
   const dateUtile =
     !versPnj || copies.some((copie) => personnages.find((p) => p.id === copie)?.genre === 'joueur');
   const manqueReponse = destinataire && versPnj ? manqueAuBillet(destinataire, reponse) : null;
+  const original: OriginalVu = {
+    texte: lettre.texte,
+    police: lettre.police,
+    signature: lettre.signe ? lettre.auteur_nom : null,
+    sceauId: lettre.sceau_id,
+    sceau: lettre.sceau,
+    auteurId: lettre.auteur_id,
+    auteurNom: lettre.auteur_nom,
+  };
+  // Une altération qui ne change rien n'en est pas une : la lettre part telle quelle.
+  const alteree = version !== null && estAlteree(original, version);
+  const manqueVersion = alteree ? manqueALaVersion(original, version, mainInconnue) : null;
 
   async function decider(decision: Decision, succes: string, avecReponse = false) {
     setOccupe(true);
@@ -196,6 +219,7 @@ function Decider({
         livraison_le: dateChoisie ? depuisChamp(date) : null,
         copies,
         reponse: avecReponse ? reponse : null,
+        version: alteree ? version : null,
       } satisfies TraitementSaisi);
       toast.success(succes);
       naviguer('/mj/a-traiter');
@@ -342,9 +366,45 @@ function Decider({
         </Section>
       )}
 
-      {erreur && (
+      {destinataire && (
+        <Section
+          titre="Altération"
+          aide="La version altérée part vers tous les destinataires, copies comprises, sans que rien ne soit remarqué. Vous déciderez ensuite pour chacun, dans En route."
+        >
+          {version === null ? (
+            <Button variant="outline" onClick={() => setVersion(versionOriginale(original))}>
+              Altérer cette lettre
+            </Button>
+          ) : (
+            <>
+              <EditeurVersion
+                original={original}
+                version={version}
+                surVersion={setVersion}
+                mainInconnue={mainInconnue}
+                surMainInconnue={setMainInconnue}
+                personnages={personnages}
+                ecritures={ecritures}
+                sceaux={sceaux}
+              />
+              <Button
+                variant="ghost"
+                className="mt-4"
+                onClick={() => {
+                  setVersion(null);
+                  setMainInconnue(false);
+                }}
+              >
+                Renoncer à l'altération
+              </Button>
+            </>
+          )}
+        </Section>
+      )}
+
+      {(erreur ?? manqueVersion) && (
         <p role="alert" className="mt-6 text-destructive">
-          {erreur}
+          {erreur ?? manqueVersion}
         </p>
       )}
 
@@ -362,7 +422,7 @@ function Decider({
           <>
             <Button
               size="lg"
-              disabled={occupe || manqueReponse !== null}
+              disabled={occupe || manqueReponse !== null || manqueVersion !== null}
               onClick={() => decider('livrer', 'Réponse en route', true)}
             >
               Envoyer la réponse
@@ -370,7 +430,7 @@ function Decider({
             <Button
               size="lg"
               variant="outline"
-              disabled={occupe}
+              disabled={occupe || manqueVersion !== null}
               onClick={() => decider('livrer', 'Lettre classée')}
             >
               Classer sans réponse
@@ -378,7 +438,7 @@ function Decider({
             <Button
               size="lg"
               variant="ghost"
-              disabled={occupe}
+              disabled={occupe || manqueVersion !== null}
               onClick={() => decider('perdre', 'Lettre perdue')}
             >
               Perdre
@@ -388,7 +448,7 @@ function Decider({
           <>
             <Button
               size="lg"
-              disabled={occupe}
+              disabled={occupe || manqueVersion !== null}
               onClick={() => decider('livrer', `En route vers ${destinataire.nom}`)}
             >
               Livrer
@@ -396,7 +456,7 @@ function Decider({
             <Button
               size="lg"
               variant="outline"
-              disabled={occupe}
+              disabled={occupe || manqueVersion !== null}
               onClick={() => decider('retenir', 'Lettre retenue')}
             >
               Retenir
@@ -404,7 +464,7 @@ function Decider({
             <Button
               size="lg"
               variant="ghost"
-              disabled={occupe}
+              disabled={occupe || manqueVersion !== null}
               onClick={() => decider('perdre', 'Lettre perdue')}
             >
               Perdre

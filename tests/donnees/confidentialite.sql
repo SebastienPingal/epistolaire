@@ -4,7 +4,8 @@
 -- marqueur en capitales, facile à chercher dans une réponse : BROUILLON-BERTRAND,
 -- ORIGINAL-FILE, ADRESSE-LIBRE, EN-ROUTE, RETENU, PERDU, FERME (tant qu'il n'est pas ouvert),
 -- ORIGINAL-SECRET, ORIGINAL-REDIRIGE, DETRUIT, BERTRAND-…, NOTES-MJ, INFO-SECRETE,
--- EVENEMENT-SECRET, POLICE-FAUSSAIRE, AUTEUR-CACHE, CLEMENCE-VISEE, et les adresses e-mail.
+-- EVENEMENT-SECRET, POLICE-FAUSSAIRE, AUTEUR-CACHE, CLEMENCE-VISEE, ABIME-SECRET (le texte
+-- d'un passage abîmé), et les adresses e-mail.
 --
 -- Identifiants : …b0 à b2 les comptes, …a1 à a5 les personnages, …c1 à c3 les sceaux,
 -- …f1 et f2 les dossiers, …d1 à d11 les plis, …e1 à e8 les exemplaires.
@@ -154,6 +155,14 @@ insert into exemplaires (id, pli_id, destinataire_id, origine, contenu, ecriture
      'en_route', now() - interval '2 hours', now() - interval '90 minutes', null,
      now() - interval '1 hour', now());
 
+-- Le pli altéré a aussi un passage abîmé : on voit qu'il y avait du texte, on ne le lit
+-- jamais. Son faussaire est un personnage, que personne ne doit pouvoir nommer.
+update exemplaires
+set contenu = '{"texte":"Version livrée, lisible. ABIME-SECRET"}',
+    passages_abimes = '[{"champ":"texte","debut":25,"fin":37}]',
+    faussaire_personnage_id = '00000000-0000-0000-0000-0000000000a4'
+where id = '00000000-0000-0000-0000-0000000000e5';
+
 insert into informations (id, intitule, notes) values
     ('00000000-0000-0000-0000-000000000099', 'INFO-SECRETE', 'INFO-SECRETE : le testament est faux');
 insert into pli_informations (pli_id, information_id) values
@@ -161,7 +170,10 @@ insert into pli_informations (pli_id, information_id) values
 
 insert into evenements (pli_id, exemplaire_id, compte_id, genre, details) values
     ('00000000-0000-0000-0000-0000000000d8', '00000000-0000-0000-0000-0000000000e5',
-     '00000000-0000-0000-0000-0000000000b0', 'traitement', '{"note":"EVENEMENT-SECRET"}');
+     '00000000-0000-0000-0000-0000000000b0', 'traitement', '{"note":"EVENEMENT-SECRET"}'),
+    ('00000000-0000-0000-0000-0000000000d8', '00000000-0000-0000-0000-0000000000e5',
+     '00000000-0000-0000-0000-0000000000b0', 'alteration',
+     '{"avant":{"texte":"ORIGINAL-SECRET"},"apres":{"texte":"Version livrée, lisible. ABIME-SECRET"}}');
 
 insert into preferences_notification (compte_id, email_arrivee, choisi_le) values
     ('00000000-0000-0000-0000-0000000000b1', true, now()),

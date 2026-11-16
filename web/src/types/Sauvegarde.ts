@@ -5,6 +5,6 @@
  */
 export type Sauvegarde = { 
 /**
- * Le nom du fichier, sans le dossier : `2026-11-16-040012.json.gz`.
+ * Le nom du fichier, sans le dossier : `2026-11-16-040012-345.json.gz`.
  */
 nom: string, taille: number, faite_le: string, };

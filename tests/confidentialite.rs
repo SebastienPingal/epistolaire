@@ -257,6 +257,7 @@ const MARQUEURS_POUR_ALIX: &[&str] = &[
     "POLICE-FAUSSAIRE",
     "AUTEUR-CACHE",
     "CLEMENCE-VISEE",
+    "ABIME-SECRET",
     "@",
 ];
 
@@ -291,6 +292,7 @@ const MARQUEURS_POUR_BERTRAND: &[&str] = &[
     "POLICE-FAUSSAIRE",
     "AUTEUR-CACHE",
     "CLEMENCE-VISEE",
+    "ABIME-SECRET",
     "@",
 ];
 
@@ -691,9 +693,20 @@ async fn lectures_d_alix(essai: &mut Essai) {
 
     // Altéré, rien de remarqué : tout paraît normal.
     let altere = essai.alix("GET /api/joueur/plis/{id}", &[&id("e5")], None).await.json();
+    // Le passage abîmé se voit toujours, mais son texte ne sort jamais : douze points.
     essai.vrai(
-        "pli altéré : la version livrée",
-        altere["contenu"]["texte"] == "Version livrée, lisible.",
+        "pli altéré : la version livrée, le passage abîmé voilé",
+        altere["contenu"]["texte"] == "Version livrée, lisible. ············",
+    );
+    essai.vrai(
+        "pli altéré : la place du passage abîmé",
+        altere["contenu"]["passages_abimes"]
+            == json!([{ "champ": "texte", "debut": 25, "fin": 37 }]),
+    );
+    let dossier = essai.alix("GET /api/joueur/dossiers/{id}", &[&id("f1")], None).await;
+    essai.vrai(
+        "pli altéré : dans la liste du dossier, le début est voilé lui aussi",
+        dossier.texte.contains("Version livrée, lisible. ············"),
     );
     essai.vrai(
         "pli altéré : le sceau brisé paraît intact",

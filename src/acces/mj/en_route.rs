@@ -3,6 +3,9 @@
 //! Tant qu'un exemplaire n'est pas livré, le MJ peut changer sa date, son destinataire,
 //! le retenir, le perdre, le remettre en route, ou en faire partir une copie.
 //! Une fois arrivé, il ne se modifie plus.
+//!
+//! La version livrée elle-même (texte, sceau, signature) se change ailleurs :
+//! voir [`super::alterations`].
 
 use axum::Json;
 use axum::extract::Path;
@@ -14,12 +17,13 @@ use ts_rs::TS;
 use uuid::Uuid;
 
 use super::acheminement::{REFUS_PERSONNAGE, SceauPose, noter, origine_pour, poser_exemplaire};
+use super::alterations::recopier_version;
 use crate::acces::Mj;
 use crate::base;
 use crate::erreur::Erreur;
 use crate::modele::{Acheminement, GenreDestinataire, OrigineExemplaire};
 
-const REFUS_ARRIVE: Erreur =
+pub(super) const REFUS_ARRIVE: Erreur =
     Erreur::Refus("Ce pli est déjà arrivé : il ne peut plus être modifié.");
 
 /// Un personnage ne reçoit jamais deux exemplaires du même pli.
@@ -58,6 +62,11 @@ pub struct ExemplaireMj {
     pub police: Option<String>,
     pub signature: Option<String>,
     pub sceau: Option<SceauPose>,
+    /// La version livrée n'est plus celle de l'auteur : texte réécrit, passage abîmé,
+    /// sceau trafiqué, signature retirée ou contrefaite.
+    pub altere: bool,
+    /// Le destinataire remarquera quelque chose.
+    pub remarque: bool,
 }
 
 #[derive(Deserialize, TS)]
@@ -101,7 +110,15 @@ pub async fn lister(_mj: Mj) -> Result<Json<EnRoute>, Erreur> {
                 as "signature?",
             s.nom_grave as "sceau_nom?",
             s.initiales as "sceau_initiales?",
-            s.image_url as "sceau_image?"
+            s.image_url as "sceau_image?",
+            (
+                coalesce(x.contenu->>'texte', '') <> coalesce(p.contenu->>'texte', '')
+                or x.passages_abimes <> '[]'::jsonb
+                or x.sceau_id is distinct from p.sceau_id
+                or coalesce(x.sceau_etat, 'intact') <> 'intact'
+                or x.signature_etat in ('retiree', 'contrefaite')
+            ) as "altere!",
+            (x.remarque_texte or x.remarque_sceau or x.remarque_signature) as "remarque!"
         from exemplaires x
         join plis p on p.id = x.pli_id
         join personnages d on d.id = x.destinataire_id
@@ -135,6 +152,8 @@ pub async fn lister(_mj: Mj) -> Result<Json<EnRoute>, Erreur> {
             police: ligne.police,
             signature: ligne.signature,
             sceau: SceauPose::depuis(ligne.sceau_nom, ligne.sceau_initiales, ligne.sceau_image),
+            altere: ligne.altere,
+            remarque: ligne.remarque,
         };
         match exemplaire.acheminement {
             Acheminement::EnRoute => ecran.en_route.push(exemplaire),
@@ -256,7 +275,9 @@ pub async fn modifier(
     Ok(StatusCode::NO_CONTENT)
 }
 
-/// Fait partir une copie du pli pour un tiers.
+/// Fait partir une copie du pli pour un tiers. La copie reprend la version livrée de
+/// l'exemplaire copié, altérations comprises ; rien n'y est remarqué tant que le MJ ne
+/// le décide pas pour ce tiers.
 pub async fn copier(
     mj: Mj,
     Path(id): Path<Uuid>,
@@ -302,6 +323,7 @@ pub async fn copier(
         source.livraison_le,
     )
     .await?;
+    recopier_version(&mut transaction, id, copie_id).await?;
 
     noter(
         &mut transaction,
@@ -312,6 +334,7 @@ pub async fn copier(
         json!({
             "destinataire_id": saisie.destinataire_id,
             "livraison_le": source.livraison_le,
+            "copie_de": id,
         }),
     )
     .await?;

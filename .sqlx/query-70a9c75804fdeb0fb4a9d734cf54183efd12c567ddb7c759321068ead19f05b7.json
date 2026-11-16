@@ -1,0 +1,88 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        select\n            coalesce(contenu->>'texte', '') as \"texte!\",\n            passages_abimes,\n            sceau_id,\n            sceau_etat as \"sceau_etat: EtatSceau\",\n            signature_etat as \"signature_etat: EtatSignature\",\n            signature_nom,\n            signature_personnage_id,\n            faussaire_personnage_id,\n            faussaire_ecriture_id,\n            remarque_texte,\n            remarque_sceau,\n            remarque_signature\n        from exemplaires\n        where id = $1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "texte!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "passages_abimes",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 2,
+        "name": "sceau_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 3,
+        "name": "sceau_etat: EtatSceau",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "signature_etat: EtatSignature",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "signature_nom",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "signature_personnage_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 7,
+        "name": "faussaire_personnage_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 8,
+        "name": "faussaire_ecriture_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 9,
+        "name": "remarque_texte",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 10,
+        "name": "remarque_sceau",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 11,
+        "name": "remarque_signature",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null,
+      false,
+      true,
+      true,
+      false,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "70a9c75804fdeb0fb4a9d734cf54183efd12c567ddb7c759321068ead19f05b7"
+}

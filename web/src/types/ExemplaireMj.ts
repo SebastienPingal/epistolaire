@@ -18,4 +18,13 @@ livraison_le: string | null, envoye_le: string, texte: string,
 /**
  * La police de l'écriture du texte.
  */
-police: string | null, signature: string | null, sceau: SceauPose | null, };
+police: string | null, signature: string | null, sceau: SceauPose | null, 
+/**
+ * La version livrée n'est plus celle de l'auteur : texte réécrit, passage abîmé,
+ * sceau trafiqué, signature retirée ou contrefaite.
+ */
+altere: boolean, 
+/**
+ * Le destinataire remarquera quelque chose.
+ */
+remarque: boolean, };

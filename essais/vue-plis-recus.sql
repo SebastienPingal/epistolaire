@@ -22,6 +22,7 @@ select 'x'::text as cas, '00000000-0000-0000-0000-0000000000b1'::uuid as pli_id,
        '00000000-0000-0000-0000-0000000000e1'::uuid as signature_ecriture_id,
        'recolle'::text as sceau_etat, 'contrefaite'::text as signature_etat,
        '[{"debut":0,"fin":7}]'::jsonb as passages_reecrits,
+       '[]'::jsonb as passages_abimes,
        '00000000-0000-0000-0000-0000000000e3'::uuid as faussaire_ecriture_id,
        false as remarque_texte, false as remarque_sceau, false as remarque_signature,
        'en_route'::text as acheminement, now() - interval '1 day' as livraison_le;
@@ -30,8 +31,8 @@ create temp table cas (cas text, id uuid);
 create function pg_temp.poser(nom text, variante text) returns void language plpgsql as $$
 declare nouveau uuid;
 begin
-  execute format('insert into exemplaires (pli_id, destinataire_id, contenu, ecriture_id, sceau_id, signature_nom, signature_ecriture_id, sceau_etat, signature_etat, passages_reecrits, faussaire_ecriture_id, remarque_texte, remarque_sceau, remarque_signature, acheminement, livraison_le)
-    select pli_id, destinataire_id, contenu, ecriture_id, sceau_id, signature_nom, signature_ecriture_id, sceau_etat, signature_etat, passages_reecrits, faussaire_ecriture_id, remarque_texte, remarque_sceau, remarque_signature, acheminement, livraison_le
+  execute format('insert into exemplaires (pli_id, destinataire_id, contenu, ecriture_id, sceau_id, signature_nom, signature_ecriture_id, sceau_etat, signature_etat, passages_reecrits, passages_abimes, faussaire_ecriture_id, remarque_texte, remarque_sceau, remarque_signature, acheminement, livraison_le)
+    select pli_id, destinataire_id, contenu, ecriture_id, sceau_id, signature_nom, signature_ecriture_id, sceau_etat, signature_etat, passages_reecrits, passages_abimes, faussaire_ecriture_id, remarque_texte, remarque_sceau, remarque_signature, acheminement, livraison_le
     from (select * from modele) m, lateral (select 1) z where true returning id') into nouveau;
   execute format('update exemplaires set %s where id = %L', variante, nouveau);
   insert into cas values (nom, nouveau);
@@ -44,15 +45,28 @@ select pg_temp.poser('4 retenu',               'acheminement = ''retenu''');
 select pg_temp.poser('5 perdu',                'acheminement = ''perdu''');
 select pg_temp.poser('6 signature retiree',    'signature_etat = ''retiree''');
 select pg_temp.poser('7 detruit',              'detruit_le = now()');
+-- Un passage abîmé se voit toujours, remarqué ou non, et ne se lit jamais : « livree » est voilé.
+select pg_temp.poser('8 abime, rien remarque', 'passages_abimes = ''[{"champ":"texte","debut":8,"fin":14}]''');
+select pg_temp.poser('9 abime, tout remarque', 'passages_abimes = ''[{"debut":8,"fin":14}]'', remarque_texte = true, remarque_sceau = true, remarque_signature = true');
+-- Des passages mal formés ne laissent rien passer : tout le texte est voilé.
+select pg_temp.poser('A abime mal forme',      'passages_abimes = ''[{"debut":"x"}]''');
+select pg_temp.poser('B abime pas une liste',  'passages_abimes = ''{"debut":8}''');
 
 \echo '--- Ce que voit le destinataire (vue plis_recus) ---'
 select c.cas, r.contenu->>'texte' as texte, r.sceau_nom, r.sceau_etat, r.signature_nom,
-       es.nom as main_signature, r.passages_reecrits as passages, er.nom as main_reecriture
+       es.nom as main_signature, r.passages_reecrits as passages, er.nom as main_reecriture,
+       r.passages_abimes as abimes
 from cas c
 left join plis_recus r on r.id = c.id
 left join ecritures es on es.id = r.signature_ecriture_id
 left join ecritures er on er.id = r.reecriture_ecriture_id
 order by c.cas;
+
+\echo '--- Le texte abîmé ne sort par aucune colonne de la vue (attendu : 0) ---'
+select count(*) as fuites
+from cas c
+join plis_recus r on r.id = c.id
+where c.cas >= '8' and to_jsonb(r)::text like '%livree%';
 
 \echo '--- Colonnes de la vue ---'
 select string_agg(column_name, ', ' order by ordinal_position) from information_schema.columns where table_name = 'plis_recus';

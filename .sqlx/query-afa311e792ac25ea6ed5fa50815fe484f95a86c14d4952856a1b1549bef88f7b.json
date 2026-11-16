@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        update exemplaires copie\n        set contenu = source.contenu,\n            passages_abimes = source.passages_abimes,\n            passages_reecrits = source.passages_reecrits,\n            sceau_id = source.sceau_id,\n            sceau_etat = source.sceau_etat,\n            signature_etat = source.signature_etat,\n            signature_nom = source.signature_nom,\n            signature_ecriture_id = source.signature_ecriture_id,\n            signature_personnage_id = source.signature_personnage_id,\n            faussaire_personnage_id = source.faussaire_personnage_id,\n            faussaire_ecriture_id = source.faussaire_ecriture_id\n        from exemplaires source\n        where copie.id = $2 and source.id = $1 and source.pli_id = copie.pli_id\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "afa311e792ac25ea6ed5fa50815fe484f95a86c14d4952856a1b1549bef88f7b"
+}

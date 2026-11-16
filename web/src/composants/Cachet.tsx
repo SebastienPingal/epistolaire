@@ -22,7 +22,12 @@ export function Cachet({ initiales, nom, etat = 'intact', className }: Props) {
       aria-label={`Sceau de ${nom}`}
       className={cn('size-12 shrink-0', className)}
     >
-      <circle cx="24" cy="24" r="22" fill="var(--sceau)" />
+      {/* Une imitation : le bord n'est pas tout à fait rond. */}
+      {etat === 'contrefait' ? (
+        <ellipse cx="24" cy="24" rx="22" ry="20.8" transform="rotate(-18 24 24)" fill="var(--sceau)" />
+      ) : (
+        <circle cx="24" cy="24" r="22" fill="var(--sceau)" />
+      )}
       <circle
         cx="24"
         cy="24"
@@ -34,8 +39,9 @@ export function Cachet({ initiales, nom, etat = 'intact', className }: Props) {
         strokeDasharray={etat === 'contrefait' ? '2.5 1.5' : undefined}
       />
       <text
-        x="24"
-        y="24"
+        x={etat === 'contrefait' ? 24.8 : 24}
+        y={etat === 'contrefait' ? 24.9 : 24}
+        transform={etat === 'contrefait' ? 'rotate(-5 24 24)' : undefined}
         textAnchor="middle"
         dominantBaseline="central"
         fill="var(--primary-foreground)"
@@ -49,9 +55,11 @@ export function Cachet({ initiales, nom, etat = 'intact', className }: Props) {
         <path
           d="M20 2 L26 14 L21 22 L28 31 L23 46"
           fill="none"
-          stroke={etat === 'brise' ? 'var(--background)' : 'var(--primary-foreground)'}
-          strokeOpacity={etat === 'brise' ? 1 : 0.35}
-          strokeWidth={etat === 'brise' ? 2 : 1.2}
+          // Brisé : une fêlure, par où l'on voit le papier. Recollé : une ligne de cire
+          // plus sombre, là où le cachet a été refermé.
+          stroke={etat === 'brise' ? 'var(--background)' : 'var(--foreground)'}
+          strokeOpacity={etat === 'brise' ? 1 : 0.5}
+          strokeWidth={etat === 'brise' ? 2 : 1.6}
           strokeLinejoin="round"
         />
       )}

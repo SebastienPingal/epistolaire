@@ -8,7 +8,9 @@
 //!   qui vérifient elles-mêmes que le pli est arrivé et qu'il est à ce joueur ;
 //! * aucun horodatage de pli ne sort d'ici : seulement des dates du jeu ([`DateJeu`]).
 //!   Le tri par heure d'arrivée se fait en SQL ;
-//! * le contenu d'un pli ne part qu'une fois le pli ouvert.
+//! * le contenu d'un pli ne part qu'une fois le pli ouvert ;
+//! * le texte d'un passage abîmé ne sort jamais : la vue le voile elle-même, et ne laisse
+//!   passer que des « · » à sa place. Ce fichier n'a donc jamais le texte abîmé en main.
 
 use axum::Json;
 use axum::extract::Path;
@@ -25,6 +27,7 @@ use crate::base;
 use crate::calendrier::{Calendrier, DateJeu};
 use crate::erreur::Erreur;
 use crate::modele::{EtatSceau, Gabarit};
+use crate::passages::{self, Passage};
 
 /// Nombre de plis qu'un seul geste peut ranger ou détruire.
 const PLIS_PAR_GESTE: usize = 500;
@@ -103,6 +106,9 @@ pub struct ContenuPli {
     pub passages_reecrits: Vec<Passage>,
     /// L'écriture de ces passages : celle du faussaire.
     pub police_reecriture: Option<String>,
+    /// Les passages abîmés : toujours visibles, jamais lisibles. Dans `texte`, leurs
+    /// caractères sont déjà remplacés par des « · ».
+    pub passages_abimes: Vec<Passage>,
 }
 
 /// Une signature, tracée dans sa propre écriture.
@@ -111,15 +117,6 @@ pub struct ContenuPli {
 pub struct SignatureVue {
     pub nom: String,
     pub police: Option<String>,
-}
-
-/// Un passage du texte, repéré par la position de ses caractères : du `debut` compris
-/// à la `fin` non comprise. Les positions comptent les caractères, pas les octets.
-#[derive(Serialize, Deserialize, TS)]
-#[ts(export)]
-pub struct Passage {
-    pub debut: u32,
-    pub fin: u32,
 }
 
 /// Où ranger un pli. Vide : la Réception.
@@ -254,7 +251,8 @@ async fn lire_pli(pool: &PgPool, joueur: &Joueur, id: Uuid) -> Result<Pli, Erreu
             r.signature_nom,
             signature.police                       as "signature_police?",
             r.passages_reecrits                    as "passages!: Value",
-            reecriture.police                      as "police_reecriture?"
+            reecriture.police                      as "police_reecriture?",
+            r.passages_abimes                      as "passages_abimes!: Value"
         from plis_recus r
         cross join reglages g
         left join ecritures texte on texte.id = r.ecriture_id
@@ -277,9 +275,9 @@ async fn lire_pli(pool: &PgPool, joueur: &Joueur, id: Uuid) -> Result<Pli, Erreu
             nom,
             police: ligne.signature_police.clone(),
         }),
-        // Un passage mal formé ne doit pas empêcher de lire la lettre.
-        passages_reecrits: serde_json::from_value(ligne.passages.clone()).unwrap_or_default(),
+        passages_reecrits: passages::depuis_la_base(ligne.passages.clone()),
         police_reecriture: ligne.police_reecriture.clone(),
+        passages_abimes: passages::depuis_la_base(ligne.passages_abimes.clone()),
     });
 
     let debut = ligne

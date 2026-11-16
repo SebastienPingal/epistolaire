@@ -30,6 +30,7 @@ import {
   depuisChamp,
   maintenant,
   Lettre,
+  LienBouton,
   Pastille,
   versChamp,
 } from './courrier';
@@ -83,7 +84,7 @@ export function EnRoute() {
       <Entete titre="En route" />
       <p className="mb-6 text-muted-foreground">
         Un pli arrive tout seul à sa date. D'ici là, vous pouvez changer sa date ou son destinataire,
-        le retenir, le perdre, ou en faire partir une copie.
+        le retenir, le perdre, en faire partir une copie, ou l'altérer.
       </p>
 
       {donnees.en_route.length === 0 ? (
@@ -140,6 +141,9 @@ function Ligne({
         <h3 className="font-medium text-balance">{titreDe(exemplaire)}</h3>
         {exemplaire.origine === 'redirection' && <Badge variant="secondary">Redirigé</Badge>}
         {exemplaire.origine === 'copie' && <Badge variant="secondary">Copie</Badge>}
+        {exemplaire.altere && (
+          <Badge variant="outline">{exemplaire.remarque ? 'Altéré · remarqué' : 'Altéré'}</Badge>
+        )}
       </div>
       <p className="mt-1 text-sm text-muted-foreground">
         {acheminement === 'en_route' && date && `Arrive ${dateLisible(date)} (${delaiLisible(date)})`}
@@ -159,6 +163,9 @@ function Ligne({
         <Button variant="outline" onClick={() => surOuverture(exemplaire)}>
           Modifier
         </Button>
+        <LienBouton vers={`/mj/en-route/${exemplaire.id}`} variant="outline">
+          Altérer
+        </LienBouton>
         <Button variant="ghost" onClick={() => surArrivee(exemplaire)}>
           Faire arriver maintenant
         </Button>
@@ -297,7 +304,7 @@ function Modification({
         <Champ
           libelle="Copie pour un tiers"
           pour="exemplaire-copie"
-          aide="Le tiers reçoit son propre exemplaire, à la même date."
+          aide="Le tiers reçoit son propre exemplaire, à la même date, dans la version livrée ici : altérations comprises, mais sans rien remarquer."
         >
           <div className="flex flex-wrap gap-2">
             <ChoixPersonnage

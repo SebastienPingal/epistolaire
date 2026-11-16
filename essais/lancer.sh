@@ -10,6 +10,8 @@
 #                                     les notifications du navigateur, le site installable
 #   essais/lancer.sh sauvegarde       la section Sauvegardes du MJ, la tâche quotidienne,
 #                                     le ménage des vieilles copies, l'e-mail en cas d'échec
+#   essais/lancer.sh alterer          l'atelier du MJ : réécrire, abîmer, trafiquer le sceau et
+#                                     la signature ; ce que chaque destinataire voit ensuite
 #
 # Le script vide la base locale, y met le jeu de données du parcours, lance le serveur
 # et l'interface, déroule le parcours, puis arrête tout. Les captures d'écran et le
@@ -20,7 +22,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-parcours="${1:?Quel parcours ? connexion, preparation-mj, ecrire, traiter, recevoir, notifications ou sauvegarde}"
+parcours="${1:?Quel parcours ? connexion, preparation-mj, ecrire, traiter, recevoir, notifications, sauvegarde ou alterer}"
 sortie="${2:-essais/sortie}"
 export DATABASE_URL="${DATABASE_URL:-postgres://postgres:postgres@localhost:5432/epistolaire}"
 mkdir -p "$sortie"

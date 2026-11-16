@@ -20,7 +20,7 @@ Le détail de chaque étape restante (tâches, questions à poser au MJ, parcour
 | 8 | Notifications et site installable | Fait |
 | 9 | Filet de sécurité | En ligne, à finir (stockage Blob, téléphones) |
 | L | Lancement : répétition générale et mise en jeu | À faire |
-| 10 | Altérations | Après le lancement |
+| 10 | Altérations | En aperçu (avancée avant le lancement, à la demande du MJ) |
 | 11 | Documents et gabarits | Après le lancement |
 | 12 | Gazette | Après le lancement |
 | 13 | Vue MJ complète | Après le lancement |
@@ -37,7 +37,15 @@ La partie commence dès que les étapes 7, 8 et 9 sont en ligne, après la rép�
 
 ## Pour reprendre
 
-État au moment de cette note (16 novembre, étape 9 mise en ligne à la demande du MJ) :
+État au moment de cette note (16 novembre, étape 10 en aperçu) :
+
+- l'étape 10 (altérations) a été faite avant le lancement, à la demande du MJ. Elle est sur sa branche, en aperçu, pas encore en ligne. Ses réponses (main inconnue : une écriture choisie à chaque fois ; passage abîmé : une tache ; altérer au traitement et dans En route ; pas de lettre entièrement fausse pour l'instant) sont dans `DECISIONS.md` ;
+- fait et vérifié en local : le parcours `alterer`, tous les anciens parcours, les tests de confidentialité (ils couvrent le passage abîmé) et la restauration ;
+- la migration `0007_alterations.sql` ajoute deux colonnes à `exemplaires`, une fonction, et remplace la vue `plis_recus`. Elle ne supprime rien. Comme les aperçus partagent encore la base du site en ligne, elle s'y applique dès que l'aperçu démarre : le site en ligne (qui ne connaît pas ces colonnes) continue de marcher avec ;
+- reste à faire pour l'étape 10 : que le MJ falsifie une lettre sur l'aperçu, puis la mise en ligne (`git push origin <branche>:main`) et l'état « Fait » ;
+- non fait, reporté : écrire une lettre entièrement fausse au nom d'un joueur (viendra avec les compétences des personnages) ; altérer un autre gabarit que le billet (étape 11).
+
+Ce qui reste de l'étape 9 n'a pas changé :
 
 - les étapes 1 à 9 sont en ligne sur `main` (l'étape 9 mise en ligne à la demande du MJ, après un aperçu construit et vérifié par `/api/sante`). Les réponses du MJ (copie à 4 h, e-mail en cas d'échec, stockage privé, section « Sauvegardes » avec téléchargement) sont dans `DECISIONS.md` ;
 - la planification des notifications passe sur le site en ligne (premier passage vu dans les journaux de Vercel le 16 novembre à 8 h 13 UTC, secret accepté). Reste l'essai réel sur le téléphone du MJ, à faire avec l'essai 9.5 ;
@@ -48,7 +56,7 @@ La partie commence dès que les étapes 7, 8 et 9 sont en ligne, après la rép�
   - sur le site, dans les Réglages du MJ, « Faire une copie maintenant », télécharger la copie, et la restaurer en local avec `cargo run --bin restaurer` ;
   - vérifier dans les journaux de Vercel que la copie de 4 h (heure de Paris) a bien tourné la première nuit : Vercel a accepté la planification avec son fuseau horaire ;
   - installer le site sur un Android et un iPhone, s'y connecter avec le code, et recevoir une notification (9.5) ;
-- une fois ces points faits : l'état « Fait » ci-dessus, puis l'étape L (`docs/taches/lancement.md`).
+- une fois ces points faits : l'état « Fait » de l'étape 9, puis l'étape L (`docs/taches/lancement.md`).
 
 ---
 
@@ -159,6 +167,8 @@ On voit : la partie commence.
 - Le sceau : intact, brisé, recollé ou contrefait. La signature : intacte, retirée ou contrefaite.
 - La détection, décidée pour chaque destinataire, et la main du faussaire.
 - L'original et l'historique, conservés et visibles du seul MJ.
+
+On voit : le MJ falsifie une lettre, et chaque destinataire ne voit que ce qu'il remarque.
 
 ### 11. Documents et gabarits
 

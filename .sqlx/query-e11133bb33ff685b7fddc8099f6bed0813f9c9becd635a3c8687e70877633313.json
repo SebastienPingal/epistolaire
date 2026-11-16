@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        select (acheminement = 'en_route' and livraison_le <= now()) as \"arrive!\"\n        from exemplaires\n        where id = $1\n        for update\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "arrive!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "e11133bb33ff685b7fddc8099f6bed0813f9c9becd635a3c8687e70877633313"
+}

@@ -9,6 +9,7 @@ import { EspaceJoueur } from '@/joueur/EspaceJoueur';
 import { Fiche } from '@/joueur/Fiche';
 import { Pli } from '@/joueur/Pli';
 import { DossierJoueur, Reception } from '@/joueur/Reception';
+import { Alteration } from '@/mj/Alteration';
 import { ATraiter } from '@/mj/ATraiter';
 import { Ecrire } from '@/mj/Ecrire';
 import { Detruits } from '@/mj/Detruits';
@@ -89,6 +90,7 @@ export function App() {
                 <Route path="a-traiter" element={<ATraiter />} />
                 <Route path="a-traiter/:id" element={<Traitement />} />
                 <Route path="en-route" element={<EnRoute />} />
+                <Route path="en-route/:id" element={<Alteration />} />
                 <Route path="ecrire" element={<Ecrire />} />
                 <Route path="detruits" element={<Detruits />} />
                 <Route path="personnages" element={<Personnages />} />

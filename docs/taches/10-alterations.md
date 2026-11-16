@@ -1,5 +1,7 @@
 # Étape 10 : altérations
 
+> Étape réalisée le 16 novembre. Les réponses du MJ sont dans `DECISIONS.md`, section « Altérations ». La lettre entièrement fausse (question 4) n'a pas été faite : le MJ la reporte au moment où les personnages auront des compétences. Deux écarts par rapport à cette fiche, expliqués dans `docs/FONCTIONNEMENT.md` : les passages abîmés sont voilés par la vue `plis_recus` elle-même, et non dans `courrier.rs` ; le format et le repérage des passages sont dans `src/passages.rs`.
+
 Après le lancement : de vrais joueurs utilisent le site. Toute migration doit pouvoir s'appliquer sans perdre ni déformer un pli en route.
 
 ## Ce que le MJ verra

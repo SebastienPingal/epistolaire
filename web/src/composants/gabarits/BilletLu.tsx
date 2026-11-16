@@ -1,6 +1,8 @@
 import { Cachet } from '@/composants/Cachet';
 import { Main } from '@/composants/Main';
 import { cn } from '@/lib/utils';
+import { morceaux } from '@/outils/passages';
+import { vocabulaire } from '@/theme/neutre';
 import type { EtatSceau } from '@/types/EtatSceau';
 import type { Passage } from '@/types/Passage';
 
@@ -15,6 +17,11 @@ type Props = {
   /** Les passages réécrits, tracés dans la main du faussaire. */
   passages?: Passage[];
   policeReecriture?: string | null;
+  /**
+   * Les passages abîmés : une tache à leur place. Leur texte n'arrive jamais jusqu'ici :
+   * le serveur l'a déjà remplacé par des « · ».
+   */
+  passagesAbimes?: Passage[];
   className?: string;
 };
 
@@ -32,6 +39,7 @@ export function BilletLu({
   sceau,
   passages = [],
   policeReecriture = null,
+  passagesAbimes = [],
   className,
 }: Props) {
   return (
@@ -44,11 +52,18 @@ export function BilletLu({
       {date && <p className="mb-4 text-right font-serif text-sm text-muted-foreground">{date}</p>}
 
       <p className="text-xl leading-relaxed break-words whitespace-pre-wrap">
-        {morceaux(texte, passages).map((morceau, rang) => (
-          <Main key={rang} police={morceau.reecrit ? policeReecriture : police}>
-            {morceau.texte}
-          </Main>
-        ))}
+        {morceaux(texte, passages, passagesAbimes).map((morceau, rang) =>
+          morceau.abime ? (
+            // Une tache : on voit qu'il y avait du texte, on ne peut pas le lire.
+            <span key={rang} className="tache" role="img" aria-label={vocabulaire.pli.illisible}>
+              <Main police={police}>{morceau.texte}</Main>
+            </span>
+          ) : (
+            <Main key={rang} police={morceau.reecrit ? policeReecriture : police}>
+              {morceau.texte}
+            </Main>
+          ),
+        )}
       </p>
 
       {(signature || sceau) && (
@@ -72,37 +87,4 @@ export function BilletLu({
       )}
     </article>
   );
-}
-
-type Morceau = { texte: string; reecrit: boolean };
-
-/**
- * Découpe le texte selon les passages réécrits. Les positions comptent les caractères,
- * comme le serveur ; un passage qui déborde du texte est ramené à ses limites.
- */
-function morceaux(texte: string, passages: Passage[]): Morceau[] {
-  const lettres = Array.from(texte);
-  const tries = [...passages]
-    .map(({ debut, fin }) => ({
-      debut: Math.max(0, Math.min(debut, lettres.length)),
-      fin: Math.max(0, Math.min(fin, lettres.length)),
-    }))
-    .filter(({ debut, fin }) => fin > debut)
-    .sort((a, b) => a.debut - b.debut);
-
-  const resultat: Morceau[] = [];
-  let position = 0;
-  for (const { debut, fin } of tries) {
-    const depart = Math.max(debut, position);
-    if (fin <= depart) continue;
-    if (depart > position) {
-      resultat.push({ texte: lettres.slice(position, depart).join(''), reecrit: false });
-    }
-    resultat.push({ texte: lettres.slice(depart, fin).join(''), reecrit: true });
-    position = fin;
-  }
-  if (position < lettres.length || resultat.length === 0) {
-    resultat.push({ texte: lettres.slice(position).join(''), reecrit: false });
-  }
-  return resultat;
 }

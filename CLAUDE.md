@@ -32,6 +32,8 @@ Claude développe et maintient tout le code. Le MJ (propriétaire du repo) déci
 - **Sauvegardes** : copie quotidienne de toute la base dans Vercel Blob, en accès privé (`src/sauvegarde/`). Une nouvelle table est copiée et restaurée sans rien faire, à condition de rester dans le schéma `public`. Jamais de restauration vers la base du site en ligne sans l'accord explicite du MJ.
 - **Notifications** : un message ne dit jamais qui écrit ni ce qui est écrit. Les mots que les joueurs lisent hors du site (e-mails, notifications) sont dans `src/theme.rs`, pendant serveur de `web/src/theme/neutre.ts`. On marque ce qui est signalé avant d'envoyer, sous verrou.
 - **Exemplaires** : un exemplaire ne se crée que par `poser_exemplaire` (`src/acces/mj/acheminement.rs`), qui recopie la version écrite par l'auteur. Tout geste du MJ sur un pli ajoute une ligne à son historique avec `noter`. Le MJ ne modifie plus un exemplaire arrivé.
+- **Altérations** : la version livrée d'un exemplaire ne se modifie que par `appliquer_version` et `recopier_version` (`src/acces/mj/alterations.rs`). L'original (`plis.contenu`) ne se modifie jamais. Les passages réécrits ne viennent jamais de l'interface : le serveur les repère seul (`src/passages.rs`). Le texte d'un passage abîmé ne sort jamais vers un joueur : la vue `plis_recus` le voile elle-même (`voiler_passages`). Une vue ne se modifie que par `create or replace view`, en ajoutant les colonnes à la fin.
+- **Passages** : `{ "champ", "debut", "fin" }`, positions en caractères Unicode, `fin` exclue. Le navigateur compte en unités UTF-16 : convertir avec `web/src/outils/passages.ts` à chaque passage de la frontière.
 - **SQL** : requêtes vérifiées à la compilation (`sqlx::query!`). Après tout changement de requête ou de migration, relancer `cargo sqlx prepare` et commiter `.sqlx/`.
 - **Types de l'interface** : générés depuis Rust (`ts-rs`) dans `web/src/types/`. Ne jamais les écrire à la main ; relancer `cargo test` pour les régénérer.
 - **Composants** : shadcn/ui (variante Base UI) et Tailwind CSS. Ajouter un composant avec `npx shadcn@latest add <nom>` depuis `web/` ; il arrive dans `web/src/components/ui/`. Préférer un composant shadcn à un composant écrit à la main.
@@ -80,6 +82,7 @@ essais/lancer.sh traiter
 essais/lancer.sh recevoir
 essais/lancer.sh notifications
 essais/lancer.sh sauvegarde
+essais/lancer.sh alterer
 essais/confidentialite.sh       # tests de confidentialité, sur la base à part epistolaire_tests
 essais/restauration.sh          # copie puis restauration d'une base, comparées ligne à ligne
 ```
@@ -87,7 +90,7 @@ essais/restauration.sh          # copie puis restauration d'une base, comparées
 - Chaque étape ajoute son parcours, et met à jour les anciens quand un écran change.
 - À la première connexion d'un compte, l'écran du choix des notifications passe avant tout : les parcours le franchissent avec `surveillerPremierChoix` (`essais/commun.cjs`).
 - Sans identifiants SMTP en local, les e-mails sont écrits dans le journal du serveur : les parcours y lisent les codes de connexion.
-- `essais/vue-plis-recus.sql` vérifie ce que la vue des joueurs laisse voir d'un pli altéré.
+- `essais/vue-plis-recus.sql` vérifie ce que la vue des joueurs laisse voir d'un pli altéré (après `essais/vider.sql`).
 - Pour vérifier qu'un test de confidentialité attrape bien une faille en modifiant une requête, compiler avec `SQLX_OFFLINE=false` et `DATABASE_URL` sur la base locale, puis remettre le fichier.
 - Regarder aussi les captures d'écran (`essais/sortie/`), au format téléphone d'abord.
 

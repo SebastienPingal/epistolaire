@@ -1,0 +1,64 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        select\n            x.pli_id,\n            x.ecriture_id,\n            p.gabarit as \"gabarit: Gabarit\",\n            coalesce(p.contenu->>'texte', '') as \"original!\",\n            p.sceau_id as sceau_origine,\n            p.signe,\n            a.id as \"auteur_id?\",\n            a.nom as \"auteur_nom?\"\n        from exemplaires x\n        join plis p on p.id = x.pli_id\n        left join personnages a on a.id = p.auteur_id\n        where x.id = $1\n        for update of x\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "pli_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "ecriture_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "gabarit: Gabarit",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "original!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "sceau_origine",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 5,
+        "name": "signe",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 6,
+        "name": "auteur_id?",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 7,
+        "name": "auteur_nom?",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      null,
+      true,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "d5159e3fc609e4165f7c0b47dd39d5fcf6faaa15ea8a539a60ce4855bb8f025e"
+}
