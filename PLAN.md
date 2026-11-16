@@ -41,7 +41,8 @@ La partie commence dès que les étapes 7, 8 et 9 sont en ligne, après la rép�
 
 - les étapes 1 à 8 sont en ligne sur `main`. Les réponses du MJ à l'étape 8 (délai des alertes accepté jusqu'à 30 minutes, alerte 2 heures avant, message groupé, rappel à 24 heures, pastille en simple point, contact des services de notifications = son adresse) sont dans `DECISIONS.md` ;
 - `CRON_SECRET` et les clés VAPID sont posés dans Vercel ;
-- restent à vérifier sur le site en ligne : que la planification passe bien toutes les 15 minutes (journaux de Vercel), et l'essai réel sur le téléphone du MJ (sur son Android, les notifications étaient bloquées par les réglages du téléphone ; l'e-mail d'essai n'avait pas encore été essayé) ;
+- la planification passe sur le site en ligne : premier passage vu dans les journaux de Vercel le 16 novembre à 8 h 13 (UTC), secret accepté ;
+- reste à faire : l'essai réel sur le téléphone du MJ (sur son Android, les notifications étaient bloquées par les réglages du téléphone ; l'e-mail d'essai n'avait pas encore été essayé) ;
 - la suivante est l'étape 9 : lire `docs/taches/README.md`, puis `docs/taches/09-filet-de-securite.md`.
 
 ---
