@@ -40,7 +40,9 @@ La partie commence dès que les étapes 7, 8 et 9 sont en ligne, après la rép�
 État au moment de cette note (16 novembre, étape 9 en aperçu) :
 
 - les étapes 1 à 8 sont en ligne sur `main`. L'étape 9 est sur sa branche, en aperçu. Les réponses du MJ (copie à 4 h, e-mail en cas d'échec, stockage privé, section « Sauvegardes » avec téléchargement) sont dans `DECISIONS.md` ;
+- la planification des notifications passe sur le site en ligne (premier passage vu dans les journaux de Vercel le 16 novembre à 8 h 13 UTC, secret accepté). Reste l'essai réel sur le téléphone du MJ, à faire avec l'essai 9.5 ;
 - fait et vérifié en local : les tests de confidentialité (`essais/confidentialite.sh`, 68 routes essayées, et l'essai du filtre retiré), la sauvegarde et la restauration de bout en bout (`essais/restauration.sh`), le parcours `sauvegarde`, et tous les anciens parcours ;
+- **blocage** : l'aperçu de cette branche échoue chez Vercel avant toute compilation (« Resource provisioning failed », sans journal), même avec un `vercel.json` identique à celui du site en ligne. Piste la plus probable : l'intégration Neon, qui n'arrive pas à préparer une base pour cette nouvelle branche (limite de l'offre gratuite de Neon ?). À regarder par le MJ dans le tableau de bord de Vercel (le déploiement en erreur) et dans Neon (les branches) ;
 - reste à faire avec le MJ :
   - créer le stockage Vercel Blob (l'outil Vercel de Claude n'en a pas la permission) : tableau de bord Vercel, projet `epistolaire`, Storage, Create, Blob, nom `epistolaire-sauvegardes`, accès **Private**, région Frankfurt (fra1), relié à tous les environnements. Vérifier ensuite que `BLOB_READ_WRITE_TOKEN` apparaît dans les variables du projet (nom seulement), puis reconstruire l'aperçu ;
   - sur l'aperçu, « Faire une copie maintenant », télécharger la copie, et la restaurer en local avec `cargo run --bin restaurer` ;
