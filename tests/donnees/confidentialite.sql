@@ -5,10 +5,11 @@
 -- ORIGINAL-FILE, ADRESSE-LIBRE, EN-ROUTE, RETENU, PERDU, FERME (tant qu'il n'est pas ouvert),
 -- ORIGINAL-SECRET, ORIGINAL-REDIRIGE, DETRUIT, BERTRAND-…, NOTES-MJ, INFO-SECRETE,
 -- EVENEMENT-SECRET, POLICE-FAUSSAIRE, AUTEUR-CACHE, CLEMENCE-VISEE, ABIME-SECRET (le texte
--- d'un passage abîmé), et les adresses e-mail.
+-- d'un passage abîmé), CARTE-FERMEE (tant qu'elle n'est pas ouverte), ADRESSE-BLOB et
+-- CHEMIN-BLOB (où sont rangées les images), et les adresses e-mail.
 --
 -- Identifiants : …b0 à b2 les comptes, …a1 à a5 les personnages, …c1 à c3 les sceaux,
--- …f1 et f2 les dossiers, …d1 à d11 les plis, …e1 à e8 les exemplaires.
+-- …f1 et f2 les dossiers, …d0 à df les plis, …e1 à ed les exemplaires, …91 à 97 les images.
 
 update reglages set calendrier_debut = (now() at time zone 'Europe/Paris')::date - 40;
 
@@ -36,6 +37,23 @@ insert into personnages (id, nom, genre, compte_id, ecriture_id, role, domaine, 
      (select id from ecritures where police = 'indie-flower'), '', '', '', '', 'NOTES-MJ'),
     ('00000000-0000-0000-0000-0000000000a5', 'Damien', 'pnj', null,
      (select id from ecritures where police = 'parisienne'), 'Notaire', '', '', '', '');
+
+-- Les images. Leur adresse est remplacée par celle d'un faux stockage au début du test ;
+-- ni elle ni le chemin ne doivent jamais sortir vers un joueur.
+--   91 : la carte qu'Alix a ouverte (sa version livrée) ;
+--   92 : une carte arrivée chez Alix, encore fermée ;
+--   93 : la carte de Bertrand ;
+--   94 : une carte encore en route vers Alix ;
+--   95 : le sceau de Damien, qu'Alix voit sur ses plis ;
+--   96 : le sceau de Bertrand, qu'Alix ne voit nulle part ;
+--   97 : l'image d'origine de la carte d'Alix, remplacée par le MJ dans son exemplaire.
+insert into images (id, chemin_blob, url_blob, type_mime, taille, largeur, hauteur)
+select
+    ('00000000-0000-0000-0000-0000000000' || n)::uuid,
+    'images/CHEMIN-BLOB-' || n || '.png',
+    'http://faux-stockage/fichiers/ADRESSE-BLOB-' || n,
+    'image/png', 100, 10, 10
+from unnest(array['91', '92', '93', '94', '95', '96', '97']) as n;
 
 insert into sceaux (id, nom_grave, initiales, proprietaire_origine_id, detenteur_id) values
     ('00000000-0000-0000-0000-0000000000c1', 'Alix', 'A',
@@ -154,6 +172,66 @@ insert into exemplaires (id, pli_id, destinataire_id, origine, contenu, ecriture
      null, null, null, null, null, null, 'absente', '[]', null,
      'en_route', now() - interval '2 hours', now() - interval '90 minutes', null,
      now() - interval '1 hour', now());
+
+update sceaux set image_id = '00000000-0000-0000-0000-000000000095'
+where id = '00000000-0000-0000-0000-0000000000c2';
+update sceaux set image_id = '00000000-0000-0000-0000-000000000096'
+where id = '00000000-0000-0000-0000-0000000000c3';
+
+-- Les autres gabarits (étape 11) : des documents du MJ.
+insert into plis (id, auteur_id, redige_par_mj, gabarit, destinataire_genre, destinataire_id,
+                  contenu, etat, envoye_le, date_proposee) values
+    -- Un rapport pour Alix, altéré : un passage abîmé dans sa seconde rubrique.
+    ('00000000-0000-0000-0000-0000000000d0', '00000000-0000-0000-0000-0000000000a4', true,
+     'rapport', 'personnage', '00000000-0000-0000-0000-0000000000a1',
+     '{"titre":"ORIGINAL-SECRET","auteur":"","rubriques":[{"titre":"Un","texte":"ORIGINAL-SECRET"},{"titre":"Deux","texte":"ORIGINAL-SECRET"}]}',
+     'traite', now() - interval '5 hours', now()),
+    -- Une carte pour Alix, ouverte. Le MJ a remplacé l'image dans son exemplaire.
+    ('00000000-0000-0000-0000-0000000000dc', '00000000-0000-0000-0000-0000000000a4', true,
+     'carte', 'personnage', '00000000-0000-0000-0000-0000000000a1',
+     '{"image":"00000000-0000-0000-0000-000000000097","titre":"ORIGINAL-SECRET","legende":""}',
+     'traite', now() - interval '5 hours', now()),
+    -- Une carte pour Alix, arrivée, encore fermée.
+    ('00000000-0000-0000-0000-0000000000dd', '00000000-0000-0000-0000-0000000000a4', true,
+     'carte', 'personnage', '00000000-0000-0000-0000-0000000000a1',
+     '{"image":"00000000-0000-0000-0000-000000000092","titre":"CARTE-FERMEE","legende":"CARTE-FERMEE"}',
+     'traite', now() - interval '5 hours', now()),
+    -- Une carte pour Bertrand.
+    ('00000000-0000-0000-0000-0000000000de', '00000000-0000-0000-0000-0000000000a5', true,
+     'carte', 'personnage', '00000000-0000-0000-0000-0000000000a2',
+     '{"image":"00000000-0000-0000-0000-000000000093","titre":"BERTRAND-CARTE","legende":""}',
+     'traite', now() - interval '5 hours', now()),
+    -- Une carte encore en route vers Alix.
+    ('00000000-0000-0000-0000-0000000000df', '00000000-0000-0000-0000-0000000000a4', true,
+     'carte', 'personnage', '00000000-0000-0000-0000-0000000000a1',
+     '{"image":"00000000-0000-0000-0000-000000000094","titre":"EN-ROUTE","legende":""}',
+     'traite', now() - interval '5 hours', now());
+
+insert into exemplaires (id, pli_id, destinataire_id, contenu, passages_abimes, acheminement,
+                         livraison_le, ouvert_le, dossier_id, notifie_le) values
+    ('00000000-0000-0000-0000-0000000000ed', '00000000-0000-0000-0000-0000000000d0',
+     '00000000-0000-0000-0000-0000000000a1',
+     '{"titre":"Rapport livré","auteur":"","rubriques":[{"titre":"Un","texte":"Texte lisible."},{"titre":"Deux","texte":"Avant ABIME-SECRET après"}]}',
+     '[{"champ":"rubriques.1.texte","debut":6,"fin":18}]',
+     'en_route', now() - interval '3 hours', now() - interval '1 hour',
+     '00000000-0000-0000-0000-0000000000f1', now()),
+    ('00000000-0000-0000-0000-0000000000e9', '00000000-0000-0000-0000-0000000000dc',
+     '00000000-0000-0000-0000-0000000000a1',
+     '{"image":"00000000-0000-0000-0000-000000000091","titre":"Carte livrée","legende":"Une légende"}',
+     '[]', 'en_route', now() - interval '3 hours', now() - interval '1 hour',
+     '00000000-0000-0000-0000-0000000000f1', now()),
+    ('00000000-0000-0000-0000-0000000000ea', '00000000-0000-0000-0000-0000000000dd',
+     '00000000-0000-0000-0000-0000000000a1',
+     '{"image":"00000000-0000-0000-0000-000000000092","titre":"CARTE-FERMEE","legende":"CARTE-FERMEE"}',
+     '[]', 'en_route', now() - interval '2 hours', null, null, now()),
+    ('00000000-0000-0000-0000-0000000000eb', '00000000-0000-0000-0000-0000000000de',
+     '00000000-0000-0000-0000-0000000000a2',
+     '{"image":"00000000-0000-0000-0000-000000000093","titre":"BERTRAND-CARTE","legende":""}',
+     '[]', 'en_route', now() - interval '2 hours', now() - interval '1 hour', null, now()),
+    ('00000000-0000-0000-0000-0000000000ec', '00000000-0000-0000-0000-0000000000df',
+     '00000000-0000-0000-0000-0000000000a1',
+     '{"image":"00000000-0000-0000-0000-000000000094","titre":"EN-ROUTE","legende":""}',
+     '[]', 'en_route', now() + interval '1 day', null, null, null);
 
 -- Le pli altéré a aussi un passage abîmé : on voit qu'il y avait du texte, on ne le lit
 -- jamais. Son faussaire est un personnage, que personne ne doit pouvoir nommer.

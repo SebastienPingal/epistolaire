@@ -8,7 +8,11 @@ export type SceauVu = {
 /**
  * Le nom gravé : celui du propriétaire d'origine, même si le sceau a été volé.
  */
-nom: string, initiales: string, image: string | null, 
+nom: string, initiales: string, 
+/**
+ * L'image du sceau, s'il en a une : elle se demande à `/api/joueur/sceaux/{image}`.
+ */
+image_id: string | null, 
 /**
  * Intact, sauf si le destinataire a remarqué quelque chose.
  */

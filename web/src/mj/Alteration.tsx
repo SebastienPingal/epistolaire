@@ -16,21 +16,24 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { BilletLu } from '@/composants/gabarits/BilletLu';
+import { Document } from '@/composants/gabarits/Document';
 import { Main } from '@/composants/Main';
 import { cn } from '@/lib/utils';
 import {
-  CHAMP_TEXTE,
-  decalerPassages,
-  enCaracteres,
-  extrait,
-  morceaux,
-  reecrituresLocales,
-  reunir,
-  voiler,
-} from '@/outils/passages';
+  casesDe,
+  ecrireCase,
+  estManuscrit,
+  memeContenu,
+  passagesDe,
+  reecrituresDuContenu,
+  seSigne,
+  voilerContenu,
+} from '@/outils/gabarits';
+import { adresseImageMj } from '@/outils/images';
+import { decalerPassages, enCaracteres, extrait, morceaux, reunir } from '@/outils/passages';
 import { useLecture } from '@/outils/useLecture';
 import { policeDe } from '@/theme/ecritures';
+import type { Contenu } from '@/types/Contenu';
 import type { EcritureMj } from '@/types/EcritureMj';
 import type { EtatSceau } from '@/types/EtatSceau';
 import type { EtatSignature } from '@/types/EtatSignature';
@@ -43,7 +46,8 @@ import type { SceauPose } from '@/types/SceauPose';
 import type { VersionLivree } from '@/types/VersionLivree';
 
 import { Attente, Champ, Section } from './commun';
-import { ChoixPersonnage, dateLisible, Lettre, nomEtGenre, Pastille } from './courrier';
+import { ChoixPersonnage, dateLisible, Lettre, nomEtGenre, Pastille, resume } from './courrier';
+import { ChoixImage, libelleDeLaCase, manqueAuContenu } from './formulaires';
 
 // ---------------------------------------------------------------------------
 // L'original, et la version livrée qui en découle
@@ -51,7 +55,8 @@ import { ChoixPersonnage, dateLisible, Lettre, nomEtGenre, Pastille } from './co
 
 /** Ce que l'auteur a écrit, tel que l'atelier en a besoin. */
 export type OriginalVu = {
-  texte: string;
+  /** Le gabarit et ses cases, tels que l'auteur les a écrits. */
+  contenu: Contenu;
   /** La police de l'écriture de l'auteur. */
   police: string | null;
   /** Le nom de l'auteur, si la lettre est signée. */
@@ -65,7 +70,7 @@ export type OriginalVu = {
 /** La version livrée d'une lettre que personne n'a touchée. */
 export function versionOriginale(original: OriginalVu): VersionLivree {
   return {
-    texte: original.texte,
+    contenu: original.contenu,
     passages_abimes: [],
     sceau_id: original.sceauId,
     sceau_etat: original.sceauId ? 'intact' : null,
@@ -84,7 +89,7 @@ export function versionOriginale(original: OriginalVu): VersionLivree {
 export function estAlteree(original: OriginalVu, version: VersionLivree): boolean {
   const intacte = versionOriginale(original);
   return (
-    version.texte !== intacte.texte ||
+    !memeContenu(version.contenu, intacte.contenu) ||
     version.passages_abimes.length > 0 ||
     version.sceau_id !== intacte.sceau_id ||
     version.sceau_etat !== intacte.sceau_etat ||
@@ -101,8 +106,11 @@ export function manqueALaVersion(
   version: VersionLivree,
   mainInconnue: boolean,
 ): string | null {
-  if (version.texte.trim() === '') {
-    return 'Le texte livré est vide. Pour qu’une lettre n’arrive pas, perdez-la plutôt.';
+  const manqueAuTexte = manqueAuContenu(version.contenu);
+  if (manqueAuTexte !== null) {
+    return estManuscrit(version.contenu.gabarit)
+      ? 'Le texte livré est vide. Pour qu’une lettre n’arrive pas, perdez-la plutôt.'
+      : manqueAuTexte;
   }
   if (version.sceau_etat === 'contrefait' && !version.sceau_id) {
     return 'Choisissez le sceau imité.';
@@ -118,7 +126,7 @@ export function manqueALaVersion(
     return 'Choisissez l’écriture de la main inconnue.';
   }
   const sansFaussaire = !version.faussaire_personnage_id && !version.faussaire_ecriture_id;
-  const reecrit = reecrituresLocales(original.texte, version.texte).length > 0;
+  const reecrit = reecrituresDuContenu(original.contenu, version.contenu).length > 0;
   if (
     sansFaussaire &&
     ((version.remarque_texte && reecrit) ||
@@ -198,7 +206,7 @@ function Atelier({
   const [erreur, setErreur] = useState<string | null>(null);
 
   const original: OriginalVu = {
-    texte: exemplaire.original.texte,
+    contenu: exemplaire.original.contenu,
     police: exemplaire.original.police,
     signature: exemplaire.original.signe ? exemplaire.auteur_nom : null,
     sceauId: exemplaire.original.sceau_id,
@@ -255,7 +263,7 @@ function Atelier({
           <div className="grid gap-4 md:grid-cols-2">
             <Volet titre="Original">
               <Lettre
-                texte={original.texte}
+                contenu={original.contenu}
                 police={original.police}
                 signature={original.signature}
                 sceau={original.sceau}
@@ -286,7 +294,7 @@ function Atelier({
             sceaux={sceaux}
             destinataireNom={exemplaire.destinataire_nom}
             enregistre={{
-              texte: exemplaire.version.texte,
+              contenu: exemplaire.version.contenu,
               passages: exemplaire.passages_reecrits,
             }}
           />
@@ -353,8 +361,9 @@ const PAS_DESIGNE = 'aucun';
 const MAIN_INCONNUE = 'inconnue';
 
 /**
- * Tout ce qui se règle dans la version livrée : le texte et ses passages abîmés, le sceau,
- * la signature, le faussaire, et ce que le destinataire remarque.
+ * Tout ce qui se règle dans la version livrée : chaque case du document et ses passages
+ * abîmés, l'image d'une carte, le sceau, la signature, le faussaire, et ce que le
+ * destinataire remarque.
  */
 export function EditeurVersion({
   original,
@@ -382,53 +391,54 @@ export function EditeurVersion({
    * Vide : la version part vers plusieurs destinataires, et rien n'est remarqué.
    */
   destinataireNom?: string;
-  /** Le dernier texte enregistré, et les passages réécrits que le serveur y a repérés. */
-  enregistre?: { texte: string; passages: Passage[] };
+  /** Le dernier contenu enregistré, et les passages réécrits que le serveur y a repérés. */
+  enregistre?: { contenu: Contenu; passages: Passage[] };
 }) {
-  const zone = useRef<HTMLTextAreaElement>(null);
   const changer = (changement: Partial<VersionLivree>) => surVersion({ ...version, ...changement });
 
-  // Tant que le texte est celui qui est enregistré, on montre le repérage du serveur :
+  // Tant que le contenu est celui qui est enregistré, on montre le repérage du serveur :
   // c'est lui qui compte. Pendant la frappe, c'est un aperçu calculé ici.
   const reecrits = useMemo(
     () =>
-      enregistre && enregistre.texte === version.texte
+      enregistre && memeContenu(enregistre.contenu, version.contenu)
         ? enregistre.passages
-        : reecrituresLocales(original.texte, version.texte),
-    [enregistre, original.texte, version.texte],
+        : reecrituresDuContenu(original.contenu, version.contenu),
+    [enregistre, original.contenu, version.contenu],
   );
-  const { famille, echelle } = policeDe(original.police);
-  const trait = { fontFamily: `${famille}, cursive`, fontSize: `${1.2 * echelle}rem` };
+  const gabarit = version.contenu.gabarit;
+  const cases = casesDe(version.contenu);
+  const casesDOrigine = new Map(casesDe(original.contenu).map(({ chemin, texte }) => [chemin, texte]));
 
-  // La feuille grandit avec le texte : le surlignage, posé dessous, garde ainsi sa place.
-  useLayoutEffect(() => {
-    const element = zone.current;
-    if (!element) return;
-    element.style.height = 'auto';
-    element.style.height = `${element.scrollHeight}px`;
-  }, [version.texte, original.police]);
+  /** Change le texte d'une case : ses passages abîmés suivent, ceux des autres ne bougent pas. */
+  function ecrire(chemin: string, avant: string, apres: string) {
+    changer({
+      contenu: ecrireCase(version.contenu, chemin, apres),
+      passages_abimes: [
+        ...version.passages_abimes.filter((passage) => passage.champ !== chemin),
+        ...decalerPassages(avant, apres, passagesDe(version.passages_abimes, chemin)),
+      ],
+    });
+  }
 
-  function abimer() {
-    const element = zone.current;
-    if (!element || element.selectionStart === element.selectionEnd) {
-      toast.info('Sélectionnez d’abord, dans la version livrée, le passage à abîmer.');
-      return;
-    }
-    // Le champ compte en unités UTF-16 ; le serveur, en caractères.
-    const passage: Passage = {
-      champ: CHAMP_TEXTE,
-      debut: enCaracteres(version.texte, element.selectionStart),
-      fin: enCaracteres(version.texte, element.selectionEnd),
-    };
-    changer({ passages_abimes: reunir([...version.passages_abimes, passage]) });
+  /** Remplace les passages abîmés d'une case. */
+  function abimer(chemin: string, passages: Passage[]) {
+    changer({
+      passages_abimes: [
+        ...version.passages_abimes.filter((passage) => passage.champ !== chemin),
+        ...reunir(passages),
+      ],
+    });
   }
 
   const sceauxPossibles = original.sceauId
     ? ETATS_SCEAU
     : ETATS_SCEAU.filter(({ valeur }) => valeur === 'contrefait');
-  const signaturesPossibles: EtatSignature[] = original.signature
-    ? ['intacte', 'retiree', 'contrefaite']
-    : ['absente', 'contrefaite'];
+  // Seuls les gabarits écrits à la main portent une signature.
+  const signaturesPossibles: EtatSignature[] = !seSigne(gabarit)
+    ? []
+    : original.signature
+      ? ['intacte', 'retiree', 'contrefaite']
+      : ['absente', 'contrefaite'];
   const ecrituresLibres = ecritures.filter((ecriture) => ecriture.utilisee_par.length === 0);
   const faussaires = personnages.filter((personnage) => personnage.ecriture_id !== null);
   const choixFaussaire = [
@@ -492,7 +502,7 @@ export function EditeurVersion({
       <div className="grid gap-4 md:grid-cols-2">
         <Volet titre="Original">
           <Lettre
-            texte={original.texte}
+            contenu={original.contenu}
             police={original.police}
             signature={original.signature}
             sceau={original.sceau}
@@ -500,48 +510,36 @@ export function EditeurVersion({
         </Volet>
 
         <Volet titre="Version livrée">
-          <div className="relative overflow-hidden rounded-sm bg-card shadow-sm ring-1 ring-foreground/10">
-            {/* Le surlignage : le même texte, invisible, posé sous le champ. */}
-            <div
-              aria-hidden
-              className="pointer-events-none absolute inset-0 px-4 py-3 leading-relaxed break-words whitespace-pre-wrap text-transparent"
-              style={trait}
-            >
-              {morceaux(version.texte, reecrits, version.passages_abimes).map((morceau, rang) => (
-                <span
-                  key={rang}
-                  className={cn(
-                    morceau.abime
-                      ? 'rounded-sm bg-foreground/25'
-                      : morceau.reecrit && 'rounded-sm bg-bon/25',
-                  )}
-                >
-                  {morceau.texte}
-                </span>
-              ))}
-            </div>
-            <textarea
-              ref={zone}
-              aria-label="Version livrée"
-              rows={3}
-              spellCheck
-              className="relative block w-full resize-none bg-transparent px-4 py-3 leading-relaxed break-words whitespace-pre-wrap outline-none"
-              style={trait}
-              value={version.texte}
-              onChange={(e) =>
-                changer({
-                  texte: e.target.value,
-                  passages_abimes: decalerPassages(
-                    version.texte,
-                    e.target.value,
-                    version.passages_abimes,
-                  ),
-                })
-              }
-            />
+          <div className="grid gap-4">
+            {version.contenu.gabarit === 'carte' && (
+              <ImageLivree
+                image={version.contenu.image}
+                origine={original.contenu.gabarit === 'carte' ? original.contenu.image : null}
+                surImage={(image) =>
+                  version.contenu.gabarit === 'carte' &&
+                  changer({ contenu: { ...version.contenu, image } })
+                }
+              />
+            )}
+            {cases.map(({ chemin, texte, long }) => (
+              <CaseLivree
+                key={chemin}
+                // Un billet n'a qu'une case : inutile de la nommer.
+                libelle={cases.length === 1 ? null : libelleDeLaCase(chemin)}
+                texte={texte}
+                origine={casesDOrigine.get(chemin) ?? ''}
+                long={long}
+                police={estManuscrit(gabarit) ? original.police : null}
+                reecrits={passagesDe(reecrits, chemin)}
+                abimes={passagesDe(version.passages_abimes, chemin)}
+                surTexte={(apres) => ecrire(chemin, texte, apres)}
+                surAbimes={(passages) => abimer(chemin, passages)}
+                champ={chemin}
+              />
+            ))}
           </div>
 
-          <p className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
+          <p className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
             <span className="inline-flex items-center gap-1.5">
               <span aria-hidden className="inline-block size-3 rounded-sm bg-bon/25" />
               réécrit
@@ -552,47 +550,6 @@ export function EditeurVersion({
             </span>
             <span>Les suppressions ne se voient pas.</span>
           </p>
-
-          <div className="mt-3 flex flex-wrap gap-2">
-            <Button type="button" variant="outline" onClick={abimer}>
-              Abîmer la sélection
-            </Button>
-            {version.texte !== original.texte && (
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => changer({ texte: original.texte, passages_abimes: [] })}
-              >
-                Reprendre le texte d'origine
-              </Button>
-            )}
-          </div>
-
-          {version.passages_abimes.length > 0 && (
-            <ul className="mt-3 flex flex-wrap gap-2" aria-label="Passages abîmés">
-              {version.passages_abimes.map((passage) => (
-                <li key={`${passage.debut}-${passage.fin}`}>
-                  <Badge variant="secondary" className="h-auto min-h-7 max-w-full gap-1 pr-1 text-sm">
-                    <span className="max-w-48 truncate">« {extrait(version.texte, passage)} »</span>
-                    <button
-                      type="button"
-                      aria-label="Ne plus abîmer ce passage"
-                      className="rounded-full p-0.5 hover:bg-foreground/10"
-                      onClick={() =>
-                        changer({
-                          passages_abimes: version.passages_abimes.filter(
-                            (autre) => autre !== passage,
-                          ),
-                        })
-                      }
-                    >
-                      <XIcon className="size-3.5" />
-                    </button>
-                  </Badge>
-                </li>
-              ))}
-            </ul>
-          )}
         </Volet>
       </div>
 
@@ -646,6 +603,7 @@ export function EditeurVersion({
         )}
       </fieldset>
 
+      {signaturesPossibles.length > 0 && (
       <fieldset>
         <legend className="mb-2 text-sm font-medium">Signature</legend>
         <div className="flex flex-wrap gap-2">
@@ -693,6 +651,7 @@ export function EditeurVersion({
           </div>
         )}
       </fieldset>
+      )}
 
       <fieldset>
         <legend className="text-sm font-medium">Faussaire</legend>
@@ -769,14 +728,16 @@ export function EditeurVersion({
               valeur={version.remarque_sceau}
               surValeur={(remarque_sceau) => changer({ remarque_sceau })}
             />
-            <Detection
-              id="remarque-signature"
-              libelle="La signature contrefaite"
-              possible={version.signature_etat === 'contrefaite'}
-              sinon="La signature n'est pas contrefaite."
-              valeur={version.remarque_signature}
-              surValeur={(remarque_signature) => changer({ remarque_signature })}
-            />
+            {signaturesPossibles.length > 0 && (
+              <Detection
+                id="remarque-signature"
+                libelle="La signature contrefaite"
+                possible={version.signature_etat === 'contrefaite'}
+                sinon="La signature n'est pas contrefaite."
+                valeur={version.remarque_signature}
+                surValeur={(remarque_signature) => changer({ remarque_signature })}
+              />
+            )}
           </div>
         </fieldset>
       )}
@@ -872,9 +833,9 @@ function Apercu({
     '';
 
   return (
-    <BilletLu
+    <Document
       className={className}
-      texte={voiler(version.texte, version.passages_abimes)}
+      contenu={voilerContenu(version.contenu, version.passages_abimes)}
       police={original.police}
       date={null}
       signature={
@@ -895,13 +856,191 @@ function Apercu({
               nom: sceau.nom_grave,
               initiales: sceau.initiales,
               etat: remarqueSceau ? version.sceau_etat : 'intact',
+              image: sceau.image_id && adresseImageMj(sceau.image_id),
             }
           : null
       }
       passages={remarqueTexte ? reecrits : []}
       policeReecriture={policeFaussaire}
       passagesAbimes={version.passages_abimes}
+      adresseImage={adresseImageMj}
     />
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Une case de la version livrée
+// ---------------------------------------------------------------------------
+
+/**
+ * Une case du document, telle qu'elle sera livrée : on la réécrit librement, et on y
+ * abîme le passage sélectionné. Les passages réécrits et abîmés sont surlignés.
+ */
+function CaseLivree({
+  champ,
+  libelle,
+  texte,
+  origine,
+  long,
+  police,
+  reecrits,
+  abimes,
+  surTexte,
+  surAbimes,
+}: {
+  /** Le chemin de la case : `texte`, `articles.2.texte`… */
+  champ: string;
+  /** Vide : le document n'a qu'une case. */
+  libelle: string | null;
+  texte: string;
+  /** Ce que l'auteur a écrit dans cette case. */
+  origine: string;
+  long: boolean;
+  /** L'écriture d'un document écrit à la main. Vide : il est imprimé. */
+  police: string | null;
+  reecrits: Passage[];
+  abimes: Passage[];
+  surTexte: (texte: string) => void;
+  surAbimes: (passages: Passage[]) => void;
+}) {
+  const zone = useRef<HTMLTextAreaElement>(null);
+  const { famille, echelle } = policeDe(police);
+  const trait =
+    police === null
+      ? { fontFamily: 'var(--police-texte)', fontSize: '1.05rem' }
+      : { fontFamily: `${famille}, cursive`, fontSize: `${1.2 * echelle}rem` };
+  const nom = libelle === null ? 'Version livrée' : `Version livrée : ${libelle}`;
+
+  // Le champ grandit avec le texte : le surlignage, posé dessous, garde ainsi sa place.
+  useLayoutEffect(() => {
+    const element = zone.current;
+    if (!element) return;
+    element.style.height = 'auto';
+    element.style.height = `${element.scrollHeight}px`;
+  }, [texte, police]);
+
+  function abimer() {
+    const element = zone.current;
+    if (!element || element.selectionStart === element.selectionEnd) {
+      toast.info('Sélectionnez d’abord, dans la version livrée, le passage à abîmer.');
+      return;
+    }
+    // Le champ compte en unités UTF-16 ; le serveur, en caractères.
+    surAbimes([
+      ...abimes,
+      {
+        champ,
+        debut: enCaracteres(texte, element.selectionStart),
+        fin: enCaracteres(texte, element.selectionEnd),
+      },
+    ]);
+  }
+
+  return (
+    <div data-case={champ}>
+      {libelle !== null && <p className="mb-1 text-sm text-muted-foreground">{libelle}</p>}
+      <div className="relative overflow-hidden rounded-sm bg-card shadow-sm ring-1 ring-foreground/10">
+        {/* Le surlignage : le même texte, invisible, posé sous le champ. */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 px-4 py-3 leading-relaxed break-words whitespace-pre-wrap text-transparent"
+          style={trait}
+        >
+          {morceaux(texte, reecrits, abimes).map((morceau, rang) => (
+            <span
+              key={rang}
+              className={cn(
+                morceau.abime ? 'rounded-sm bg-foreground/25' : morceau.reecrit && 'rounded-sm bg-bon/25',
+              )}
+            >
+              {morceau.texte}
+            </span>
+          ))}
+        </div>
+        <textarea
+          ref={zone}
+          aria-label={nom}
+          rows={long ? 3 : 1}
+          spellCheck
+          className="relative block w-full resize-none bg-transparent px-4 py-3 leading-relaxed break-words whitespace-pre-wrap outline-none"
+          style={trait}
+          value={texte}
+          onChange={(e) => surTexte(e.target.value)}
+        />
+      </div>
+
+      <div className="mt-2 flex flex-wrap gap-2">
+        <Button type="button" variant="outline" size={libelle === null ? 'default' : 'sm'} onClick={abimer}>
+          Abîmer la sélection
+        </Button>
+        {texte !== origine && (
+          <Button
+            type="button"
+            variant="ghost"
+            size={libelle === null ? 'default' : 'sm'}
+            onClick={() => {
+              surAbimes([]);
+              surTexte(origine);
+            }}
+          >
+            Reprendre le texte d'origine
+          </Button>
+        )}
+      </div>
+
+      {abimes.length > 0 && (
+        <ul className="mt-2 flex flex-wrap gap-2" aria-label="Passages abîmés">
+          {abimes.map((passage) => (
+            <li key={`${passage.debut}-${passage.fin}`}>
+              <Badge variant="secondary" className="h-auto min-h-7 max-w-full gap-1 pr-1 text-sm">
+                <span className="max-w-48 truncate">« {extrait(texte, passage)} »</span>
+                <button
+                  type="button"
+                  aria-label="Ne plus abîmer ce passage"
+                  className="rounded-full p-0.5 hover:bg-foreground/10"
+                  onClick={() => surAbimes(abimes.filter((autre) => autre !== passage))}
+                >
+                  <XIcon className="size-3.5" />
+                </button>
+              </Badge>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+/** L'image d'une carte, telle qu'elle sera livrée : le MJ peut en livrer une autre. */
+function ImageLivree({
+  image,
+  origine,
+  surImage,
+}: {
+  image: string;
+  /** L'image de l'original. */
+  origine: string | null;
+  surImage: (image: string) => void;
+}) {
+  return (
+    <div>
+      <p className="mb-1 text-sm text-muted-foreground">
+        Image{origine !== null && image !== origine && ' · remplacée'}
+      </p>
+      <ChoixImage
+        libelle="Image livrée"
+        image={image === '' ? null : image}
+        surImage={(choisie) => choisie && surImage(choisie)}
+      />
+      {origine !== null && image !== origine && (
+        <Button type="button" variant="ghost" size="sm" className="mt-2" onClick={() => surImage(origine)}>
+          Reprendre l'image d'origine
+        </Button>
+      )}
+      <p className="mt-1 text-sm text-muted-foreground">
+        Rien ne signale au destinataire qu'une image a été remplacée.
+      </p>
+    </div>
   );
 }
 
@@ -960,6 +1099,15 @@ function Historique({ evenements }: { evenements: Evenement[] }) {
   );
 }
 
+/** Le texte d'une version de l'historique. Avant l'étape 11, elle n'avait qu'un texte. */
+function texteDeVersion(version: VersionLivree): string {
+  const ancienne = version as unknown as { texte?: string };
+  if (typeof ancienne.texte === 'string') return ancienne.texte;
+  if (!version.contenu) return '';
+  const { titre, texte } = resume(version.contenu);
+  return [titre, texte].filter(Boolean).join('\n');
+}
+
 function EtatDeVersion({ titre, version }: { titre: string; version: VersionLivree }) {
   const remarque = [
     version.remarque_texte && 'le texte',
@@ -970,7 +1118,7 @@ function EtatDeVersion({ titre, version }: { titre: string; version: VersionLivr
     <div className="min-w-0">
       <p className="font-medium">{titre}</p>
       <p className="mt-1 rounded-sm bg-card px-2 py-1.5 break-words whitespace-pre-wrap ring-1 ring-foreground/10">
-        {version.texte}
+        {texteDeVersion(version)}
       </p>
       <p className="mt-1 text-muted-foreground">
         Sceau : {ETATS_SCEAU.find(({ valeur }) => valeur === version.sceau_etat)?.libelle.toLowerCase() ?? 'aucun'}

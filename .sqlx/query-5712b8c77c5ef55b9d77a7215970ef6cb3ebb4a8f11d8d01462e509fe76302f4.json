@@ -1,0 +1,50 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        select id, type_mime, taille, largeur, hauteur, cree_le\n        from images\n        order by cree_le desc, id\n        limit 200\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "type_mime",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "taille",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "largeur",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 4,
+        "name": "hauteur",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 5,
+        "name": "cree_le",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "5712b8c77c5ef55b9d77a7215970ef6cb3ebb4a8f11d8d01462e509fe76302f4"
+}

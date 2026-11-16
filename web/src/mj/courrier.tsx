@@ -26,11 +26,16 @@ import {
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Cachet } from '@/composants/Cachet';
+import { Document } from '@/composants/gabarits/Document';
 import { Main } from '@/composants/Main';
 import { cn } from '@/lib/utils';
+import { estManuscrit, seSigne } from '@/outils/gabarits';
+import { adresseImageMj } from '@/outils/images';
 import { policeDe } from '@/theme/ecritures';
 import type { BilletPnj } from '@/types/BilletPnj';
+import type { Contenu } from '@/types/Contenu';
 import type { EcritureMj } from '@/types/EcritureMj';
+import type { Gabarit } from '@/types/Gabarit';
 import type { NouveauPersonnage } from '@/types/NouveauPersonnage';
 import type { PersonnageDetail } from '@/types/PersonnageDetail';
 import type { PersonnageResume } from '@/types/PersonnageResume';
@@ -115,18 +120,68 @@ export function LienBouton({
 }
 
 // ---------------------------------------------------------------------------
-// Une lettre, telle qu'elle est écrite
+// Un document, tel qu'il est écrit
 // ---------------------------------------------------------------------------
 
+export const NOMS_GABARITS: Record<Gabarit, string> = {
+  billet: 'Billet',
+  lettre_longue: 'Lettre longue',
+  gazette: 'Gazette',
+  acte: 'Acte officiel',
+  rapport: 'Rapport',
+  carte: 'Carte ou illustration',
+};
+
+/** Le cachet d'un sceau, dans un écran du MJ. */
+export function CachetMj({ sceau, className }: { sceau: SceauPose; className?: string }) {
+  return (
+    <Cachet
+      initiales={sceau.initiales}
+      nom={sceau.nom_grave}
+      image={sceau.image_id && adresseImageMj(sceau.image_id)}
+      className={className}
+    />
+  );
+}
+
+/** De quoi reconnaître un document dans une liste : son titre s'il en a un, et son début. */
+export function resume(contenu: Contenu): { titre: string | null; texte: string } {
+  const ou = (texte: string) => (texte.trim() === '' ? null : texte);
+  switch (contenu.gabarit) {
+    case 'billet':
+      return { titre: null, texte: contenu.texte };
+    case 'lettre_longue':
+      return { titre: ou(contenu.lieu_et_date), texte: contenu.texte };
+    case 'gazette':
+      return {
+        titre: [contenu.titre, contenu.numero].filter((texte) => texte.trim() !== '').join(' · '),
+        texte: contenu.articles.map((article) => ou(article.titre) ?? article.texte).join(' · '),
+      };
+    case 'acte':
+      return { titre: ou(contenu.objet) ?? ou(contenu.autorite), texte: contenu.texte };
+    case 'rapport':
+      return {
+        titre: contenu.titre,
+        texte: contenu.rubriques.map((rubrique) => ou(rubrique.titre) ?? rubrique.texte).join(' · '),
+      };
+    case 'carte':
+      return { titre: ou(contenu.titre), texte: contenu.legende };
+  }
+}
+
+/**
+ * Un document dans un écran du MJ : en entier, tel que le lira son destinataire, ou
+ * `tronquee`, en quelques lignes pour une liste. Dessous, son sceau et sa signature.
+ */
 export function Lettre({
-  texte,
+  contenu,
   police,
   signature,
   sceau,
   tronquee = false,
   className,
 }: {
-  texte: string;
+  contenu: Contenu;
   police: string | null;
   /** Le nom tracé sous le texte. Vide : la lettre n'est pas signée. */
   signature: string | null;
@@ -135,18 +190,58 @@ export function Lettre({
   tronquee?: boolean;
   className?: string;
 }) {
+  const billet = contenu.gabarit === 'billet';
+  const manuscrit = estManuscrit(contenu.gabarit);
+  const { titre, texte } = resume(contenu);
+
   return (
     <div
       className={cn('rounded-sm bg-card px-4 py-3 shadow-sm ring-1 ring-foreground/10', className)}
     >
-      <p className={cn('text-lg break-words whitespace-pre-wrap', tronquee && 'line-clamp-3')}>
-        <Main police={police}>{texte}</Main>
-      </p>
+      {billet || tronquee ? (
+        <>
+          {!billet && (
+            <p className="mb-1 flex flex-wrap items-baseline gap-x-2 text-sm text-muted-foreground">
+              <span className="font-medium text-foreground">{NOMS_GABARITS[contenu.gabarit]}</span>
+              {titre && <span className="min-w-0 truncate">{titre}</span>}
+            </p>
+          )}
+          <div className="flex items-start gap-3">
+            {contenu.gabarit === 'carte' && contenu.image && (
+              <img
+                src={adresseImageMj(contenu.image)}
+                alt=""
+                className="size-16 shrink-0 rounded-sm object-cover ring-1 ring-foreground/10"
+              />
+            )}
+            <p
+              className={cn(
+                'min-w-0 break-words whitespace-pre-wrap',
+                manuscrit ? 'text-lg' : 'font-serif',
+                tronquee && 'line-clamp-3',
+              )}
+            >
+              {manuscrit ? <Main police={police}>{texte}</Main> : texte}
+            </p>
+          </div>
+        </>
+      ) : (
+        // En entier : le rendu des joueurs. Le sceau et la signature sont rappelés dessous.
+        <Document
+          contenu={contenu}
+          police={police}
+          date={null}
+          signature={null}
+          sceau={null}
+          adresseImage={adresseImageMj}
+          nu
+        />
+      )}
       <div className="mt-2 flex min-h-8 flex-wrap items-center justify-between gap-x-4 gap-y-1 text-sm text-muted-foreground">
         <span className="flex items-center gap-2">
           {sceau ? (
             <>
-              <Cachet initiales={sceau.initiales} nom={sceau.nom_grave} className="size-7" />
+              <CachetMj sceau={sceau} className="size-7" />
               Scellée : {sceau.nom_grave}
             </>
           ) : (
@@ -158,7 +253,7 @@ export function Lettre({
             {signature}
           </Main>
         ) : (
-          <span className="ml-auto">Non signée</span>
+          seSigne(contenu.gabarit) && <span className="ml-auto">Non signée</span>
         )}
       </div>
     </div>
@@ -424,7 +519,7 @@ export function ComposerBillet({
                 actif={billet.sceau_id === sceau.id}
                 surChoix={() => changer({ sceau_id: sceau.id })}
               >
-                <Cachet initiales={sceau.initiales} nom={sceau.nom_grave} className="size-7" />
+                <CachetMj sceau={sceau} className="size-7" />
                 {sceau.nom_grave}
               </Pastille>
             ))}
@@ -486,14 +581,18 @@ export function Pastille({
  * L'écriture d'un PNJ qui n'en a pas encore. Les génériques viennent en premier ;
  * celles des joueurs ne sont pas proposées, pour que leur main reste un indice.
  */
-function ChoixEcriturePnj({
+export function ChoixEcriturePnj({
   nom,
+  aide,
   personnages,
   ecritures,
   choisie,
   surChoix,
 }: {
+  /** Le nom tracé dans chaque écriture proposée, et dans le titre. */
   nom: string;
+  /** Vide : la phrase qui convient à un PNJ sans écriture. */
+  aide?: string;
   personnages: PersonnageResume[];
   ecritures: EcritureMj[];
   choisie: string | null;
@@ -510,7 +609,7 @@ function ChoixEcriturePnj({
     <fieldset>
       <legend className="text-sm font-medium">Écriture de {nom}</legend>
       <p className="mt-1 mb-2 text-sm text-muted-foreground">
-        {nom} n'a pas encore d'écriture. Celle que vous choisissez ici restera la sienne.
+        {aide ?? `${nom} n'a pas encore d'écriture. Celle que vous choisissez ici restera la sienne.`}
       </p>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
         {proposees.map((ecriture) => (

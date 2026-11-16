@@ -21,7 +21,7 @@ Le détail de chaque étape restante (tâches, questions à poser au MJ, parcour
 | 9 | Filet de sécurité | En ligne, à finir (stockage Blob, téléphones) |
 | L | Lancement : répétition générale et mise en jeu | À faire |
 | 10 | Altérations | En ligne (avancée avant le lancement, à la demande du MJ) ; à essayer par le MJ |
-| 11 | Documents et gabarits | Après le lancement |
+| 11 | Documents et gabarits | En aperçu (avancée avant le lancement, à la demande du MJ) ; à essayer par le MJ |
 | 12 | Gazette | Après le lancement |
 | 13 | Vue MJ complète | Après le lancement |
 | 14 | Finitions | Après le lancement |
@@ -37,13 +37,22 @@ La partie commence dès que les étapes 7, 8 et 9 sont en ligne, après la rép�
 
 ## Pour reprendre
 
-État au moment de cette note (16 novembre, étape 10 mise en ligne à la demande du MJ) :
+État au moment de cette note (16 novembre, étape 11 livrée en aperçu) :
+
+- l'étape 11 (documents et gabarits) a été faite avant le lancement, à la demande du MJ, alors que l'étape 10 n'est pas encore essayée par lui. Ses réponses (un document peut n'avoir aucun expéditeur ; il peut être adressé à un PNJ ; trois gabarits à la main, trois imprimés ; images privées ; tout pli peut être scellé ; le pli fermé laisse deviner la sorte de document ; le MJ peut remplacer l'image d'une carte) sont dans `DECISIONS.md` ;
+- fait et vérifié en local : le parcours `documents`, tous les anciens parcours, les tests de confidentialité (75 routes, images comprises, avec un faux stockage) ;
+- la migration `0008_documents.sql` ajoute la table `images`, deux colonnes (`sceaux.image_id`, `plis.ecriture_id`), une fonction, et remplace la fonction `voiler_passages` et la vue `plis_recus`. Elle ne supprime rien, et les billets existants ne sont pas touchés ;
+- **les images ne marchent pas sur le site tant que le stockage Vercel Blob n'existe pas** (voir plus bas : c'est le même que celui des sauvegardes). Sans lui, déposer une image répond « Le stockage des copies et des images n'est pas relié au site » ; tout le reste de l'étape marche ;
+- reste à faire pour l'étape 11 : que le MJ crée le stockage, puis envoie une carte et un acte depuis « Documents » sur l'aperçu ; puis la mise en ligne et l'état « Fait » ;
+- non fait : retirer ou ajouter un article dans la version altérée d'un exemplaire (elle garde la forme de l'original) ; le ménage des images déposées et jamais utilisées ; la copie des fichiers d'images dans les sauvegardes (la copie quotidienne garde leur fiche, pas le fichier, qui reste dans le stockage).
+
+L'étape 10, au moment de sa mise en ligne (16 novembre, à la demande du MJ) :
 
 - l'étape 10 (altérations) a été faite avant le lancement, à la demande du MJ, et mise en ligne sur `main` à sa demande, sans attendre son essai : l'aperçu a seulement été construit (sur `claude/vigilant-tesla-3to8mw`, la branche que Vercel accepte) et vérifié par `/api/sante`. Ses réponses (main inconnue : une écriture choisie à chaque fois ; passage abîmé : une tache ; altérer au traitement et dans En route ; pas de lettre entièrement fausse pour l'instant) sont dans `DECISIONS.md` ;
 - fait et vérifié en local : le parcours `alterer`, tous les anciens parcours, les tests de confidentialité (ils couvrent le passage abîmé) et la restauration ;
 - la migration `0007_alterations.sql` ajoute deux colonnes à `exemplaires`, une fonction, et remplace la vue `plis_recus`. Elle ne supprime rien ;
 - reste à faire pour l'étape 10 : que le MJ falsifie une lettre sur le site (À traiter ou En route, « Altérer »), puis l'état « Fait » ;
-- non fait, reporté : écrire une lettre entièrement fausse au nom d'un joueur (viendra avec les compétences des personnages) ; altérer un autre gabarit que le billet (étape 11).
+- non fait, reporté : écrire une lettre entièrement fausse au nom d'un joueur (viendra avec les compétences des personnages).
 
 Ce qui reste de l'étape 9 n'a pas changé :
 

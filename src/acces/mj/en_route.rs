@@ -21,7 +21,8 @@ use super::alterations::recopier_version;
 use crate::acces::Mj;
 use crate::base;
 use crate::erreur::Erreur;
-use crate::modele::{Acheminement, GenreDestinataire, OrigineExemplaire};
+use crate::gabarits::Contenu;
+use crate::modele::{Acheminement, Gabarit, GenreDestinataire, OrigineExemplaire};
 
 pub(super) const REFUS_ARRIVE: Erreur =
     Erreur::Refus("Ce pli est déjà arrivé : il ne peut plus être modifié.");
@@ -57,13 +58,14 @@ pub struct ExemplaireMj {
     /// La date d'arrivée prévue. Un exemplaire retenu ou perdu garde celle qu'il avait.
     pub livraison_le: Option<DateTime<Utc>>,
     pub envoye_le: DateTime<Utc>,
-    pub texte: String,
+    /// La version livrée : le gabarit et ses cases.
+    pub contenu: Contenu,
     /// La police de l'écriture du texte.
     pub police: Option<String>,
     pub signature: Option<String>,
     pub sceau: Option<SceauPose>,
-    /// La version livrée n'est plus celle de l'auteur : texte réécrit, passage abîmé,
-    /// sceau trafiqué, signature retirée ou contrefaite.
+    /// La version livrée n'est plus celle de l'auteur : case réécrite, image remplacée,
+    /// passage abîmé, sceau trafiqué, signature retirée ou contrefaite.
     pub altere: bool,
     /// Le destinataire remarquera quelque chose.
     pub remarque: bool,
@@ -104,15 +106,16 @@ pub async fn lister(_mj: Mj) -> Result<Json<EnRoute>, Erreur> {
             x.acheminement as "acheminement: Acheminement",
             x.livraison_le,
             p.envoye_le as "envoye_le!",
-            coalesce(x.contenu->>'texte', '') as "texte!",
+            p.gabarit as "gabarit: Gabarit",
+            x.contenu,
             e.police as "police?",
             case when x.signature_etat in ('intacte', 'contrefaite') then x.signature_nom end
                 as "signature?",
             s.nom_grave as "sceau_nom?",
             s.initiales as "sceau_initiales?",
-            s.image_url as "sceau_image?",
+            s.image_id as "sceau_image?",
             (
-                coalesce(x.contenu->>'texte', '') <> coalesce(p.contenu->>'texte', '')
+                x.contenu <> p.contenu
                 or x.passages_abimes <> '[]'::jsonb
                 or x.sceau_id is distinct from p.sceau_id
                 or coalesce(x.sceau_etat, 'intact') <> 'intact'
@@ -148,7 +151,7 @@ pub async fn lister(_mj: Mj) -> Result<Json<EnRoute>, Erreur> {
             acheminement: ligne.acheminement,
             livraison_le: ligne.livraison_le,
             envoye_le: ligne.envoye_le,
-            texte: ligne.texte,
+            contenu: Contenu::depuis_la_base(ligne.gabarit, ligne.contenu),
             police: ligne.police,
             signature: ligne.signature,
             sceau: SceauPose::depuis(ligne.sceau_nom, ligne.sceau_initiales, ligne.sceau_image),

@@ -153,7 +153,7 @@ function Ligne({
       </p>
       <Lettre
         className="mt-3"
-        texte={exemplaire.texte}
+        contenu={exemplaire.contenu}
         police={exemplaire.police}
         signature={exemplaire.signature}
         sceau={exemplaire.sceau}
@@ -242,7 +242,7 @@ function Modification({
         </DialogHeader>
 
         <Lettre
-          texte={exemplaire.texte}
+          contenu={exemplaire.contenu}
           police={exemplaire.police}
           signature={exemplaire.signature}
           sceau={exemplaire.sceau}

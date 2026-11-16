@@ -27,8 +27,9 @@ use super::plume::{self, BilletPnj};
 use crate::acces::Mj;
 use crate::base;
 use crate::erreur::Erreur;
+use crate::gabarits::Contenu;
 use crate::modele::{
-    Acheminement, EtatPli, GenreDestinataire, GenrePersonnage, OrigineExemplaire,
+    Acheminement, EtatPli, Gabarit, GenreDestinataire, GenrePersonnage, OrigineExemplaire,
 };
 
 // ---------------------------------------------------------------------------
@@ -54,7 +55,8 @@ pub struct LettreATraiter {
     pub auteur_nom: String,
     /// La police de l'écriture de l'auteur, s'il en a une.
     pub police: Option<String>,
-    pub texte: String,
+    /// Ce que l'auteur a écrit : le gabarit et ses cases. Un joueur n'écrit que des billets.
+    pub contenu: Contenu,
     pub signe: bool,
     /// Le sceau posé par l'auteur, s'il a scellé.
     pub sceau_id: Option<Uuid>,
@@ -120,12 +122,13 @@ pub async fn lister(_mj: Mj) -> Result<Json<FileMj>, Erreur> {
             p.auteur_id as "auteur_id!",
             a.nom as auteur_nom,
             e.police as "police?",
-            coalesce(p.contenu->>'texte', '') as "texte!",
+            p.gabarit as "gabarit: Gabarit",
+            p.contenu,
             p.signe,
             p.sceau_id,
             s.nom_grave as "sceau_nom?",
             s.initiales as "sceau_initiales?",
-            s.image_url as "sceau_image?",
+            s.image_id as "sceau_image?",
             p.destinataire_genre as "genre: GenreDestinataire",
             p.destinataire_id,
             d.nom as "destinataire_nom?",
@@ -175,7 +178,7 @@ pub async fn lister(_mj: Mj) -> Result<Json<FileMj>, Erreur> {
             auteur_id: ligne.auteur_id,
             auteur_nom: ligne.auteur_nom,
             police: ligne.police,
-            texte: ligne.texte,
+            contenu: Contenu::depuis_la_base(ligne.gabarit, ligne.contenu),
             signe: ligne.signe,
             sceau_id: ligne.sceau_id,
             sceau: SceauPose::depuis(ligne.sceau_nom, ligne.sceau_initiales, ligne.sceau_image),

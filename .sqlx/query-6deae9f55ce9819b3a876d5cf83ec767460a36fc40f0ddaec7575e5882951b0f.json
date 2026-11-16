@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        select\n            r.gabarit as \"gabarit!: Gabarit\",\n            r.contenu as \"contenu!: Value\"\n        from plis_recus r\n        where r.id = $1\n          and r.destinataire_id = $2\n          and r.ouvert_le is not null\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "gabarit!: Gabarit",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "contenu!: Value",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      true,
+      true
+    ]
+  },
+  "hash": "6deae9f55ce9819b3a876d5cf83ec767460a36fc40f0ddaec7575e5882951b0f"
+}

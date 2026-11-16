@@ -1,0 +1,58 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        insert into images (id, chemin_blob, url_blob, type_mime, taille, largeur, hauteur)\n        values ($1, $2, $3, $4, $5, $6, $7)\n        returning id, type_mime, taille, largeur, hauteur, cree_le\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "type_mime",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "taille",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "largeur",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 4,
+        "name": "hauteur",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 5,
+        "name": "cree_le",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Text",
+        "Text",
+        "Int4",
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "0a6cb372f24ab86b720120b477bba2d13923b945e4c39a2fd153e8c78e368cd7"
+}

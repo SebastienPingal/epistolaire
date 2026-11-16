@@ -26,6 +26,8 @@ import type { SceauMj } from '@/types/SceauMj';
 import type { SceauSaisi } from '@/types/SceauSaisi';
 
 import { Attente, Champ, Confirmation, Entete } from './commun';
+import { CachetMj } from './courrier';
+import { ChoixImage } from './formulaires';
 import { initialesDe } from './Personnage';
 
 /** La valeur du choix « personne ne le détient ». */
@@ -54,6 +56,7 @@ export function Sceaux() {
         nom_grave: sceau.nom_grave,
         initiales: sceau.initiales,
         detenteur_id: sceau.detenteur_id,
+        image_id: sceau.image_id,
         ...changement,
       } satisfies SceauSaisi);
     } catch (e) {
@@ -84,7 +87,8 @@ export function Sceaux() {
       </Entete>
       <p className="mb-6 text-muted-foreground">
         Un sceau est un objet : vous pouvez le confier, le retirer ou le faire changer de mains. Son
-        nom gravé reste celui de son propriétaire d'origine.
+        nom gravé reste celui de son propriétaire d'origine. Sans image, il est dessiné à partir
+        de ses initiales ; avec une image, c'est elle qui est gravée dans la cire.
       </p>
 
       {donnees.length === 0 ? (
@@ -93,7 +97,7 @@ export function Sceaux() {
         <ul className="divide-y rounded-xl bg-card ring-1 ring-foreground/10">
           {donnees.map((sceau) => (
             <li key={sceau.id} className="flex flex-wrap items-center gap-3 px-4 py-3">
-              <Cachet initiales={sceau.initiales} nom={sceau.nom_grave} />
+              <CachetMj sceau={sceau} />
               <div className="grid min-w-40 flex-1 grid-cols-[1fr_4.5rem] gap-2">
                 <Input
                   aria-label="Nom gravé"
@@ -146,6 +150,19 @@ export function Sceaux() {
                   <Trash2Icon />
                 </Button>
               </div>
+              <details className="w-full text-sm">
+                <summary className="cursor-pointer text-muted-foreground">
+                  {sceau.image_id ? 'Image du sceau' : 'Donner une image à ce sceau'}
+                </summary>
+                <div className="mt-2">
+                  <ChoixImage
+                    compact
+                    libelle={`Image du sceau ${sceau.nom_grave}`}
+                    image={sceau.image_id}
+                    surImage={(image_id) => enregistrer(sceau, { image_id })}
+                  />
+                </div>
+              </details>
             </li>
           ))}
         </ul>
@@ -193,6 +210,7 @@ function Creation({
         nom_grave: nom,
         initiales,
         detenteur_id: detenteur === PERSONNE ? null : detenteur,
+        image_id: null,
       } satisfies SceauSaisi);
       setNom('');
       setInitiales('');

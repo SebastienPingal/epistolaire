@@ -3,4 +3,8 @@
 /**
  * Un sceau que le joueur détient. Il porte le nom de son propriétaire d'origine.
  */
-export type MonSceau = { id: string, nom_grave: string, initiales: string, image_url: string | null, };
+export type MonSceau = { id: string, nom_grave: string, initiales: string, 
+/**
+ * L'image du sceau, s'il en a une : elle se demande à `/api/joueur/sceaux/{image}`.
+ */
+image_id: string | null, };

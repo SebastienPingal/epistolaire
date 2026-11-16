@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        select (\n            exists (\n                select 1 from plis_recus r\n                where r.destinataire_id = $1 and r.sceau_image_id = $2\n            )\n            or exists (\n                select 1 from sceaux s\n                where s.detenteur_id = $1 and s.image_id = $2\n            )\n        ) as \"visible!\"\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "visible!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "a00754a8bd43263318ace241227cc4a8fd3ba0ce66395f3197e52f0318c99f85"
+}

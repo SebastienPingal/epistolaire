@@ -8,7 +8,11 @@ import type { SceauVu } from "./SceauVu";
  * et la date d'arrivée ; une fois ouvert, aussi qui signe et les premiers mots,
  * pour le reconnaître dans une liste.
  */
-export type PliFerme = { id: string, gabarit: Gabarit, 
+export type PliFerme = { id: string, 
+/**
+ * La sorte de document. Elle se devine avant l'ouverture, à la forme du pli.
+ */
+gabarit: Gabarit, 
 /**
  * Le jour d'arrivée, dans le calendrier du jeu. Jamais l'heure.
  */
@@ -26,6 +30,6 @@ sceau: SceauVu | null,
  */
 signature: string | null, 
 /**
- * Les premiers mots. Seulement une fois le pli ouvert.
+ * Les premiers mots, ou le titre. Seulement une fois le pli ouvert.
  */
 debut: string | null, };

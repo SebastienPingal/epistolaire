@@ -13,8 +13,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Attente } from '@/composants/Attente';
 import { Cachet } from '@/composants/Cachet';
-import { Enveloppe, Pliure } from '@/composants/Enveloppe';
+import { Enveloppe, formeDe, Pliure } from '@/composants/Enveloppe';
 import { cn } from '@/lib/utils';
+import { adresseSceauJoueur } from '@/outils/images';
 import { useLecture } from '@/outils/useLecture';
 import { vocabulaire } from '@/theme/neutre';
 import type { Dossier } from '@/types/Dossier';
@@ -49,12 +50,13 @@ export function LignePli({
 }) {
   const contenu = (
     <>
-      <Enveloppe ouverte={pli.ouvert} className="w-16 shrink-0">
+      <Enveloppe ouverte={pli.ouvert} forme={formeDe(pli.gabarit)} className="w-16 shrink-0">
         {pli.sceau ? (
           <Cachet
             initiales={pli.sceau.initiales}
             nom={pli.sceau.nom}
             etat={pli.sceau.etat}
+            image={pli.sceau.image_id && adresseSceauJoueur(pli.sceau.image_id)}
             className="size-6"
           />
         ) : (

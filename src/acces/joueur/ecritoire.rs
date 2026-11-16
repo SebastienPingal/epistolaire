@@ -71,7 +71,8 @@ pub struct MonSceau {
     pub id: Uuid,
     pub nom_grave: String,
     pub initiales: String,
-    pub image_url: Option<String>,
+    /// L'image du sceau, s'il en a une : elle se demande à `/api/joueur/sceaux/{image}`.
+    pub image_id: Option<Uuid>,
 }
 
 /// À qui une lettre est adressée.
@@ -523,7 +524,7 @@ pub(super) async fn mes_sceaux(pool: &PgPool, joueur: &Joueur) -> Result<Vec<Mon
     let sceaux = sqlx::query_as!(
         MonSceau,
         r#"
-        select id, nom_grave, initiales, image_url
+        select id, nom_grave, initiales, image_id
         from sceaux
         where detenteur_id = $1
         order by cree_le

@@ -12,6 +12,8 @@
 #                                     le ménage des vieilles copies, l'e-mail en cas d'échec
 #   essais/lancer.sh alterer          l'atelier du MJ : réécrire, abîmer, trafiquer le sceau et
 #                                     la signature ; ce que chaque destinataire voit ensuite
+#   essais/lancer.sh documents        l'outil Documents du MJ : les six gabarits, les images,
+#                                     plusieurs destinataires ; ce que chacun reçoit, et quand
 #
 # Le script vide la base locale, y met le jeu de données du parcours, lance le serveur
 # et l'interface, déroule le parcours, puis arrête tout. Les captures d'écran et le
@@ -22,7 +24,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-parcours="${1:?Quel parcours ? connexion, preparation-mj, ecrire, traiter, recevoir, notifications, sauvegarde ou alterer}"
+parcours="${1:?Quel parcours ? connexion, preparation-mj, ecrire, traiter, recevoir, notifications, sauvegarde, alterer ou documents}"
 sortie="${2:-essais/sortie}"
 export DATABASE_URL="${DATABASE_URL:-postgres://postgres:postgres@localhost:5432/epistolaire}"
 mkdir -p "$sortie"
@@ -46,8 +48,9 @@ for variable in CRON_SECRET VAPID_PUBLIC VAPID_PRIVATE VAPID_SUJET; do
     grep -q "^$variable=" .env || grep "^$variable=" .env.exemple >>.env
 done
 # Le parcours « sauvegarde » remplace le stockage Vercel Blob par un faux, lancé par le
-# parcours lui-même sur cette machine. Les autres parcours n'ont pas de stockage.
-if [ "$parcours" = sauvegarde ]; then
+# parcours lui-même sur cette machine ; « documents » fait de même, pour les images.
+# Les autres parcours n'ont pas de stockage.
+if [ "$parcours" = sauvegarde ] || [ "$parcours" = documents ]; then
     export BLOB_READ_WRITE_TOKEN=vercel_blob_rw_essai_secret
     export VERCEL_BLOB_API_URL=http://localhost:8791
 else

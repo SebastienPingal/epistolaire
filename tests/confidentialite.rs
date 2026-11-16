@@ -17,7 +17,11 @@
 //! répondent 404 et ne changent rien en base ; la porte du MJ répond 403 à un joueur et
 //! 401 sans session ; la porte des tâches répond 401 sans le secret.
 //!
-//! Les étapes 10 à 14 ajouteront leurs cas : chaque nouvelle route de joueur s'ajoute à
+//! Les images (étape 11) sont servies par un faux stockage, lancé par le test : une image
+//! permise répond ses octets, une image interdite répond 404, et aucune adresse du stockage
+//! ne sort jamais.
+//!
+//! Les étapes 12 à 14 ajouteront leurs cas : chaque nouvelle route de joueur s'ajoute à
 //! [`ROUTES_JOUEUR`] et s'essaie dans [`derouler`].
 
 use std::collections::BTreeSet;
@@ -47,6 +51,8 @@ const ROUTES_JOUEUR: &[&str] = &[
     "DELETE /api/joueur/plis/{id}",
     "POST /api/joueur/plis/{id}/ouverture",
     "PUT /api/joueur/plis/{id}/dossier",
+    "GET /api/joueur/plis/{id}/images/{image}",
+    "GET /api/joueur/sceaux/{image}",
     "PUT /api/joueur/rangement",
     "POST /api/joueur/destruction",
     "POST /api/joueur/dossiers",
@@ -229,14 +235,21 @@ fn id(suffixe: &str) -> String {
 /// Tous les identifiants du jeu de données, les siens et ceux des autres.
 fn tous_les_identifiants() -> Vec<String> {
     [
-        "b0", "b1", "b2", "a1", "a2", "a3", "a4", "a5", "c1", "c2", "c3", "f1", "f2", "d1", "d2",
-        "d3", "d4", "d5", "d6", "d7", "d8", "d9", "da", "db", "e1", "e2", "e3", "e4", "e5", "e6",
-        "e7", "e8", "ef", "99",
+        "b0", "b1", "b2", "a1", "a2", "a3", "a4", "a5", "c1", "c2", "c3", "f1", "f2", "d0", "d1",
+        "d2", "d3", "d4", "d5", "d6", "d7", "d8", "d9", "da", "db", "dc", "dd", "de", "df", "e1",
+        "e2", "e3", "e4", "e5", "e6", "e7", "e8", "e9", "ea", "eb", "ec", "ed", "ef", "91", "92",
+        "93", "94", "95", "96", "97", "99",
     ]
     .iter()
     .map(|s| id(s))
     .collect()
 }
+
+/// Les images du jeu de données.
+const IMAGES: &[&str] = &["91", "92", "93", "94", "95", "96", "97"];
+
+/// Les plis arrivés chez Alix, qu'elle peut donc lire : fermés ou ouverts.
+const ARRIVES_CHEZ_ALIX: &[&str] = &["e4", "e5", "e6", "e9", "ea", "ed"];
 
 /// Ce qu'Alix ne doit jamais recevoir.
 const MARQUEURS_POUR_ALIX: &[&str] = &[
@@ -258,17 +271,25 @@ const MARQUEURS_POUR_ALIX: &[&str] = &[
     "AUTEUR-CACHE",
     "CLEMENCE-VISEE",
     "ABIME-SECRET",
+    "CARTE-FERMEE",
+    "ADRESSE-BLOB",
+    "CHEMIN-BLOB",
+    "faux-stockage",
     "@",
 ];
 
 /// Les identifiants qu'Alix ne doit jamais recevoir : les comptes, les personnages cachés,
 /// les plis (elle ne voit que des exemplaires, et son brouillon), les exemplaires qui ne
 /// sont pas arrivés chez elle, ce qui est à Bertrand, l'écriture du faussaire, le sceau
-/// qu'elle ne détient pas, l'information du MJ.
+/// qu'elle ne détient pas, l'information du MJ, et les images qu'elle ne voit pas : celle
+/// de Bertrand, celle d'un pli en route, le sceau de Bertrand, et l'image d'origine que le
+/// MJ a remplacée dans son exemplaire. (L'image 92, celle de sa carte encore fermée, est
+/// vérifiée à part : elle ne lui est permise qu'une fois le pli ouvert.)
 fn identifiants_interdits_a_alix() -> Vec<String> {
     [
-        "b0", "b1", "b2", "a3", "a4", "c2", "c3", "f2", "d2", "d3", "d4", "d5", "d6", "d7", "d8",
-        "d9", "da", "db", "e1", "e2", "e3", "e7", "e8", "ef", "99",
+        "b0", "b1", "b2", "a3", "a4", "c2", "c3", "f2", "d0", "d2", "d3", "d4", "d5", "d6", "d7",
+        "d8", "d9", "da", "db", "dc", "dd", "de", "df", "e1", "e2", "e3", "e7", "e8", "eb", "ec",
+        "ef", "93", "94", "96", "97", "99",
     ]
     .iter()
     .map(|s| id(s))
@@ -285,6 +306,12 @@ const MARQUEURS_POUR_BERTRAND: &[&str] = &[
     "FERME",
     "DETRUIT",
     "Version livrée",
+    "Rapport livré",
+    "Carte livrée",
+    "CARTE-FERMEE",
+    "ADRESSE-BLOB",
+    "CHEMIN-BLOB",
+    "faux-stockage",
     "Archives",
     "NOTES-MJ",
     "INFO-SECRETE",
@@ -426,7 +453,10 @@ impl Essai {
                 self.echec(format!("{contexte} : Bertrand reçoit « {marqueur} »"));
             }
         }
-        for interdit in ["a3", "a4", "b0", "b1", "b2", "e4", "e5", "e6", "f1", "c1", "c2"] {
+        for interdit in [
+            "a3", "a4", "b0", "b1", "b2", "e4", "e5", "e6", "e9", "ea", "ec", "ed", "f1", "c1",
+            "c2", "91", "92", "94", "95", "97",
+        ] {
             if texte.contains(&id(interdit)) {
                 self.echec(format!("{contexte} : Bertrand reçoit l'identifiant {}", id(interdit)));
             }
@@ -530,6 +560,11 @@ fn confidentialite() {
          (elle est entièrement vidée) : {nom}"
     );
 
+    // Le faux stockage des images : une adresse de cette machine, sur un port libre.
+    let ecoute = std::net::TcpListener::bind("127.0.0.1:0").expect("port du faux stockage");
+    ecoute.set_nonblocking(true).expect("faux stockage");
+    let stockage = format!("http://{}", ecoute.local_addr().expect("adresse du faux stockage"));
+
     // Le site lit sa base dans DATABASE_URL au premier appel : on la pose avant.
     // SAFETY : aucun autre fil ne tourne encore dans ce test.
     unsafe {
@@ -538,7 +573,9 @@ fn confidentialite() {
         std::env::set_var("CRON_SECRET", SECRET);
         std::env::remove_var("VERCEL_ENV");
         std::env::remove_var("SMTP_HOST");
-        std::env::remove_var("BLOB_READ_WRITE_TOKEN");
+        // Jamais le vrai stockage : seul le faux, sur cette machine, est accepté.
+        std::env::set_var("BLOB_READ_WRITE_TOKEN", "vercel_blob_rw_tests_secret");
+        std::env::set_var("VERCEL_BLOB_API_URL", &stockage);
     }
 
     tokio::runtime::Builder::new_multi_thread()
@@ -560,6 +597,21 @@ fn confidentialite() {
                 .execute(&base)
                 .await
                 .expect("chargement du jeu de données");
+
+            // Le faux stockage répond « OCTETS-91 » pour le fichier de l'image 91.
+            sqlx::query("update images set url_blob = replace(url_blob, 'http://faux-stockage', $1)")
+                .bind(&stockage)
+                .execute(&base)
+                .await
+                .expect("adresses du faux stockage");
+            let ecoute = tokio::net::TcpListener::from_std(ecoute).expect("faux stockage");
+            tokio::spawn(async move {
+                let fichiers = axum::Router::new().fallback(|uri: axum::http::Uri| async move {
+                    let chemin = uri.path();
+                    format!("OCTETS-{}", &chemin[chemin.len().saturating_sub(2)..])
+                });
+                axum::serve(ecoute, fichiers).await.expect("faux stockage");
+            });
 
             let mut essai = Essai {
                 base,
@@ -633,13 +685,17 @@ async fn lectures_d_alix(essai: &mut Essai) {
     let reception = r.json();
     essai.vrai(
         "réception : les plis arrivés, non rangés, non détruits",
-        ids_de(&reception["plis"]) == ensemble(&["e4", "e6"]),
+        ids_de(&reception["plis"]) == ensemble(&["e4", "e6", "ea"]),
     );
     essai.vrai(
         "réception : ses seuls dossiers",
         ids_de(&reception["dossiers"]) == ensemble(&["f1"]),
     );
-    essai.vrai("réception : deux plis non ouverts", reception["non_ouverts"] == 2);
+    essai.vrai("réception : trois plis non ouverts", reception["non_ouverts"] == 3);
+    essai.vrai(
+        "réception : rien de l'image d'une carte fermée",
+        !r.texte.contains(&id("92")),
+    );
 
     let r = essai.alix("GET /api/joueur/fiche", &[], None).await;
     essai.statut("fiche", &r, StatusCode::OK);
@@ -648,7 +704,7 @@ async fn lectures_d_alix(essai: &mut Essai) {
 
     let r = essai.alix("GET /api/joueur/pastille", &[], None).await;
     essai.statut("pastille", &r, StatusCode::OK);
-    essai.vrai("pastille : deux plis non ouverts", r.json()["nombre"] == 2);
+    essai.vrai("pastille : trois plis non ouverts", r.json()["nombre"] == 3);
 
     let r = essai.alix("GET /api/joueur/notifications", &[], None).await;
     essai.statut("notifications", &r, StatusCode::OK);
@@ -669,7 +725,7 @@ async fn lectures_d_alix(essai: &mut Essai) {
         essai.examiner_pour_alix(&format!("brouillon {cible}"), &r.texte, &[]);
 
         let r = essai.alix("GET /api/joueur/plis/{id}", &[&cible], None).await;
-        let arrive = [id("e4"), id("e5"), id("e6")].contains(&cible);
+        let arrive = ensemble(ARRIVES_CHEZ_ALIX).contains(&cible);
         let attendu = if arrive { StatusCode::OK } else { StatusCode::NOT_FOUND };
         essai.statut(&format!("pli {cible}"), &r, attendu);
         essai.examiner_pour_alix(&format!("pli {cible}"), &r.texte, &[]);
@@ -696,7 +752,8 @@ async fn lectures_d_alix(essai: &mut Essai) {
     // Le passage abîmé se voit toujours, mais son texte ne sort jamais : douze points.
     essai.vrai(
         "pli altéré : la version livrée, le passage abîmé voilé",
-        altere["contenu"]["texte"] == "Version livrée, lisible. ············",
+        altere["contenu"]["document"]
+            == json!({ "gabarit": "billet", "texte": "Version livrée, lisible. ············" }),
     );
     essai.vrai(
         "pli altéré : la place du passage abîmé",
@@ -724,6 +781,89 @@ async fn lectures_d_alix(essai: &mut Essai) {
         "pli altéré : la signature contrefaite paraît normale",
         altere["contenu"]["signature"]["nom"] == "Damien",
     );
+
+    // Les autres gabarits : un rapport dont une rubrique a un passage abîmé.
+    let rapport = essai.alix("GET /api/joueur/plis/{id}", &[&id("ed")], None).await.json();
+    essai.vrai(
+        "rapport : la version livrée, case par case, le passage abîmé voilé",
+        rapport["contenu"]["document"]
+            == json!({
+                "gabarit": "rapport",
+                "titre": "Rapport livré",
+                "auteur": "",
+                "rubriques": [
+                    { "titre": "Un", "texte": "Texte lisible." },
+                    { "titre": "Deux", "texte": "Avant ············ après" },
+                ],
+            }),
+    );
+    essai.vrai(
+        "rapport : la place du passage abîmé, dans sa case",
+        rapport["contenu"]["passages_abimes"]
+            == json!([{ "champ": "rubriques.1.texte", "debut": 6, "fin": 18 }]),
+    );
+    essai.vrai("rapport : dans les listes, son titre", rapport["exterieur"]["debut"] == "Rapport livré");
+
+    // Une carte fermée : sa forme se devine, rien d'autre. Ni son titre, ni son image.
+    let r = essai.alix("GET /api/joueur/plis/{id}", &[&id("ea")], None).await;
+    let carte_fermee = r.json();
+    essai.vrai("carte fermée : pas de contenu", carte_fermee["contenu"].is_null());
+    essai.vrai("carte fermée : pas de début", carte_fermee["exterieur"]["debut"].is_null());
+    essai.vrai("carte fermée : sa forme", carte_fermee["exterieur"]["gabarit"] == "carte");
+    essai.vrai("carte fermée : rien de son image", !r.texte.contains(&id("92")));
+
+    // Une carte ouverte : l'image de sa version livrée, pas celle de l'original.
+    let carte = essai.alix("GET /api/joueur/plis/{id}", &[&id("e9")], None).await.json();
+    essai.vrai(
+        "carte ouverte : l'image livrée",
+        carte["contenu"]["document"]["image"] == json!(id("91")),
+    );
+    essai.vrai(
+        "pli fermé : l'image du sceau se voit avant l'ouverture",
+        ferme["exterieur"]["sceau"]["image_id"] == json!(id("95")),
+    );
+
+    images_pour_alix(essai).await;
+}
+
+/// Les images : Alix ne reçoit que celle de sa carte ouverte, et le sceau qu'elle voit.
+/// Tout le reste répond 404, sans un octet de l'image.
+async fn images_pour_alix(essai: &mut Essai) {
+    for pli in tous_les_identifiants() {
+        for image in IMAGES {
+            let image = id(image);
+            let r = essai
+                .alix("GET /api/joueur/plis/{id}/images/{image}", &[&pli, &image], None)
+                .await;
+            let contexte = format!("image {image} du pli {pli}");
+            if pli == id("e9") && image == id("91") {
+                essai.statut(&contexte, &r, StatusCode::OK);
+                essai.vrai(&format!("{contexte} : ses octets"), r.texte == "OCTETS-91");
+            } else {
+                // La carte fermée (ea, 92), celle de Bertrand (eb, 93), celle qui est en
+                // route (ec, 94), l'image d'origine remplacée (e9, 97), une image d'un autre
+                // pli, l'identifiant du pli au lieu de celui de l'exemplaire…
+                essai.statut(&contexte, &r, StatusCode::NOT_FOUND);
+                essai.vrai(&format!("{contexte} : aucun octet"), !r.texte.contains("OCTETS"));
+            }
+            essai.examiner_pour_alix(&contexte, &r.texte, &[]);
+        }
+    }
+
+    for image in tous_les_identifiants() {
+        let r = essai.alix("GET /api/joueur/sceaux/{image}", &[&image], None).await;
+        let contexte = format!("image de sceau {image}");
+        if image == id("95") {
+            // Le sceau de Damien ferme deux de ses plis.
+            essai.statut(&contexte, &r, StatusCode::OK);
+            essai.vrai(&format!("{contexte} : ses octets"), r.texte == "OCTETS-95");
+        } else {
+            // Le sceau de Bertrand, et toutes les images de documents : pas par cette route.
+            essai.statut(&contexte, &r, StatusCode::NOT_FOUND);
+            essai.vrai(&format!("{contexte} : aucun octet"), !r.texte.contains("OCTETS"));
+        }
+        essai.examiner_pour_alix(&contexte, &r.texte, &[]);
+    }
 }
 
 /// Les gestes sur ce qui n'est pas à Alix, ou pas encore arrivé : 404, et rien ne change.
@@ -744,7 +884,7 @@ async fn gestes_interdits_a_alix(essai: &mut Essai) {
             essai.examiner_pour_alix(&format!("envoyer le brouillon {cible}"), &r.texte, &[]);
         }
 
-        if ![id("e4"), id("e5"), id("e6")].contains(&cible) {
+        if !ensemble(ARRIVES_CHEZ_ALIX).contains(&cible) {
             let r = essai
                 .alix("POST /api/joueur/plis/{id}/ouverture", &[&cible], None)
                 .await;
@@ -909,7 +1049,7 @@ async fn gestes_permis_a_alix(essai: &mut Essai) {
     let r = essai.alix("POST /api/joueur/plis/{id}/ouverture", &[&id("e4")], None).await;
     essai.statut("ouvrir", &r, StatusCode::OK);
     essai.examiner_pour_alix("ouvrir", &r.texte, &["FERME"]);
-    essai.vrai("ouvrir : le texte paraît", r.json()["contenu"]["texte"] == "FERME");
+    essai.vrai("ouvrir : le texte paraît", r.json()["contenu"]["document"]["texte"] == "FERME");
     let r = essai.alix("POST /api/joueur/plis/{id}/ouverture", &[&id("e4")], None).await;
     essai.statut("rouvrir", &r, StatusCode::OK);
     essai.sql_vrai(
@@ -928,7 +1068,10 @@ async fn gestes_permis_a_alix(essai: &mut Essai) {
     essai.statut("ranger", &r, StatusCode::NO_CONTENT);
     let r = essai.alix("GET /api/joueur/dossiers/{id}", &[&id("f1")], None).await;
     essai.examiner_pour_alix("dossier", &r.texte, &["FERME"]);
-    essai.vrai("dossier : ses deux plis", ids_de(&r.json()["plis"]) == ensemble(&["e4", "e5"]));
+    essai.vrai(
+        "dossier : ses quatre plis",
+        ids_de(&r.json()["plis"]) == ensemble(&["e4", "e5", "e9", "ed"]),
+    );
     let r = essai
         .alix(
             "PUT /api/joueur/rangement",
@@ -954,6 +1097,26 @@ async fn gestes_permis_a_alix(essai: &mut Essai) {
     let r = essai.alix("GET /api/joueur/plis/{id}", &[&id("e6")], None).await;
     essai.statut("un pli détruit avec son dossier", &r, StatusCode::NOT_FOUND);
 
+    // La carte : son image ne se sert qu'une fois le pli ouvert, et plus après sa destruction.
+    let (carte, son_image) = (id("ea"), id("92"));
+    let image = ["GET /api/joueur/plis/{id}/images/{image}", carte.as_str(), son_image.as_str()];
+    let r = essai.alix(image[0], &[image[1], image[2]], None).await;
+    essai.statut("l'image d'une carte fermée", &r, StatusCode::NOT_FOUND);
+    let r = essai.alix("POST /api/joueur/plis/{id}/ouverture", &[&id("ea")], None).await;
+    essai.statut("ouvrir la carte", &r, StatusCode::OK);
+    essai.examiner_pour_alix("ouvrir la carte", &r.texte, &["CARTE-FERMEE", "FERME"]);
+    essai.vrai(
+        "ouvrir la carte : son image est désignée",
+        r.json()["contenu"]["document"]["image"] == json!(id("92")),
+    );
+    let r = essai.alix(image[0], &[image[1], image[2]], None).await;
+    essai.statut("l'image de la carte ouverte", &r, StatusCode::OK);
+    essai.vrai("l'image de la carte ouverte : ses octets", r.texte == "OCTETS-92");
+    let r = essai.alix("DELETE /api/joueur/plis/{id}", &[&id("ea")], None).await;
+    essai.statut("détruire la carte", &r, StatusCode::NO_CONTENT);
+    let r = essai.alix(image[0], &[image[1], image[2]], None).await;
+    essai.statut("l'image d'une carte détruite", &r, StatusCode::NOT_FOUND);
+
     // Détruire.
     let r = essai
         .alix("POST /api/joueur/destruction", &[], Some(json!({ "plis": [id("e5")] })))
@@ -966,7 +1129,7 @@ async fn gestes_permis_a_alix(essai: &mut Essai) {
     essai.vrai("réception vidée", ids_de(&r.json()["plis"]).is_empty());
     essai.sql_vrai(
         "les plis détruits restent dans la base",
-        "select count(*) = 4 from exemplaires where detruit_le is not null",
+        "select count(*) = 5 from exemplaires where detruit_le is not null",
     )
     .await;
 
@@ -1030,7 +1193,8 @@ async fn lectures_de_bertrand(essai: &mut Essai) {
     essai.vrai("son dossier : son pli", ids_de(&r.json()["plis"]) == ensemble(&["e7"]));
     for cible in tous_les_identifiants() {
         let r = essai.bertrand("GET /api/joueur/plis/{id}", &[&cible], None).await;
-        let attendu = if cible == id("e7") { StatusCode::OK } else { StatusCode::NOT_FOUND };
+        let a_lui = cible == id("e7") || cible == id("eb");
+        let attendu = if a_lui { StatusCode::OK } else { StatusCode::NOT_FOUND };
         essai.statut(&format!("pli {cible}, par Bertrand"), &r, attendu);
         essai.examiner_pour_bertrand(&format!("pli {cible}"), &r.texte);
         let r = essai.bertrand("GET /api/joueur/brouillons/{id}", &[&cible], None).await;
@@ -1039,6 +1203,26 @@ async fn lectures_de_bertrand(essai: &mut Essai) {
         let r = essai.bertrand("GET /api/joueur/dossiers/{id}", &[&cible], None).await;
         let attendu = if cible == id("f2") { StatusCode::OK } else { StatusCode::NOT_FOUND };
         essai.statut(&format!("dossier {cible}, par Bertrand"), &r, attendu);
+
+        // Les images : sa carte et son sceau, rien de celles d'Alix.
+        for image in IMAGES {
+            let image = id(image);
+            let r = essai
+                .bertrand("GET /api/joueur/plis/{id}/images/{image}", &[&cible, &image], None)
+                .await;
+            let a_lui = cible == id("eb") && image == id("93");
+            let attendu = if a_lui { StatusCode::OK } else { StatusCode::NOT_FOUND };
+            essai.statut(&format!("image {image} du pli {cible}, par Bertrand"), &r, attendu);
+            essai.vrai(
+                &format!("image {image} du pli {cible}, par Bertrand : ses octets, ou rien"),
+                if a_lui { r.texte == "OCTETS-93" } else { !r.texte.contains("OCTETS") },
+            );
+        }
+        let r = essai.bertrand("GET /api/joueur/sceaux/{image}", &[&cible], None).await;
+        // Son propre sceau : il le détient.
+        let a_lui = cible == id("96");
+        let attendu = if a_lui { StatusCode::OK } else { StatusCode::NOT_FOUND };
+        essai.statut(&format!("image de sceau {cible}, par Bertrand"), &r, attendu);
     }
 }
 

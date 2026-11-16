@@ -13,6 +13,7 @@ import { Cachet } from '@/composants/Cachet';
 import { Confirmation } from '@/composants/Confirmation';
 import { Main } from '@/composants/Main';
 import { cn } from '@/lib/utils';
+import { adresseSceauJoueur } from '@/outils/images';
 import { useLecture } from '@/outils/useLecture';
 import { policeDe } from '@/theme/ecritures';
 import { vocabulaire } from '@/theme/neutre';
@@ -218,7 +219,12 @@ function Editeur({ ecritoire, brouillon }: { ecritoire: Ecritoire; brouillon: Br
                 actif={saisie.sceau_id === sceau.id}
                 surChoix={() => setSaisie((avant) => ({ ...avant, sceau_id: sceau.id }))}
               >
-                <Cachet initiales={sceau.initiales} nom={sceau.nom_grave} className="size-8" />
+                <Cachet
+                  initiales={sceau.initiales}
+                  nom={sceau.nom_grave}
+                  image={sceau.image_id && adresseSceauJoueur(sceau.image_id)}
+                  className="size-8"
+                />
                 {sceau.nom_grave}
               </ChoixSceau>
             ))}

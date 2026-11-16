@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Attente } from '@/composants/Attente';
 import { Cachet } from '@/composants/Cachet';
 import { Main } from '@/composants/Main';
+import { adresseSceauJoueur } from '@/outils/images';
 import { useLecture } from '@/outils/useLecture';
 import { vocabulaire } from '@/theme/neutre';
 import type { MaFiche } from '@/types/MaFiche';
@@ -36,7 +37,11 @@ export function Fiche({ surDeconnexion }: { surDeconnexion: () => void }) {
         <ul className="flex flex-wrap gap-4">
           {donnees.sceaux.map((sceau) => (
             <li key={sceau.id} className="flex items-center gap-3">
-              <Cachet initiales={sceau.initiales} nom={sceau.nom_grave} />
+              <Cachet
+                initiales={sceau.initiales}
+                nom={sceau.nom_grave}
+                image={sceau.image_id && adresseSceauJoueur(sceau.image_id)}
+              />
               <span>{sceau.nom_grave}</span>
             </li>
           ))}

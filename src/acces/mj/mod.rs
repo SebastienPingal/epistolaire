@@ -6,9 +6,11 @@
 mod acheminement;
 mod alterations;
 mod detruits;
+mod documents;
 mod ecritures;
 mod en_route;
 mod file;
+mod images;
 mod notifications;
 mod personnages;
 mod plume;
@@ -17,11 +19,14 @@ mod sauvegardes;
 mod sceaux;
 
 use axum::Router;
+use axum::extract::DefaultBodyLimit;
 use axum::routing::{delete, get, post, put};
+
+use crate::images::TAILLE_MAX;
 
 pub fn routes() -> Router {
     Router::new()
-        // Le courrier : la file, les plis en route, et la plume du MJ.
+        // Le courrier : la file, les plis en route, et les documents du MJ.
         .route("/a-traiter", get(file::lister))
         .route("/a-traiter/{id}/traitement", post(file::traiter))
         .route(
@@ -35,7 +40,16 @@ pub fn routes() -> Router {
         )
         .route("/exemplaires/{id}/version", put(alterations::alterer))
         .route("/exemplaires/{id}/copie", post(en_route::copier))
-        .route("/lettres", post(plume::ecrire))
+        .route("/documents", post(documents::envoyer))
+        // Les images des documents et des sceaux. Le dépôt reçoit le fichier lui-même :
+        // sa limite est celle d'une image, pas celle d'une demande ordinaire.
+        .route(
+            "/images",
+            get(images::lister)
+                .post(images::deposer)
+                .layer(DefaultBodyLimit::max(TAILLE_MAX + 1024)),
+        )
+        .route("/images/{id}", get(images::afficher))
         .route("/detruits", get(detruits::lister))
         // La préparation de la partie.
         .route("/personnages", get(personnages::lister).post(personnages::creer))

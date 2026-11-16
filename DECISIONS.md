@@ -1,7 +1,7 @@
 # Jeu de rôle épistolaire : décisions de conception
 
 Ce document est tenu à jour au fil des échanges de conception.
-Dernière mise à jour : 16 novembre, à l'étape 10 (altérations).
+Dernière mise à jour : 16 novembre, à l'étape 11 (documents et gabarits).
 
 ## Avancement
 
@@ -145,6 +145,13 @@ Dernière mise à jour : 16 novembre, à l'étape 10 (altérations).
 - Ses plis arrivent comme les autres : pli fermé, dossier Réception, notification. Ils peuvent aussi être des faux, avec les mêmes outils.
 - Par défaut, une lettre de PNJ suit les règles des joueurs : billet de 500 caractères, sceau, signature, écriture. Le MJ peut choisir un autre gabarit et dépasser la limite.
 - Les documents sont libres. Les gabarits s'adaptent à la longueur du contenu.
+- Un document peut n'avoir aucun expéditeur, comme une carte trouvée ou une affiche (décidé le 16 novembre). Il n'a alors ni signature ni sceau ; s'il est écrit à la main, le MJ choisit son écriture, qui n'est jamais celle d'un joueur.
+- Un document peut être adressé à un PNJ comme à un joueur (décidé le 16 novembre). L'exemplaire d'un PNJ est arrivé et lu aussitôt, comme pour un billet.
+- Trois gabarits sont écrits à la main, dans l'écriture de l'expéditeur : le billet, la lettre longue et l'acte officiel. Les autres sont imprimés : la gazette, le rapport, et la légende de la carte (décidé le 16 novembre). Seuls les gabarits écrits à la main portent une signature.
+- Tout pli peut être fermé par un sceau de l'expéditeur, quel que soit son gabarit : le cachet se voit sur le pli fermé. À l'intérieur, il ne figure que sur le billet, la lettre longue et l'acte officiel (décidé le 16 novembre).
+- Dans l'atelier des altérations, le MJ peut remplacer l'image d'une carte pour un destinataire (décidé le 16 novembre). Rien ne le signale au joueur : une image n'a pas d'écriture où montrer le faux.
+- Une version altérée garde la forme de l'original : le même gabarit, autant d'articles ou de rubriques. Le MJ réécrit une case, il ne la retire pas (choix de réalisation de l'étape 11, à revoir si le besoin se présente).
+- Les images (cartes, illustrations, sceaux) ne sont vues que de leurs destinataires : celle d'un document, une fois le pli arrivé et ouvert ; celle d'un sceau, dès que le sceau se voit. Le site les sert lui-même, depuis le stockage privé Vercel Blob, celui des sauvegardes. Aucune image n'a d'adresse publique (décidé le 16 novembre). 4 Mo au plus par image.
 
 ## Gazette (l'ancienne zone commune)
 
@@ -233,6 +240,7 @@ Dernière mise à jour : 16 novembre, à l'étape 10 (altérations).
 - Dans l'habillage neutre, les mois sont numérotés : « 12e jour du 3e mois, an 1 ».
 - Les mois ont la longueur des vrais mois. Le premier jour du jeu est le « 1er jour du 1er mois, an 1 », puis le temps avance comme dans le calendrier réel à partir d'un 1er janvier : le 1er mois a 31 jours, le 2e en a 28, et ainsi de suite. Le jour change à minuit, heure de Paris.
 - Seules les dates s'affichent, sans l'heure : date d'écriture sur la lettre, date d'arrivée dans la Réception.
+- Avant d'être ouvert, un pli laisse deviner la sorte de document qu'il contient (décidé le 16 novembre) : une carte arrive en rouleau, une gazette en journal plié, tout le reste en pli ordinaire. Rien d'autre ne se devine : ni titre, ni image, ni texte.
 - L'ouverture d'un pli se fait par un geste : glisser le doigt sur le sceau sur téléphone, cliquer et maintenir sur ordinateur. Un pli sans sceau se déplie de la même façon.
 - Le son est désactivé par défaut. Les animations sont réduites si l'appareil le demande.
 - Un réglage de taille du texte existe, sans changer la police. On peut aussi zoomer avec les doigts.

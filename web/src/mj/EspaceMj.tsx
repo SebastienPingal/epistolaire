@@ -41,7 +41,7 @@ type Entree = { chemin: string; libelle: string; Icone: ComponentType };
 const COURRIER: Entree[] = [
   { chemin: '/mj/a-traiter', libelle: 'À traiter', Icone: InboxIcon },
   { chemin: '/mj/en-route', libelle: 'En route', Icone: SendIcon },
-  { chemin: '/mj/ecrire', libelle: 'Écrire', Icone: FeatherIcon },
+  { chemin: '/mj/documents', libelle: 'Documents', Icone: FeatherIcon },
   { chemin: '/mj/detruits', libelle: 'Détruites', Icone: FlameIcon },
 ];
 

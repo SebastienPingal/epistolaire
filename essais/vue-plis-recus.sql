@@ -68,6 +68,20 @@ from cas c
 join plis_recus r on r.id = c.id
 where c.cas >= '8' and to_jsonb(r)::text like '%livree%';
 
+\echo '--- Les autres gabarits : un passage désigne sa case par son chemin ---'
+\echo 'attendu : le texte du premier article voilé de 4 à 10, rien d''autre'
+select voiler_passages(
+    '{"titre":"Gazette","articles":[{"titre":"Un","texte":"abc secret def"},{"titre":"Deux","texte":"intact"}]}',
+    '[{"champ":"articles.0.texte","debut":4,"fin":10}]');
+\echo 'attendu : inchangé (la case n''existe pas)'
+select voiler_passages('{"titre":"Gazette","articles":[]}', '[{"champ":"articles.3.texte","debut":0,"fin":3}]');
+\echo 'attendu : tout voilé, sauf l''image (le passage désigne une liste, pas un texte)'
+select voiler_passages(
+    '{"image":"00000000-0000-0000-0000-000000000091","titre":"Carte","rubriques":[{"titre":"Un","texte":"secret\nsur deux lignes"}]}',
+    '[{"champ":"rubriques","debut":0,"fin":3}]');
+\echo 'attendu : tout voilé (la liste des passages n''en est pas une)'
+select voiler_passages('{"titre":"Rapport","rubriques":[{"titre":"Un","texte":"secret"}]}', '{"debut":1}');
+
 \echo '--- Colonnes de la vue ---'
 select string_agg(column_name, ', ' order by ordinal_position) from information_schema.columns where table_name = 'plis_recus';
 rollback;

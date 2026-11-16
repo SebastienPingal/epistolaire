@@ -4,7 +4,11 @@ export type SceauMj = { id: string,
 /**
  * Le nom gravé : il ne change pas quand le sceau change de mains.
  */
-nom_grave: string, initiales: string, image_url: string | null, proprietaire_origine_id: string | null, proprietaire_origine_nom: string | null, 
+nom_grave: string, initiales: string, 
+/**
+ * L'image du sceau. Vide : il est dessiné à partir de ses initiales.
+ */
+image_id: string | null, proprietaire_origine_id: string | null, proprietaire_origine_nom: string | null, 
 /**
  * Qui le détient aujourd'hui. Vide : personne, le MJ le garde.
  */

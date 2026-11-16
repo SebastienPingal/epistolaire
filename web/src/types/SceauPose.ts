@@ -3,4 +3,8 @@
 /**
  * Le sceau qui ferme un pli, tel que le MJ le voit.
  */
-export type SceauPose = { nom_grave: string, initiales: string, image_url: string | null, };
+export type SceauPose = { nom_grave: string, initiales: string, 
+/**
+ * L'image du sceau, s'il en a une. Vide : il est dessiné à partir de ses initiales.
+ */
+image_id: string | null, };

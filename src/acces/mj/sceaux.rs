@@ -19,7 +19,8 @@ pub struct SceauMj {
     /// Le nom gravé : il ne change pas quand le sceau change de mains.
     pub nom_grave: String,
     pub initiales: String,
-    pub image_url: Option<String>,
+    /// L'image du sceau. Vide : il est dessiné à partir de ses initiales.
+    pub image_id: Option<Uuid>,
     pub proprietaire_origine_id: Option<Uuid>,
     pub proprietaire_origine_nom: Option<String>,
     /// Qui le détient aujourd'hui. Vide : personne, le MJ le garde.
@@ -33,6 +34,9 @@ pub struct SceauSaisi {
     pub nom_grave: String,
     pub initiales: String,
     pub detenteur_id: Option<Uuid>,
+    /// Une image déposée par le MJ (`POST /api/mj/images`). Vide : pas d'image.
+    #[serde(default)]
+    pub image_id: Option<Uuid>,
 }
 
 pub async fn lister(_mj: Mj) -> Result<Json<Vec<SceauMj>>, Erreur> {
@@ -41,7 +45,7 @@ pub async fn lister(_mj: Mj) -> Result<Json<Vec<SceauMj>>, Erreur> {
         SceauMj,
         r#"
         select
-            s.id, s.nom_grave, s.initiales, s.image_url,
+            s.id, s.nom_grave, s.initiales, s.image_id,
             s.proprietaire_origine_id, o.nom as "proprietaire_origine_nom?",
             s.detenteur_id, d.nom as "detenteur_nom?"
         from sceaux s
@@ -63,16 +67,17 @@ pub async fn creer(_mj: Mj, Json(saisie): Json<SceauSaisi>) -> Result<StatusCode
 
     sqlx::query!(
         r#"
-        insert into sceaux (nom_grave, initiales, proprietaire_origine_id, detenteur_id)
-        values ($1, $2, $3, $3)
+        insert into sceaux (nom_grave, initiales, proprietaire_origine_id, detenteur_id, image_id)
+        values ($1, $2, $3, $3, $4)
         "#,
         nom_grave,
         initiales,
         saisie.detenteur_id,
+        saisie.image_id,
     )
     .execute(pool)
     .await
-    .map_err(refus_de_la_base("", "Ce personnage n'existe pas."))?;
+    .map_err(refus_de_la_base("", "Ce personnage ou cette image n'existe pas."))?;
 
     Ok(StatusCode::NO_CONTENT)
 }
@@ -88,15 +93,20 @@ pub async fn modifier(
     let pool = base::pool().await?;
 
     let modifie = sqlx::query!(
-        "update sceaux set nom_grave = $2, initiales = $3, detenteur_id = $4 where id = $1",
+        r#"
+        update sceaux
+        set nom_grave = $2, initiales = $3, detenteur_id = $4, image_id = $5
+        where id = $1
+        "#,
         id,
         nom_grave,
         initiales,
         saisie.detenteur_id,
+        saisie.image_id,
     )
     .execute(pool)
     .await
-    .map_err(refus_de_la_base("", "Ce personnage n'existe pas."))?;
+    .map_err(refus_de_la_base("", "Ce personnage ou cette image n'existe pas."))?;
 
     if modifie.rows_affected() == 0 {
         return Err(Erreur::Introuvable);

@@ -4,6 +4,9 @@
 //! non comprise. Le format est le même partout, dans la base comme dans l'interface :
 //! `{ "champ": "texte", "debut": 12, "fin": 30 }`.
 //!
+//! `champ` est le chemin de la case dans le contenu ([`crate::gabarits`]) : `texte` pour un
+//! billet, `articles.2.texte` pour le troisième article d'une gazette.
+//!
 //! Règles de ce fichier :
 //!
 //! * les positions comptent les **caractères Unicode** (ce que compte `chars()`), jamais les
@@ -18,11 +21,12 @@ use similar::{Algorithm, DiffTag, capture_diff_slices};
 use ts_rs::TS;
 
 use crate::erreur::Erreur;
+use crate::gabarits::Contenu;
 
-/// La seule case d'un billet. Les autres gabarits (étape 11) auront les leurs.
+/// La seule case d'un billet, et la case d'un passage enregistré sans case.
 pub const CHAMP_TEXTE: &str = "texte";
 
-/// Nombre de passages abîmés qu'un même texte peut porter.
+/// Nombre de passages abîmés qu'un même document peut porter.
 const PASSAGES_ABIMES_MAX: usize = 100;
 
 /// Un passage d'une case du gabarit : du `debut` compris à la `fin` non comprise.
@@ -89,7 +93,27 @@ fn mots(texte: &str) -> Vec<Mot<'_>> {
     mots
 }
 
-/// Repère les passages réécrits : ce qui, dans la version livrée, n'est pas de l'auteur.
+/// Repère les passages réécrits de tout un document, case par case. La version livrée a la
+/// forme de l'original ([`Contenu::meme_forme`]) : chaque case se compare à celle qui a le
+/// même chemin. Une case que l'original n'a pas est comparée à une case vide.
+pub fn reperer_dans_le_contenu(original: &Contenu, livre: &Contenu) -> Vec<Passage> {
+    let avant = original.textes();
+    let mut passages = Vec::new();
+    for (chemin, texte) in livre.textes() {
+        let ancien = avant
+            .iter()
+            .find(|(autre, _)| *autre == chemin)
+            .map_or("", |(_, ancien)| *ancien);
+        for mut passage in reperer_reecritures(ancien, texte) {
+            passage.champ.clone_from(&chemin);
+            passages.push(passage);
+        }
+    }
+    passages
+}
+
+/// Repère les passages réécrits d'un texte : ce qui, dans la version livrée, n'est pas de
+/// l'auteur. Les passages rendus désignent la case `texte`.
 ///
 /// Les deux textes sont comparés mot par mot. Tout mot ajouté ou remplacé dans la version
 /// livrée fait partie d'un passage réécrit ; des mots voisins forment un seul passage,
@@ -120,32 +144,48 @@ pub fn reperer_reecritures(original: &str, livre: &str) -> Vec<Passage> {
         .collect()
 }
 
-/// Vérifie les passages abîmés choisis par le MJ, et les rend rangés dans l'ordre du texte.
-/// Deux passages qui se touchent ou se chevauchent n'en font qu'un.
-pub fn verifier_abimes(texte: &str, passages: &[Passage]) -> Result<Vec<Passage>, Erreur> {
+/// Vérifie les passages abîmés choisis par le MJ, et les rend rangés : dans l'ordre des
+/// cases du document, puis dans l'ordre du texte. Deux passages d'une même case qui se
+/// touchent ou se chevauchent n'en font qu'un.
+///
+/// `cases` : les cases de texte du document, chacune avec son chemin ([`Contenu::textes`]).
+pub fn verifier_abimes(cases: &[(String, &str)], passages: &[Passage]) -> Result<Vec<Passage>, Erreur> {
     if passages.len() > PASSAGES_ABIMES_MAX {
-        return Err(Erreur::Refus("Ce texte a trop de passages abîmés."));
+        return Err(Erreur::Refus("Ce document a trop de passages abîmés."));
     }
-    let longueur = texte.chars().count() as u32;
-    let mut tries = passages.to_vec();
-    tries.sort_by_key(|passage| (passage.debut, passage.fin));
+    if passages
+        .iter()
+        .any(|passage| !cases.iter().any(|(chemin, _)| *chemin == passage.champ))
+    {
+        return Err(Erreur::Refus(
+            "Un passage abîmé désigne une case que ce document n'a pas. Choisissez-le de nouveau.",
+        ));
+    }
 
     let mut reunis: Vec<Passage> = Vec::new();
-    for passage in tries {
-        if passage.champ != CHAMP_TEXTE {
-            return Err(Erreur::Refus("Un billet n'a qu'une case : son texte."));
-        }
-        if passage.debut >= passage.fin || passage.fin > longueur {
-            return Err(Erreur::Refus(
-                "Un passage abîmé sort du texte. Choisissez-le de nouveau.",
-            ));
-        }
-        match reunis.last_mut() {
-            Some(precedent) if passage.debut <= precedent.fin => {
-                precedent.fin = precedent.fin.max(passage.fin);
+    for (chemin, texte) in cases {
+        let longueur = texte.chars().count() as u32;
+        let mut choisis: Vec<&Passage> = passages
+            .iter()
+            .filter(|passage| passage.champ == *chemin)
+            .collect();
+        choisis.sort_by_key(|passage| (passage.debut, passage.fin));
+
+        let mut de_la_case: Vec<Passage> = Vec::new();
+        for passage in choisis {
+            if passage.debut >= passage.fin || passage.fin > longueur {
+                return Err(Erreur::Refus(
+                    "Un passage abîmé sort du texte. Choisissez-le de nouveau.",
+                ));
             }
-            _ => reunis.push(passage),
+            match de_la_case.last_mut() {
+                Some(precedent) if passage.debut <= precedent.fin => {
+                    precedent.fin = precedent.fin.max(passage.fin);
+                }
+                _ => de_la_case.push(passage.clone()),
+            }
         }
+        reunis.extend(de_la_case);
     }
     Ok(reunis)
 }
@@ -261,10 +301,15 @@ mod tests {
         assert_eq!(reperer_reecritures("Rien à voir ici", livre), vec![passage(0, 14)]);
     }
 
+    /// Les cases d'un billet : son seul texte.
+    fn billet(texte: &str) -> Vec<(String, &str)> {
+        vec![(CHAMP_TEXTE.to_owned(), texte)]
+    }
+
     #[test]
     fn les_passages_abimes_sont_ranges_et_reunis() {
         let rendus = verifier_abimes(
-            "Les registres ont disparu.",
+            &billet("Les registres ont disparu."),
             &[passage(14, 17), passage(0, 3), passage(16, 25)],
         );
         assert_eq!(rendus.ok(), Some(vec![passage(0, 3), passage(14, 25)]));
@@ -273,10 +318,71 @@ mod tests {
     #[test]
     fn un_passage_abime_reste_dans_le_texte() {
         // Dix caractères, mais plus d'octets : la limite est celle des caractères.
-        let texte = "été 🕯 gué.";
-        assert!(verifier_abimes(texte, &[passage(4, 10)]).is_ok());
-        assert!(verifier_abimes(texte, &[passage(4, 11)]).is_err());
-        assert!(verifier_abimes(texte, &[passage(5, 5)]).is_err());
+        let cases = billet("été 🕯 gué.");
+        assert!(verifier_abimes(&cases, &[passage(4, 10)]).is_ok());
+        assert!(verifier_abimes(&cases, &[passage(4, 11)]).is_err());
+        assert!(verifier_abimes(&cases, &[passage(5, 5)]).is_err());
+    }
+
+    fn rapport(rubriques: &[(&str, &str)]) -> Contenu {
+        Contenu::Rapport(crate::gabarits::Rapport {
+            titre: "Rapport".into(),
+            auteur: String::new(),
+            rubriques: rubriques
+                .iter()
+                .map(|(titre, texte)| crate::gabarits::Rubrique {
+                    titre: (*titre).into(),
+                    texte: (*texte).into(),
+                })
+                .collect(),
+        })
+    }
+
+    fn dans(champ: &str, debut: u32, fin: u32) -> Passage {
+        Passage { champ: champ.to_owned(), debut, fin }
+    }
+
+    #[test]
+    fn chaque_case_d_un_document_a_ses_passages_reecrits() {
+        let original = rapport(&[("Les comptes", "Tout est en ordre."), ("Les hommes", "Rien à dire.")]);
+        let livre = rapport(&[("Les comptes", "Tout est en désordre."), ("Les traîtres", "Rien à dire.")]);
+        assert_eq!(
+            reperer_dans_le_contenu(&original, &livre),
+            vec![dans("rubriques.0.texte", 12, 21), dans("rubriques.1.titre", 4, 12)],
+        );
+        assert_eq!(reperer_dans_le_contenu(&original, &original), vec![]);
+    }
+
+    #[test]
+    fn les_passages_abimes_se_rangent_case_par_case() {
+        let document = rapport(&[("Un", "Premier texte."), ("Deux", "Second texte.")]);
+        let rendus = verifier_abimes(
+            &document.textes(),
+            &[
+                dans("rubriques.1.texte", 0, 6),
+                dans("rubriques.0.texte", 8, 13),
+                dans("rubriques.0.texte", 0, 7),
+                // Il touche le précédent, mais dans une autre case : ils restent deux.
+                dans("rubriques.1.titre", 0, 4),
+            ],
+        );
+        assert_eq!(
+            rendus.ok(),
+            Some(vec![
+                dans("rubriques.0.texte", 0, 7),
+                dans("rubriques.0.texte", 8, 13),
+                dans("rubriques.1.titre", 0, 4),
+                dans("rubriques.1.texte", 0, 6),
+            ]),
+        );
+    }
+
+    #[test]
+    fn un_passage_abime_designe_une_case_du_document() {
+        let document = rapport(&[("Un", "Premier texte.")]);
+        assert!(verifier_abimes(&document.textes(), &[dans("rubriques.1.texte", 0, 3)]).is_err());
+        assert!(verifier_abimes(&document.textes(), &[dans("rubriques", 0, 3)]).is_err());
+        assert!(verifier_abimes(&document.textes(), &[dans("texte", 0, 3)]).is_err());
     }
 
     #[test]

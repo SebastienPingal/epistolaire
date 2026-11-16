@@ -40,7 +40,7 @@ export function Detruits() {
                 <span>Arrivée le {dateLisible(pli.arrive_le)}</span>
               </div>
               <Lettre
-                texte={pli.texte}
+                contenu={pli.contenu}
                 police={pli.police}
                 signature={pli.signature}
                 sceau={pli.sceau}

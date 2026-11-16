@@ -1,7 +1,7 @@
 # Guide de fonctionnement
 
 Ce guide décrit comment le site est construit. Il est mis à jour à la fin de chaque étape de `PLAN.md`.
-État décrit : étape 10 (altérations).
+État décrit : étape 11 (documents et gabarits).
 
 ## Vue d'ensemble
 
@@ -19,10 +19,12 @@ Les deux sont hébergés sur Vercel. L'interface est un ensemble de fichiers sta
 | `api/main.rs` | Le point d'entrée du serveur sur Vercel |
 | `src/` | Le serveur : routeur, accès à la base, logique du jeu |
 | `src/modele.rs` | Le vocabulaire du jeu : gabarits, états d'un pli, d'un sceau… |
+| `src/gabarits.rs` | Les six gabarits : leurs cases, leur lecture dans la base, leur vérification |
+| `src/images.rs` | Les images des documents et des sceaux : les ranger dans le stockage, les servir |
 | `src/calendrier.rs` | Le calendrier du jeu : d'un jour réel à une date du jeu |
 | `src/passages.rs` | Les passages d'un texte, réécrits ou abîmés : leur format, le repérage des réécritures, la vérification des passages abîmés |
-| `src/acces/joueur/` | La porte des joueurs : écritoire, fiche, courrier reçu, dossiers |
-| `src/acces/mj/` | La porte du MJ : la file, les plis en route, les altérations, la plume des PNJ, les plis détruits, puis personnages, écritures, sceaux, réglages |
+| `src/acces/joueur/` | La porte des joueurs : écritoire, fiche, courrier reçu, dossiers, images de ses plis |
+| `src/acces/mj/` | La porte du MJ : la file, les plis en route, les altérations, les documents, les images, les plis détruits, puis personnages, écritures, sceaux, réglages |
 | `src/taches/` | La troisième porte : les tâches planifiées, appelées par Vercel |
 | `src/notifications/` | Les choix de notification de chaque compte, ses navigateurs abonnés, l'envoi, et le chiffrement des notifications du navigateur |
 | `src/sauvegarde/` | La copie quotidienne de la base, son dépôt dans Vercel Blob, et sa restauration |
@@ -40,7 +42,8 @@ Les deux sont hébergés sur Vercel. L'interface est un ensemble de fichiers sta
 | `web/src/joueur/` | Les écrans des joueurs |
 | `web/src/mj/` | Les écrans du MJ |
 | `web/src/composants/` | Les éléments du jeu réutilisés partout : une écriture, un cachet, une enveloppe |
-| `web/src/composants/gabarits/` | Le rendu des gabarits, tels qu'on les lit : pour l'instant le billet |
+| `web/src/composants/gabarits/` | Le rendu des six gabarits, tels qu'on les lit, et leur aiguillage `Document.tsx` |
+| `web/src/outils/gabarits.ts`, `web/src/outils/images.ts` | Les cases des gabarits côté navigateur ; les adresses des images et leur dépôt |
 | `web/src/outils/passages.ts` | Les passages côté navigateur : conversion des positions, aperçu des réécritures, découpage d'un texte en morceaux |
 | `web/src/types/` | Les types générés depuis le serveur. Ne pas les modifier à la main |
 | `web/src/components/ui/` | Les composants shadcn/ui, ajoutés au fur et à mesure |
@@ -74,7 +77,8 @@ Toute autre adresse renvoie l'interface.
 | `comptes` | Les adresses e-mail autorisées, MJ ou joueur |
 | `personnages` | Les personnages des joueurs et les PNJ, avec leur fiche |
 | `ecritures` | Les polices manuscrites |
-| `sceaux` | Les sceaux, leur nom gravé et leur détenteur actuel |
+| `sceaux` | Les sceaux, leur nom gravé, leur image éventuelle et leur détenteur actuel |
+| `images` | La fiche de chaque image déposée par le MJ. Le fichier est dans le stockage |
 | `contacts` | Les carnets d'adresses |
 | `dossiers` | Les dossiers créés par les joueurs |
 | `plis` | Ce qui a été écrit, en version originale |
@@ -249,9 +253,9 @@ Aucun mot n'explique jamais une altération : seul le rendu la montre.
 ```
 
 - `debut` et `fin` comptent les **caractères Unicode**, `fin` exclue. C'est ce que comptent Rust (`chars()`) et PostgreSQL. Un champ de texte du navigateur compte autrement (en unités UTF-16, où un émoji en vaut deux) : `web/src/outils/passages.ts` convertit à chaque passage de la frontière ;
-- `champ` nomme la case du gabarit. Un billet n'a que `texte` ; un passage enregistré sans `champ` vaut `texte` ;
+- `champ` nomme la case du gabarit, par son chemin : `texte` pour un billet, `articles.2.texte` pour le troisième article d'une gazette. Un passage enregistré sans `champ` vaut `texte` ;
 - les **passages réécrits** ne viennent jamais de l'interface. Le serveur les repère seul à chaque enregistrement (`src/passages.rs`), en comparant l'original et la version livrée mot par mot, avec la bibliothèque `similar`. Tout mot ajouté ou remplacé fait partie d'un passage ; des mots voisins n'en font qu'un. Un mot simplement supprimé ne laisse rien à montrer, et l'écran le dit. Le surlignage pendant la frappe est un aperçu calculé dans le navigateur (bibliothèque `diff`) ; une fois enregistré, c'est le repérage du serveur qui s'affiche ;
-- les **passages abîmés** sont choisis par le MJ, et vérifiés par le serveur : dans les limites du texte, réunis s'ils se touchent. Le texte abîmé reste dans la base (le MJ le voit), mais la vue des joueurs le remplace par des « · », en gardant la longueur et les retours à la ligne. Si la liste est mal formée, la vue voile tout le texte plutôt que de risquer d'en laisser passer.
+- les **passages abîmés** sont choisis par le MJ, et vérifiés par le serveur : dans les limites du texte, réunis s'ils se touchent. Le texte abîmé reste dans la base (le MJ le voit), mais la vue des joueurs le remplace par des « · », en gardant la longueur et les retours à la ligne. Si la liste est mal formée, ou si un passage désigne autre chose qu'un texte, la vue voile tout le contenu plutôt que de risquer d'en laisser passer.
 
 **Les garanties du serveur** (`src/acces/mj/alterations.rs`) :
 
@@ -262,15 +266,55 @@ Aucun mot n'explique jamais une altération : seul le rendu la montre.
 
 L'atelier affiche aussi l'historique du pli, et reste lisible une fois le pli arrivé : on n'y change plus rien, mais on y voit l'original, ce qui a été reçu, et ce qui s'est passé.
 
-### Écrire au nom d'un PNJ
+### Documents
 
-Le MJ choisit un PNJ (ou en crée un), un destinataire, et écrit un billet. Les règles sont celles des joueurs : une écriture, une signature et un sceau facultatifs. Trois différences :
+Un seul outil pour tout ce qu'envoie le MJ (écran « Documents », `POST /api/mj/documents`). Il choisit :
 
-- la lettre ne passe pas par la file : elle part aussitôt, avec le délai habituel ou la date que le MJ choisit ;
-- le MJ peut dépasser la longueur d'un billet ;
-- un PNJ qui n'a pas encore d'écriture reçoit celle que le MJ choisit à ce moment, et la garde.
+- **un gabarit** parmi les six (voir « Les gabarits ») ;
+- **un expéditeur** : un PNJ, un PNJ créé sur place, ou personne. Sans expéditeur, le document n'a ni signature ni sceau ;
+- **le contenu** : les cases du gabarit. Les articles, rubriques et lettres de lecteurs s'ajoutent, se retirent et changent d'ordre ;
+- **la signature** (gabarits écrits à la main seulement) et **le sceau** (tout gabarit : il ferme le pli) ;
+- **un ou plusieurs destinataires**, joueurs ou PNJ. Chacun reçoit son exemplaire. La date par défaut (le délai habituel, plus ou moins le hasard) est tirée une fois et partagée ; le MJ peut fixer une date pour tous, ou pour un seul ;
+- un aperçu montre le document tel qu'il sera lu.
 
-Le MJ n'écrit qu'au nom d'un PNJ. Ses lettres ne comptent dans aucun quota. Écrire une lettre entièrement fausse au nom d'un joueur n'est pas possible pour l'instant : cela viendra avec les compétences des personnages.
+Le document ne passe pas par la file : il part aussitôt, et chaque exemplaire reste modifiable dans En route. Un PNJ qui n'a pas encore d'écriture reçoit celle que le MJ choisit pour un document écrit à la main, et la garde. La réponse d'un PNJ écrite sous une lettre de la file est un billet envoyé par le même chemin.
+
+Le MJ n'écrit qu'au nom d'un PNJ, ou de personne. Ses documents ne comptent dans aucun quota. Écrire une lettre entièrement fausse au nom d'un joueur n'est pas possible pour l'instant : cela viendra avec les compétences des personnages.
+
+### Les gabarits
+
+| Gabarit | Cases | Écrit | Signature |
+|---|---|---|---|
+| Billet | texte | à la main | oui |
+| Lettre longue | lieu et date, texte | à la main | oui |
+| Acte officiel | autorité, objet, texte, formule finale | à la main | oui |
+| Rapport | titre, auteur, rubriques (intertitre, texte) | imprimé | non |
+| Gazette | titre, numéro, date, articles (titre, texte), courrier des lecteurs (texte, nom) | imprimée | non |
+| Carte ou illustration | image, titre, légende | imprimée | non |
+
+- Dans la base, la colonne `gabarit` du pli nomme le gabarit, et le JSON `contenu` porte ses cases : celui du pli pour l'original, celui de l'exemplaire pour la version livrée. Un billet est toujours `{ "texte": … }` : les billets d'avant l'étape 11 se lisent sans rien changer. Une case absente vaut une case vide, et un contenu mal formé se lit vide plutôt que de bloquer une Réception.
+- Avec l'interface, le gabarit et ses cases voyagent ensemble : `{ "gabarit": "rapport", "titre": …, "rubriques": [ … ] }`.
+- Une case de texte se désigne par son chemin : `texte`, `articles.2.texte`, `rubriques.0.titre`. C'est ce chemin que portent les passages réécrits ou abîmés.
+- Le rendu est le même pour le joueur et pour le MJ (`web/src/composants/gabarits/Document.tsx`). Un passage réécrit et remarqué paraît dans la main du faussaire, même sur un document imprimé. La hauteur suit le contenu. Les mots imprimés par le gabarit (« Courrier des lecteurs », « N° ») viennent du thème.
+- Le cachet figure à l'intérieur des trois gabarits signés ; sur les autres, il ne se voit que sur le pli fermé.
+- **Le pli fermé** laisse deviner la sorte de document : un rouleau pour une carte, un journal plié pour une gazette, un pli ordinaire pour le reste (`web/src/composants/Enveloppe.tsx`). Rien de son contenu ne part avant l'ouverture.
+- **Altérer** un document se fait dans le même atelier que pour un billet : une zone par case, « Abîmer la sélection » sous chacune, et pour une carte, le remplacement de l'image. La version livrée garde la forme de l'original (autant d'articles, autant de rubriques) : c'est ce qui permet de les comparer case par case.
+
+### Les images
+
+Le MJ dépose une image depuis l'outil Documents (une carte) ou l'écran Sceaux. Le navigateur la réduit à 2 000 pixels de côté si elle est trop grande ou trop lourde, puis l'envoie (`POST /api/mj/images`, 4 Mo au plus : Vercel refuse les envois de plus de 4,5 Mo). Le serveur ne garde que de vraies images (PNG, JPEG, WebP, GIF), reconnues à leurs premiers octets ; pas de SVG, qui peut contenir du code. Les dimensions sont celles que donne le navigateur du MJ.
+
+Le fichier va dans le stockage Vercel Blob du projet, **en accès privé**, dans le dossier `images/` ; la table `images` garde sa fiche. C'est le même stockage que celui des sauvegardes. Aucune image n'a d'adresse publique : le site la sert lui-même, après vérification.
+
+| Qui demande | Adresse | Servie si |
+|---|---|---|
+| Le MJ | `/api/mj/images/{image}` | toujours |
+| Un joueur, l'image d'un document | `/api/joueur/plis/{pli}/images/{image}` | le pli est dans `plis_recus` pour lui (arrivé, pas détruit), **ouvert**, et sa version livrée cite cette image |
+| Un joueur, l'image d'un sceau | `/api/joueur/sceaux/{image}` | ce sceau ferme un pli qu'il a reçu, même fermé, ou il le détient |
+
+Dans tous les autres cas, la réponse est « introuvable », comme pour une image qui n'existe pas. La réponse est privée (aucun serveur intermédiaire ne la garde) ; le navigateur de la personne peut la garder. Ni l'adresse ni le chemin du fichier dans le stockage ne sortent jamais.
+
+La copie quotidienne de la base contient les fiches des images, pas leurs fichiers : ils restent dans le stockage.
 
 ### Détruites
 
@@ -297,7 +341,7 @@ Deux joueurs ne peuvent pas avoir la même écriture : c'est la base elle-même 
 
 ### Les sceaux
 
-Un sceau est un objet, avec un nom gravé qui ne change pas quand il change de mains. À la création d'un personnage, le site propose de lui créer un sceau à son nom. Dans l'habillage neutre, un sceau est dessiné comme un simple cachet portant des initiales. L'import d'une image de sceau viendra avec les images des documents.
+Un sceau est un objet, avec un nom gravé qui ne change pas quand il change de mains. À la création d'un personnage, le site propose de lui créer un sceau à son nom. Dans l'habillage neutre, un sceau est dessiné comme un simple cachet portant des initiales. Le MJ peut lui donner une image (écran Sceaux) : elle est alors gravée dans la cire à la place des initiales, et les états d'un sceau trafiqué (brisé, recollé, contrefait) se dessinent par-dessus.
 
 ## Les notifications
 
@@ -395,6 +439,7 @@ La restauration n'exige pas les droits d'administrateur de la base : charger les
   - qu'aucune réponse ne contient un marqueur interdit, une adresse e-mail (pas même la sienne), l'identifiant d'un auteur caché, d'un pli, d'un exemplaire qui n'est pas arrivé chez lui, ni une date réelle (seuls ses brouillons ont la leur) ;
   - qu'un pli altéré paraît intact quand rien n'est remarqué, et que le texte d'un passage abîmé ne sort jamais (ni à la lecture du pli, ni dans les listes) ;
   - que les gestes interdits (ouvrir, ranger, détruire le pli d'un autre ou un pli pas encore arrivé ; lire, modifier, envoyer, jeter le brouillon d'un autre ou une lettre envoyée ; toucher le dossier d'un autre) répondent « introuvable » et ne changent **rien** dans la base (empreinte de toutes les tables avant et après) ;
+  - qu'une image ne se sert qu'à qui a le droit de la voir (un faux stockage, lancé par le test, répond les octets) : celle d'une carte fermée, en route, détruite, d'un autre joueur, ou remplacée par le MJ dans son exemplaire, répond « introuvable » ;
   - que chaque route du MJ répond 403 à un joueur et 401 sans session, et chaque tâche 401 sans le secret, même pour le MJ connecté. Ces deux listes sont relues automatiquement dans le code.
 
 Le test ne touche jamais une base dont le nom ne finit pas par `_tests`. Il a été vérifié une fois en retirant volontairement le filtre « ce pli est-il à lui ? » : il échoue alors, comme prévu.
@@ -411,7 +456,9 @@ Le parcours `notifications` appelle la tâche avec le secret d'essai, fait « ar
 
 Le parcours `sauvegarde` remplace le stockage Vercel Blob par un faux, lancé sur la machine (variable `VERCEL_BLOB_API_URL`). Il vérifie la liste, la copie à la main, le ménage des copies de plus de 30 jours, le téléchargement, la garde de la tâche, et l'e-mail au MJ quand le stockage est en panne. `essais/restauration.sh` copie une base remplie, la restaure dans une base neuve et compare chaque table ligne à ligne, puis vérifie les refus (base qui contient déjà du courrier, copie à laquelle il manque une table).
 
-Le parcours `alterer` falsifie une lettre dans l'atelier (réécriture, passage abîmé, sceau recollé, signature contrefaite, faussaire), pour deux destinataires dont un seul remarque quelque chose, puis lit la lettre de chacun. Il garde toutes les réponses faites aux joueurs et y cherche l'original et le texte abîmé : ils ne doivent être nulle part. La lettre d'essai contient un émoji, pour que les positions des passages soient vérifiées là où le navigateur et le serveur ne comptent pas pareil. `essais/vue-plis-recus.sql` montre ce que la vue laisse voir de chaque cas, passages abîmés et mal formés compris.
+Le parcours `alterer` falsifie une lettre dans l'atelier (réécriture, passage abîmé, sceau recollé, signature contrefaite, faussaire), pour deux destinataires dont un seul remarque quelque chose, puis lit la lettre de chacun. Il garde toutes les réponses faites aux joueurs et y cherche l'original et le texte abîmé : ils ne doivent être nulle part. La lettre d'essai contient un émoji, pour que les positions des passages soient vérifiées là où le navigateur et le serveur ne comptent pas pareil. `essais/vue-plis-recus.sql` montre ce que la vue laisse voir de chaque cas, passages abîmés et mal formés compris, y compris dans les cases des autres gabarits.
+
+Le parcours `documents` envoie les six gabarits à deux joueurs à des dates différentes, par l'écran et directement, avec un faux stockage pour les images. Il vérifie les refus (au nom d'un joueur, signature sur un gabarit imprimé, sceau non détenu, image inexistante, fichier qui n'est pas une image…), la forme des plis fermés, chaque gabarit au téléphone, l'altération d'une case d'article et le remplacement de l'image d'une carte, et surtout le service des images : refusée avant l'arrivée, avant l'ouverture, à l'autre joueur, par la mauvaise route ; servie ensuite, identique au fichier déposé. Aucune réponse faite à un joueur ne contient une adresse du stockage.
 
 Ils tournent contre une base locale, jamais contre la base en ligne.
 
@@ -462,7 +509,7 @@ cargo sqlx prepare
 | `VAPID_SUJET` | Le contact donné aux services de notifications : `mailto:` suivi d'une adresse, ou l'adresse `https://` du site. Sur Vercel, c'est l'adresse e-mail du MJ, à sa demande : les services de notifications (Google, Apple…) le contactent en cas de souci avec les envois |
 
 Ces quatre variables sont posées dans Vercel (site en ligne et aperçus) depuis l'étape 8. `CRON_SECRET` et `VAPID_PRIVATE` y sont de type « sensible » : personne ne peut plus les relire, pas même depuis le tableau de bord. Pour en changer, en tirer de nouvelles. Changer la paire VAPID oblige chacun à réactiver les notifications sur ses appareils.
-| `BLOB_READ_WRITE_TOKEN` | Le jeton du stockage Vercel Blob des sauvegardes. Vercel l'ajoute tout seul quand le stockage est relié au projet. Sans lui, aucune copie ne se fait, et la section « Sauvegardes » le dit |
+| `BLOB_READ_WRITE_TOKEN` | Le jeton du stockage Vercel Blob des sauvegardes et des images. Vercel l'ajoute tout seul quand le stockage est relié au projet. Sans lui, aucune copie ne se fait, aucune image ne se dépose ni ne s'affiche, et le site le dit |
 | `VERCEL_BLOB_API_URL` | Pour les essais seulement : l'adresse d'un faux stockage. Jamais sur Vercel |
 | `SITE_URL` | L'adresse du site, pour les liens des e-mails envoyés par la tâche. Facultatif : par défaut, celle que Vercel donne au site en ligne ou à l'aperçu |
 

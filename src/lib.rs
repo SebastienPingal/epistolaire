@@ -8,6 +8,8 @@ pub mod calendrier;
 pub mod connexion;
 pub mod courriel;
 pub mod erreur;
+pub mod gabarits;
+pub mod images;
 pub mod modele;
 pub mod notifications;
 pub mod passages;

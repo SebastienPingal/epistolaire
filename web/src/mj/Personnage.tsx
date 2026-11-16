@@ -14,7 +14,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Cachet } from '@/composants/Cachet';
 import { Main } from '@/composants/Main';
 import { cn } from '@/lib/utils';
 import { useLecture } from '@/outils/useLecture';
@@ -26,6 +25,7 @@ import type { PersonnageResume } from '@/types/PersonnageResume';
 import type { SceauSaisi } from '@/types/SceauSaisi';
 
 import { Attente, Champ, Confirmation, Section } from './commun';
+import { CachetMj } from './courrier';
 
 export function Personnage() {
   const { id } = useParams();
@@ -308,6 +308,7 @@ function Sceaux({
         nom_grave: personnage.nom,
         initiales: initialesDe(personnage.nom),
         detenteur_id: personnage.id,
+        image_id: null,
       } satisfies SceauSaisi);
       await surChangement();
     } catch (e) {
@@ -326,7 +327,7 @@ function Sceaux({
         <ul className="flex flex-wrap gap-4">
           {personnage.sceaux.map((sceau) => (
             <li key={sceau.id} className="flex items-center gap-3">
-              <Cachet initiales={sceau.initiales} nom={sceau.nom_grave} />
+              <CachetMj sceau={sceau} />
               <span>{sceau.nom_grave}</span>
             </li>
           ))}

@@ -1,0 +1,42 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        insert into plis (\n            auteur_id, redige_par_mj, gabarit, destinataire_genre, destinataire_id,\n            contenu, sceau_id, signe, ecriture_id, etat, envoye_le, date_proposee\n        )\n        values (\n            $1, true, $2, $3, $4, $5, $6, $7, $8, 'traite', now(),\n            now() + make_interval(mins => $9)\n        )\n        returning id, envoye_le as \"envoye_le!\", date_proposee as \"date_commune!\"\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "envoye_le!",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 2,
+        "name": "date_commune!",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Text",
+        "Uuid",
+        "Jsonb",
+        "Uuid",
+        "Bool",
+        "Uuid",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "2fe12f37d1b79b0c48a2441f5637642fb23f9a76eee39cae63faa838d76bf0bf"
+}

@@ -1,7 +1,8 @@
 //! Les altérations : ce que le MJ change à la version livrée d'un exemplaire.
 //!
-//! Il peut réécrire le texte, abîmer un passage, trafiquer le sceau, retirer ou contrefaire
-//! la signature, désigner le faussaire, et décider de ce que ce destinataire remarque.
+//! Il peut réécrire chaque case du document, abîmer un passage, remplacer l'image d'une
+//! carte, trafiquer le sceau, retirer ou contrefaire la signature, désigner le faussaire,
+//! et décider de ce que ce destinataire remarque.
 //!
 //! Règles de ce fichier :
 //!
@@ -11,6 +12,8 @@
 //!   [`recopier_version`], pour une copie) ;
 //! * les passages réécrits ne viennent jamais de l'interface : le serveur les repère
 //!   lui-même, en comparant l'original et la version livrée ([`crate::passages`]) ;
+//! * la version livrée garde le gabarit et la forme de l'original : autant d'articles,
+//!   autant de rubriques. C'est ce qui permet de comparer les deux case par case ;
 //! * chaque altération ajoute une ligne à l'historique du pli, avec l'avant et l'après ;
 //! * un exemplaire arrivé ne s'altère plus ;
 //! * rien de tout ceci ne sort par la porte des joueurs : la vue `plis_recus` ne montre que
@@ -27,12 +30,13 @@ use uuid::Uuid;
 
 use super::acheminement::{REFUS_PERSONNAGE, SceauPose, noter};
 use super::en_route::REFUS_ARRIVE;
-use super::plume::LONGUEUR_MAX;
 use crate::acces::Mj;
 use crate::base;
 use crate::erreur::{Erreur, refus_de_la_base};
+use crate::gabarits::Contenu;
+use crate::images;
 use crate::modele::{Acheminement, EtatSceau, EtatSignature, Gabarit, OrigineExemplaire};
-use crate::passages::{self, Passage, reperer_reecritures, verifier_abimes};
+use crate::passages::{self, Passage, reperer_dans_le_contenu, verifier_abimes};
 
 /// Le nom qu'on trace sous une lettre reste court.
 const LONGUEUR_SIGNATURE: usize = 200;
@@ -49,7 +53,8 @@ const LONGUEUR_SIGNATURE: usize = 200;
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[ts(export)]
 pub struct VersionLivree {
-    pub texte: String,
+    /// Le gabarit et ses cases, tels que le destinataire les lira.
+    pub contenu: Contenu,
     /// Les passages abîmés : toujours visibles du destinataire, jamais lisibles.
     pub passages_abimes: Vec<Passage>,
     /// Le sceau qui ferme l'exemplaire. Intact, brisé ou recollé : c'est celui que l'auteur
@@ -103,7 +108,7 @@ pub struct ExemplaireDetail {
 #[derive(Serialize, TS)]
 #[ts(export)]
 pub struct Original {
-    pub texte: String,
+    pub contenu: Contenu,
     /// La police de l'écriture de l'auteur.
     pub police: Option<String>,
     pub signe: bool,
@@ -185,7 +190,7 @@ pub(super) async fn appliquer_version(
             x.pli_id,
             x.ecriture_id,
             p.gabarit as "gabarit: Gabarit",
-            coalesce(p.contenu->>'texte', '') as "original!",
+            p.contenu as original,
             p.sceau_id as sceau_origine,
             p.signe,
             a.id as "auteur_id?",
@@ -205,21 +210,23 @@ pub(super) async fn appliquer_version(
         .await?
         .ok_or(Erreur::Introuvable)?;
 
-    if contexte.gabarit != Gabarit::Billet {
-        return Err(Erreur::Refus("Seul un billet s'altère pour l'instant."));
-    }
-
-    // Le texte n'est pas retouché ici : les passages abîmés comptent ses caractères.
-    if saisie.texte.trim().is_empty() {
+    // La version livrée garde le gabarit et la forme de l'original.
+    let original = Contenu::depuis_la_base(contexte.gabarit, contexte.original);
+    if !saisie.contenu.meme_forme(&original) {
         return Err(Erreur::Refus(
-            "Le texte livré est vide. Pour qu'une lettre n'arrive pas, perdez-la plutôt.",
+            "La version livrée garde la forme de l'original : le même gabarit, autant d'articles ou de rubriques.",
         ));
     }
-    if saisie.texte.chars().count() > LONGUEUR_MAX {
-        return Err(Erreur::Refus("Ce texte est bien trop long pour un billet."));
+    // Les textes ne sont pas retouchés ici : les passages abîmés comptent leurs caractères.
+    // Pour qu'un document n'arrive pas, on le perd : on ne le vide pas.
+    saisie.contenu.valider()?;
+    if saisie.contenu.images() != original.images()
+        && !images::existent(&mut **transaction, &saisie.contenu.images()).await?
+    {
+        return Err(Erreur::Refus("L'image livrée n'existe pas."));
     }
-    let passages_abimes = verifier_abimes(&saisie.texte, &saisie.passages_abimes)?;
-    let passages_reecrits = reperer_reecritures(&contexte.original, &saisie.texte);
+    let passages_abimes = verifier_abimes(&saisie.contenu.textes(), &saisie.passages_abimes)?;
+    let passages_reecrits = reperer_dans_le_contenu(&original, &saisie.contenu);
 
     // Le sceau. Celui que l'auteur a posé peut être intact, brisé ou recollé. Tout autre
     // sceau est une imitation, y compris sur un pli qui n'était pas scellé.
@@ -268,6 +275,9 @@ pub(super) async fn appliquer_version(
                 contexte.ecriture_id,
                 contexte.auteur_id,
             ),
+            EtatSignature::Contrefaite if !contexte.gabarit.se_signe() => {
+                return Err(Erreur::Refus("Ce gabarit ne porte pas de signature."));
+            }
             EtatSignature::Contrefaite => {
                 let imite = match saisie.signature_personnage_id {
                     Some(personnage_id) => Some(personnage(transaction, personnage_id).await?),
@@ -346,7 +356,7 @@ pub(super) async fn appliquer_version(
     }
 
     let apres = VersionLivree {
-        texte: saisie.texte.clone(),
+        contenu: saisie.contenu.clone(),
         passages_abimes,
         sceau_id,
         sceau_etat,
@@ -368,7 +378,7 @@ pub(super) async fn appliquer_version(
     sqlx::query!(
         r#"
         update exemplaires
-        set contenu = jsonb_set(contenu, '{texte}', to_jsonb($2::text)),
+        set contenu = $2,
             passages_abimes = $3,
             passages_reecrits = $4,
             sceau_id = $5,
@@ -386,7 +396,7 @@ pub(super) async fn appliquer_version(
         where id = $1
         "#,
         id,
-        apres.texte,
+        apres.contenu.cases(),
         json!(apres.passages_abimes),
         json!(passages_reecrits),
         apres.sceau_id,
@@ -403,7 +413,7 @@ pub(super) async fn appliquer_version(
     )
     .execute(&mut **transaction)
     .await
-    .map_err(refus_de_la_base("", "Ce sceau n'existe pas."))?;
+    .map_err(refus_de_la_base("", "Ce sceau ou ce personnage n'existe pas."))?;
 
     noter(
         transaction,
@@ -479,20 +489,22 @@ async fn version_de<'e>(
     let ligne = sqlx::query!(
         r#"
         select
-            coalesce(contenu->>'texte', '') as "texte!",
-            passages_abimes,
-            sceau_id,
-            sceau_etat as "sceau_etat: EtatSceau",
-            signature_etat as "signature_etat: EtatSignature",
-            signature_nom,
-            signature_personnage_id,
-            faussaire_personnage_id,
-            faussaire_ecriture_id,
-            remarque_texte,
-            remarque_sceau,
-            remarque_signature
-        from exemplaires
-        where id = $1
+            p.gabarit as "gabarit: Gabarit",
+            x.contenu,
+            x.passages_abimes,
+            x.sceau_id,
+            x.sceau_etat as "sceau_etat: EtatSceau",
+            x.signature_etat as "signature_etat: EtatSignature",
+            x.signature_nom,
+            x.signature_personnage_id,
+            x.faussaire_personnage_id,
+            x.faussaire_ecriture_id,
+            x.remarque_texte,
+            x.remarque_sceau,
+            x.remarque_signature
+        from exemplaires x
+        join plis p on p.id = x.pli_id
+        where x.id = $1
         "#,
         id,
     )
@@ -500,7 +512,7 @@ async fn version_de<'e>(
     .await?;
 
     Ok(ligne.map(|ligne| VersionLivree {
-        texte: ligne.texte,
+        contenu: Contenu::depuis_la_base(ligne.gabarit, ligne.contenu),
         passages_abimes: passages::depuis_la_base(ligne.passages_abimes),
         sceau_id: ligne.sceau_id,
         sceau_etat: ligne.sceau_etat,
@@ -530,12 +542,13 @@ async fn detail(id: Uuid) -> Result<ExemplaireDetail, Erreur> {
             x.livraison_le,
             p.envoye_le as "envoye_le!",
             (x.acheminement = 'en_route' and x.livraison_le <= now()) as "arrive!",
-            coalesce(p.contenu->>'texte', '') as "original!",
+            p.gabarit as "gabarit: Gabarit",
+            p.contenu as original,
             p.signe,
             p.sceau_id as sceau_origine_id,
             s.nom_grave as "sceau_nom?",
             s.initiales as "sceau_initiales?",
-            s.image_url as "sceau_image?",
+            s.image_id as "sceau_image?",
             e.police as "police?",
             x.passages_reecrits
         from exemplaires x
@@ -581,7 +594,7 @@ async fn detail(id: Uuid) -> Result<ExemplaireDetail, Erreur> {
         envoye_le: ligne.envoye_le,
         arrive: ligne.arrive,
         original: Original {
-            texte: ligne.original,
+            contenu: Contenu::depuis_la_base(ligne.gabarit, ligne.original),
             police: ligne.police,
             signe: ligne.signe,
             sceau_id: ligne.sceau_origine_id,

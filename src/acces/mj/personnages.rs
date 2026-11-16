@@ -358,7 +358,7 @@ async fn detail(pool: &PgPool, id: Uuid) -> Result<PersonnageDetail, Erreur> {
         SceauMj,
         r#"
         select
-            s.id, s.nom_grave, s.initiales, s.image_url,
+            s.id, s.nom_grave, s.initiales, s.image_id,
             s.proprietaire_origine_id, o.nom as "proprietaire_origine_nom?",
             s.detenteur_id, d.nom as "detenteur_nom?"
         from sceaux s

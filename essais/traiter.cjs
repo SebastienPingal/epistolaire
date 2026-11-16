@@ -10,7 +10,7 @@ const base = 'http://localhost:5173';
 const perso = (n) => `00000000-0000-0000-0000-0000000000a${n}`;
 const pliId = (n) => `00000000-0000-0000-0000-0000000000d${n}`;
 const ALIX = perso(1), BERTRAND = perso(2), CHANCELIER = perso(5), SCEAU_B = '00000000-0000-0000-0000-0000000000c2';
-const billet = (plus = {}) => ({ ecriture_id: null, texte: 'x', signe: true, sceau_id: null, livraison_le: null, ...plus });
+const billet = (auteur, destinataire, plus = {}) => ({ auteur_id: auteur, contenu: { gabarit: 'billet', texte: 'x' }, signe: true, sceau_id: null, ecriture_id: null, destinataires: [{ personnage_id: destinataire, livraison_le: null }], ...plus });
 
 (async () => {
   const b = await chromium.launch();
@@ -64,7 +64,7 @@ const billet = (plus = {}) => ({ ecriture_id: null, texte: 'x', signe: true, sce
   let route = await enRoute();
   const ex1 = route.en_route.find((x) => x.pli_id === pliId(1));
   ok('un clic : en route vers Bertrand, à la date proposée', ex1 && ex1.livraison_le === proposee && ex1.destinataire_nom === 'Bertrand Lenoir' && ex1.origine === 'destinataire');
-  ok('la version livrée reprend le texte, la signature, le sceau et l\'écriture de l\'auteur', ex1 && ex1.texte.startsWith('Cher Bertrand') && ex1.signature === 'Alix de Montfort' && ex1.sceau.initiales === 'AM' && ex1.police === 'caveat');
+  ok('la version livrée reprend le texte, la signature, le sceau et l\'écriture de l\'auteur', ex1 && ex1.contenu.texte.startsWith('Cher Bertrand') && ex1.signature === 'Alix de Montfort' && ex1.sceau.initiales === 'AM' && ex1.police === 'caveat');
 
   // 3. Date proposée dépassée : dix minutes après la validation
   await carte('Bertrand Lenoir à Alix de Montfort').locator('button:text-is("Valider")').click();
@@ -199,8 +199,8 @@ const billet = (plus = {}) => ({ ecriture_id: null, texte: 'x', signe: true, sce
   ok('porte des joueurs : rien pour Bertrand tant que ses plis sont en route', sql(`select count(*) from plis_recus where destinataire_id = '${BERTRAND}'`) === '0');
 
   // 10. Écrire au nom d'un PNJ
-  await p.click('a[href="/mj/ecrire"]');
-  await p.waitForSelector('h1:has-text("Écrire au nom")');
+  await p.click('a[href="/mj/documents"]');
+  await p.waitForSelector('h1:has-text("Documents")');
   await choisir(p, '#auteur', 'Le Chancelier');
   await choisir(p, '#destinataire', 'Alix de Montfort');
   await p.waitForSelector('textarea');
@@ -218,9 +218,9 @@ const billet = (plus = {}) => ({ ecriture_id: null, texte: 'x', signe: true, sce
   ok('lettre du Chancelier : en route, délai habituel de 24 h ± 4 h (' + heures.toFixed(1) + ' h)', heures >= 19.9 && heures <= 28.1);
   ok('signée, scellée et de sa main', duChancelier && duChancelier.signature === 'Le Chancelier' && duChancelier.sceau.initiales === 'CD' && duChancelier.police === 'parisienne');
   ok('elle ne passe pas par la file', !(await file()).lettres.some((l) => l.auteur_nom === 'Le Chancelier'));
-  ok('écrire au nom d\'un joueur : refusé', (await api.post(base + '/api/mj/lettres', { data: { auteur_id: ALIX, destinataire_id: BERTRAND, billet: billet() } })).status() === 400);
-  ok('sceller avec un sceau que le PNJ ne détient pas : refusé', (await api.post(base + '/api/mj/lettres', { data: { auteur_id: CHANCELIER, destinataire_id: ALIX, billet: billet({ sceau_id: SCEAU_B }) } })).status() === 400);
-  ok('PNJ sans écriture et sans choix : refusé', (await api.post(base + '/api/mj/lettres', { data: { auteur_id: perso(3), destinataire_id: ALIX, billet: billet() } })).status() === 400);
+  ok('écrire au nom d\'un joueur : refusé', (await api.post(base + '/api/mj/documents', { data: billet(ALIX, BERTRAND) })).status() === 400);
+  ok('sceller avec un sceau que le PNJ ne détient pas : refusé', (await api.post(base + '/api/mj/documents', { data: billet(CHANCELIER, ALIX, { sceau_id: SCEAU_B }) })).status() === 400);
+  ok('PNJ sans écriture et sans choix : refusé', (await api.post(base + '/api/mj/documents', { data: billet(perso(3), ALIX) })).status() === 400);
   ok('les lettres du MJ ne comptent dans aucun quota', sql(`select count(*) from plis where redige_par_mj and etat = 'traite'`) === '2');
 
   // 11. Téléphone
@@ -237,7 +237,7 @@ const billet = (plus = {}) => ({ ecriture_id: null, texte: 'x', signe: true, sce
   await photo('/mj/a-traiter', 'h3', 'file');
   await photo(`/mj/a-traiter/${pliId(4)}`, 'text=Cette lettre est pour la gazette', 'traitement');
   await photo('/mj/en-route', 'h3', 'en-route');
-  await photo('/mj/ecrire', 'h1', 'ecrire');
+  await photo('/mj/documents', 'h1', 'ecrire');
   await tel.click('[data-sidebar=trigger]');
   await tel.waitForSelector('a[href="/mj/en-route"]');
   await tel.waitForTimeout(400);
@@ -256,7 +256,7 @@ const billet = (plus = {}) => ({ ecriture_id: null, texte: 'x', signe: true, sce
     (await j.request.post(`${base}/api/mj/a-traiter/${pliId(4)}/ecart`, { data: {} })).status(),
     (await j.request.put(`${base}/api/mj/exemplaires/${ex1b.id}`, { data: { destinataire_id: BERTRAND, acheminement: 'en_route', livraison_le: '2020-01-01T00:00:00Z' } })).status(),
     (await j.request.post(`${base}/api/mj/exemplaires/${ex1b.id}/copie`, { data: { destinataire_id: BERTRAND, livraison_le: null } })).status(),
-    (await j.request.post(base + '/api/mj/lettres', { data: { auteur_id: CHANCELIER, destinataire_id: BERTRAND, billet: billet() } })).status(),
+    (await j.request.post(base + '/api/mj/documents', { data: billet(CHANCELIER, BERTRAND) })).status(),
   ];
   ok('joueur connecté : file, plis en route et plume du MJ fermés (' + statuts.join(', ') + ')', statuts.every((s) => s === 403));
   ok('aucune erreur de page' + (erreurs.length ? ' : ' + erreurs.slice(0, 3).join(' | ') : ''), erreurs.length === 0);

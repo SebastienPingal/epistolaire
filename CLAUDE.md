@@ -33,7 +33,10 @@ Claude développe et maintient tout le code. Le MJ (propriétaire du repo) déci
 - **Notifications** : un message ne dit jamais qui écrit ni ce qui est écrit. Les mots que les joueurs lisent hors du site (e-mails, notifications) sont dans `src/theme.rs`, pendant serveur de `web/src/theme/neutre.ts`. On marque ce qui est signalé avant d'envoyer, sous verrou.
 - **Exemplaires** : un exemplaire ne se crée que par `poser_exemplaire` (`src/acces/mj/acheminement.rs`), qui recopie la version écrite par l'auteur. Tout geste du MJ sur un pli ajoute une ligne à son historique avec `noter`. Le MJ ne modifie plus un exemplaire arrivé.
 - **Altérations** : la version livrée d'un exemplaire ne se modifie que par `appliquer_version` et `recopier_version` (`src/acces/mj/alterations.rs`). L'original (`plis.contenu`) ne se modifie jamais. Les passages réécrits ne viennent jamais de l'interface : le serveur les repère seul (`src/passages.rs`). Le texte d'un passage abîmé ne sort jamais vers un joueur : la vue `plis_recus` le voile elle-même (`voiler_passages`). Une vue ne se modifie que par `create or replace view`, en ajoutant les colonnes à la fin.
-- **Passages** : `{ "champ", "debut", "fin" }`, positions en caractères Unicode, `fin` exclue. Le navigateur compte en unités UTF-16 : convertir avec `web/src/outils/passages.ts` à chaque passage de la frontière.
+- **Gabarits** : les cases de chaque gabarit sont dans `src/gabarits.rs` (`Contenu`), et leur pendant navigateur dans `web/src/outils/gabarits.ts`. La colonne `gabarit` du pli nomme le gabarit, le JSON `contenu` porte ses cases ; un billet reste `{ "texte": … }`. Lire un contenu de la base : toujours `Contenu::depuis_la_base`. Le rendu, commun aux joueurs et au MJ, est dans `web/src/composants/gabarits/` (`Document.tsx`). Une version livrée garde la forme de l'original (`meme_forme`).
+- **Documents du MJ** : tout ce qu'envoie le MJ passe par `rediger` (`src/acces/mj/documents.rs`) : un pli, un exemplaire par destinataire, jamais au nom d'un joueur.
+- **Images** : le fichier est dans Vercel Blob en accès privé, sa fiche dans la table `images`. `crate::images::servir` ne vérifie rien : la porte qui l'appelle vérifie avant. Pour un joueur (`src/acces/joueur/images.rs`) : l'image d'un document seulement si le pli est dans `plis_recus`, ouvert, et la cite ; l'image d'un sceau seulement s'il voit ce sceau. Ni `url_blob` ni `chemin_blob` ne sortent jamais dans une réponse.
+- **Passages** : `{ "champ", "debut", "fin" }`, positions en caractères Unicode, `fin` exclue. `champ` est le chemin de la case (`texte`, `articles.2.texte`). Le navigateur compte en unités UTF-16 : convertir avec `web/src/outils/passages.ts` à chaque passage de la frontière.
 - **SQL** : requêtes vérifiées à la compilation (`sqlx::query!`). Après tout changement de requête ou de migration, relancer `cargo sqlx prepare` et commiter `.sqlx/`.
 - **Types de l'interface** : générés depuis Rust (`ts-rs`) dans `web/src/types/`. Ne jamais les écrire à la main ; relancer `cargo test` pour les régénérer.
 - **Composants** : shadcn/ui (variante Base UI) et Tailwind CSS. Ajouter un composant avec `npx shadcn@latest add <nom>` depuis `web/` ; il arrive dans `web/src/components/ui/`. Préférer un composant shadcn à un composant écrit à la main.
@@ -83,12 +86,14 @@ essais/lancer.sh recevoir
 essais/lancer.sh notifications
 essais/lancer.sh sauvegarde
 essais/lancer.sh alterer
+essais/lancer.sh documents
 essais/confidentialite.sh       # tests de confidentialité, sur la base à part epistolaire_tests
 essais/restauration.sh          # copie puis restauration d'une base, comparées ligne à ligne
 ```
 
 - Chaque étape ajoute son parcours, et met à jour les anciens quand un écran change.
 - À la première connexion d'un compte, l'écran du choix des notifications passe avant tout : les parcours le franchissent avec `surveillerPremierChoix` (`essais/commun.cjs`).
+- Les parcours `sauvegarde` et `documents` lancent un faux stockage Vercel Blob sur le port 8791.
 - Sans identifiants SMTP en local, les e-mails sont écrits dans le journal du serveur : les parcours y lisent les codes de connexion.
 - `essais/vue-plis-recus.sql` vérifie ce que la vue des joueurs laisse voir d'un pli altéré (après `essais/vider.sql`).
 - Pour vérifier qu'un test de confidentialité attrape bien une faille en modifiant une requête, compiler avec `SQLX_OFFLINE=false` et `DATABASE_URL` sur la base locale, puis remettre le fichier.

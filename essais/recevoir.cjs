@@ -296,7 +296,7 @@ const HEURE = /\b\d{1,2}(:|\s?h\s?)\d{2}\b/;
   ok('le pli qu\'il contenait est détruit pour Alix, gardé dans la base', sql(`select detruit_le is not null from exemplaires where id = '${A}'`) === 't' && await statut(tel.request.get(`${base}/api/joueur/plis/${A}`)) === 404);
   ok('le carnet garde Bertrand', (await carnet(tel)).includes(BERTRAND));
   const detruits = await lire(mj, '/mj/detruits');
-  ok('le MJ voit les deux plis détruits, avec leur texte', detruits.length === 2 && detruits.some((x) => x.id === A && x.dossier === 'Intrigues' && x.texte.includes('registres')) && detruits.some((x) => x.id === B && x.dossier === null));
+  ok('le MJ voit les deux plis détruits, avec leur texte', detruits.length === 2 && detruits.some((x) => x.id === A && x.dossier === 'Intrigues' && x.contenu.texte.includes('registres')) && detruits.some((x) => x.id === B && x.dossier === null));
   await mj.goto(`${base}/mj/detruits`);
   await mj.waitForSelector('h3');
   await photo(mj, 'ordi-detruites');

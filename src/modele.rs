@@ -31,7 +31,8 @@ valeurs! {
 }
 
 valeurs! {
-    /// Les six gabarits de la V1. Chacun a ses cases, rangées dans `contenu`.
+    /// Les six gabarits de la V1. Chacun a ses cases, rangées dans `contenu` :
+    /// voir [`crate::gabarits`].
     Gabarit { Billet, LettreLongue, Gazette, Acte, Rapport, Carte }
 }
 

@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select url_blob, type_mime from images where id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "url_blob",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "type_mime",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "732914805ad8377628d40a78efc9438285976aa7e922574aea0e504e3391b911"
+}

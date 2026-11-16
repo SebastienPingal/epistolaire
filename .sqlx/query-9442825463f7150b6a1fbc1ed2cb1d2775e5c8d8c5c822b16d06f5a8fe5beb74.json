@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        select exists (\n            select 1 from personnages where ecriture_id = e.id and genre = 'joueur'\n        ) as \"d_un_joueur!\"\n        from ecritures e\n        where e.id = $1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "d_un_joueur!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "9442825463f7150b6a1fbc1ed2cb1d2775e5c8d8c5c822b16d06f5a8fe5beb74"
+}

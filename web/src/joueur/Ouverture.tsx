@@ -8,10 +8,12 @@ import {
 
 import { messageErreur } from '@/api';
 import { Cachet } from '@/composants/Cachet';
-import { Enveloppe, Pliure } from '@/composants/Enveloppe';
+import { Enveloppe, formeDe, Pliure } from '@/composants/Enveloppe';
 import { cn } from '@/lib/utils';
+import { adresseSceauJoueur } from '@/outils/images';
 import { useAuDoigt, useMouvementReduit } from '@/outils/useMedia';
 import { vocabulaire } from '@/theme/neutre';
+import type { Gabarit } from '@/types/Gabarit';
 import type { Pli } from '@/types/Pli';
 import type { SceauVu } from '@/types/SceauVu';
 
@@ -30,6 +32,8 @@ const DUREE_BRIS = 450;
 type Phase = 'repos' | 'geste' | 'ouverture';
 
 type Props = {
+  /** La sorte de document : elle donne sa forme au pli fermé, rien de plus. */
+  gabarit?: Gabarit;
   sceau: SceauVu | null;
   /** Demande l'ouverture au serveur, qui renvoie le contenu du pli. */
   ouvrir: () => Promise<Pli>;
@@ -48,7 +52,7 @@ type Props = {
  *
  * Avec les animations réduites, rien ne bouge : la lettre paraît dès le geste fini.
  */
-export function Ouverture({ sceau, ouvrir, surOuvert, surErreur }: Props) {
+export function Ouverture({ gabarit, sceau, ouvrir, surOuvert, surErreur }: Props) {
   const reduit = useMouvementReduit();
   const auDoigt = useAuDoigt();
   const zone = useRef<HTMLDivElement>(null);
@@ -204,7 +208,7 @@ export function Ouverture({ sceau, ouvrir, surOuvert, surErreur }: Props) {
         onPointerCancel={remettreEnPlace}
         onContextMenu={(evenement) => evenement.preventDefault()}
       >
-        <Enveloppe>
+        <Enveloppe forme={formeDe(gabarit)}>
           <div
             role="button"
             tabIndex={0}
@@ -294,6 +298,7 @@ function CachetEnDeux({ sceau, brise }: { sceau: SceauVu; brise: boolean }) {
         initiales={sceau.initiales}
         nom={sceau.nom}
         etat={sceau.etat}
+        image={sceau.image_id && adresseSceauJoueur(sceau.image_id)}
         className="size-full"
       />
     </span>

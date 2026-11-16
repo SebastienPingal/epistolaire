@@ -120,7 +120,7 @@ function Titre({ lettre }: { lettre: LettreATraiter }) {
         Envoyée {dateLisible(lettre.envoye_le)}
       </p>
       <Lettre
-        texte={lettre.texte}
+        contenu={lettre.contenu}
         police={lettre.police}
         signature={lettre.signe ? lettre.auteur_nom : null}
         sceau={lettre.sceau}
@@ -197,7 +197,7 @@ function Decider({
     !versPnj || copies.some((copie) => personnages.find((p) => p.id === copie)?.genre === 'joueur');
   const manqueReponse = destinataire && versPnj ? manqueAuBillet(destinataire, reponse) : null;
   const original: OriginalVu = {
-    texte: lettre.texte,
+    contenu: lettre.contenu,
     police: lettre.police,
     signature: lettre.signe ? lettre.auteur_nom : null,
     sceauId: lettre.sceau_id,

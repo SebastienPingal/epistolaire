@@ -1,4 +1,5 @@
-//! Le stockage Vercel Blob, en accès privé.
+//! Le stockage Vercel Blob, en accès privé. Il garde les copies de la base, et les images
+//! des documents et des sceaux ([`crate::images`]).
 //!
 //! Vercel ne fournit pas de bibliothèque Rust : ce fichier parle directement à son API,
 //! comme le fait la bibliothèque officielle `@vercel/blob` (version 2.9, lue le 16 novembre) :
@@ -29,7 +30,7 @@ const API_PAR_DEFAUT: &str = "https://vercel.com/api/blob";
 const VERSION_API: &str = "13";
 
 pub const REFUS_NON_CONFIGURE: Erreur = Erreur::Refus(
-    "Le stockage des copies n'est pas relié au site (BLOB_READ_WRITE_TOKEN manque).",
+    "Le stockage des copies et des images n'est pas relié au site (BLOB_READ_WRITE_TOKEN manque).",
 );
 
 pub struct Blob {
@@ -49,6 +50,14 @@ pub struct Fichier {
     pub size: u64,
     #[serde(rename = "uploadedAt")]
     pub uploaded_at: DateTime<Utc>,
+}
+
+/// Ce que Vercel répond à un dépôt.
+#[derive(Debug, Deserialize)]
+pub struct Depot {
+    /// L'adresse du fichier. Privée : elle ne se lit qu'avec le jeton.
+    pub url: String,
+    pub pathname: String,
 }
 
 #[derive(Deserialize)]
@@ -99,8 +108,13 @@ impl Blob {
             .header("x-vercel-blob-store-id", &self.stockage)
     }
 
-    /// Dépose un fichier privé. Un fichier du même nom n'est jamais écrasé.
-    pub async fn deposer(&self, chemin: &str, octets: Vec<u8>, type_contenu: &str) -> Result<(), Erreur> {
+    /// Dépose un fichier privé, et rend son adresse. Un fichier du même nom n'est jamais écrasé.
+    pub async fn deposer(
+        &self,
+        chemin: &str,
+        octets: Vec<u8>,
+        type_contenu: &str,
+    ) -> Result<Depot, Erreur> {
         let reponse = self
             .appel(self.client.put(format!("{}/", self.api)))
             .query(&[("pathname", chemin)])
@@ -112,8 +126,11 @@ impl Blob {
             .send()
             .await
             .map_err(Erreur::interne)?;
-        verifier(reponse, "dépôt").await?;
-        Ok(())
+        verifier(reponse, "dépôt")
+            .await?
+            .json()
+            .await
+            .map_err(Erreur::interne)
     }
 
     /// Tous les fichiers dont le nom commence par ce préfixe.

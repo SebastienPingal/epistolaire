@@ -7,6 +7,9 @@
 //! * le courrier reçu ne se lit que dans la vue `plis_recus`, et ne se modifie que par les
 //!   fonctions SQL `ouvrir_pli`, `ranger_pli` et `detruire_pli` ;
 //! * aucun horodatage de pli ne sort : seulement des dates du jeu ;
+//! * une image ne se sert qu'après vérification, dans [`images`] : celle d'un document,
+//!   seulement si le pli est arrivé, ouvert, et la cite ; celle d'un sceau, seulement si le
+//!   joueur voit ce sceau. Aucune adresse du stockage ne sort ;
 //! * ses propres lettres ne se lisent et ne se modifient que dans la vue `brouillons` :
 //!   une lettre envoyée n'appartient plus à son auteur ;
 //! * ses dossiers lui appartiennent : leur table se lit et s'écrit directement, toujours
@@ -19,6 +22,7 @@ pub mod courrier;
 mod dossiers;
 mod ecritoire;
 mod fiche;
+mod images;
 mod notifications;
 
 use axum::Router;
@@ -41,6 +45,8 @@ pub fn routes() -> Router {
         .route("/plis/{id}", get(courrier::lire).delete(courrier::detruire))
         .route("/plis/{id}/ouverture", post(courrier::ouvrir))
         .route("/plis/{id}/dossier", put(courrier::ranger))
+        .route("/plis/{id}/images/{image}", get(images::du_pli))
+        .route("/sceaux/{image}", get(images::du_sceau))
         .route("/rangement", put(courrier::ranger_plusieurs))
         .route("/destruction", post(courrier::detruire_plusieurs))
         .route("/dossiers", post(dossiers::creer))

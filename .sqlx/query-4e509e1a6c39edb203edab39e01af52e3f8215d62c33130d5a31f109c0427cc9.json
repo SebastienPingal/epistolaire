@@ -1,0 +1,94 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        select\n            p.gabarit as \"gabarit: Gabarit\",\n            x.contenu,\n            x.passages_abimes,\n            x.sceau_id,\n            x.sceau_etat as \"sceau_etat: EtatSceau\",\n            x.signature_etat as \"signature_etat: EtatSignature\",\n            x.signature_nom,\n            x.signature_personnage_id,\n            x.faussaire_personnage_id,\n            x.faussaire_ecriture_id,\n            x.remarque_texte,\n            x.remarque_sceau,\n            x.remarque_signature\n        from exemplaires x\n        join plis p on p.id = x.pli_id\n        where x.id = $1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "gabarit: Gabarit",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "contenu",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 2,
+        "name": "passages_abimes",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 3,
+        "name": "sceau_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 4,
+        "name": "sceau_etat: EtatSceau",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "signature_etat: EtatSignature",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "signature_nom",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "signature_personnage_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 8,
+        "name": "faussaire_personnage_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 9,
+        "name": "faussaire_ecriture_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 10,
+        "name": "remarque_texte",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 11,
+        "name": "remarque_sceau",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 12,
+        "name": "remarque_signature",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "4e509e1a6c39edb203edab39e01af52e3f8215d62c33130d5a31f109c0427cc9"
+}

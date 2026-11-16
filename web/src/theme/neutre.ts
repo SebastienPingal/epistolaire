@@ -101,6 +101,22 @@ export const vocabulaire = {
     illisible: 'passage illisible',
   },
 
+  /** Les mots imprimés dans les gabarits : ils font partie du document. */
+  gabarits: {
+    gazette: {
+      numero: 'N°',
+      courrier: 'Courrier des lecteurs',
+      anonyme: 'Anonyme',
+    },
+    rapport: {
+      par: 'Par',
+    },
+    carte: {
+      /** Lu par les lecteurs d'écran, pour une image sans titre. */
+      image: 'Illustration',
+    },
+  },
+
   ecritoire: {
     titre: 'Écrire',
     restantes: (nombre: number) =>

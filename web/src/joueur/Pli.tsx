@@ -7,7 +7,8 @@ import { appeler, messageErreur, modifier, supprimer } from '@/api';
 import { Button } from '@/components/ui/button';
 import { Attente } from '@/composants/Attente';
 import { Confirmation } from '@/composants/Confirmation';
-import { BilletLu } from '@/composants/gabarits/BilletLu';
+import { Document } from '@/composants/gabarits/Document';
+import { adresseImageDuPli, adresseSceauJoueur } from '@/outils/images';
 import { useLecture } from '@/outils/useLecture';
 import { vocabulaire } from '@/theme/neutre';
 import type { Destination } from '@/types/Destination';
@@ -91,6 +92,7 @@ function LecturePli({ id }: { id: string }) {
             {vocabulaire.reception.arrive(arrive)}
           </p>
           <Ouverture
+            gabarit={exterieur.gabarit}
             sceau={exterieur.sceau}
             ouvrir={() => appeler<PliServeur>(`/joueur/plis/${id}/ouverture`, {})}
             surOuvert={(recu) => {
@@ -102,16 +104,22 @@ function LecturePli({ id }: { id: string }) {
         </div>
       ) : (
         <>
-          <BilletLu
+          <Document
             className="animate-in duration-500 fade-in slide-in-from-bottom-2 motion-reduce:animate-none"
-            texte={contenu.texte}
+            contenu={contenu.document}
             police={contenu.police}
             date={vocabulaire.date(contenu.ecrit_le)}
             signature={contenu.signature}
-            sceau={exterieur.sceau}
+            sceau={
+              exterieur.sceau && {
+                ...exterieur.sceau,
+                image: exterieur.sceau.image_id && adresseSceauJoueur(exterieur.sceau.image_id),
+              }
+            }
             passages={contenu.passages_reecrits}
             policeReecriture={contenu.police_reecriture}
             passagesAbimes={contenu.passages_abimes}
+            adresseImage={adresseImageDuPli(id)}
           />
           <p className="mt-3 text-sm text-muted-foreground">{mots.recu(arrive)}</p>
 

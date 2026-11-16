@@ -224,7 +224,7 @@ function Carte({
 
       <Lettre
         className="mt-3"
-        texte={lettre.texte}
+        contenu={lettre.contenu}
         police={lettre.police}
         signature={lettre.signe ? lettre.auteur_nom : null}
         sceau={lettre.sceau}

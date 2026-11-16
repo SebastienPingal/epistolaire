@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        update sceaux\n        set nom_grave = $2, initiales = $3, detenteur_id = $4, image_id = $5\n        where id = $1\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Text",
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "e0313357b4a704ef002c480a024e9463c83d2e20ced0c411c3bf69670bcf5b80"
+}

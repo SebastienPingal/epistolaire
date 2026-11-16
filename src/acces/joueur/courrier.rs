@@ -8,7 +8,9 @@
 //!   qui vérifient elles-mêmes que le pli est arrivé et qu'il est à ce joueur ;
 //! * aucun horodatage de pli ne sort d'ici : seulement des dates du jeu ([`DateJeu`]).
 //!   Le tri par heure d'arrivée se fait en SQL ;
-//! * le contenu d'un pli ne part qu'une fois le pli ouvert ;
+//! * le contenu d'un pli ne part qu'une fois le pli ouvert, quel que soit son gabarit.
+//!   Fermé, il ne montre que son extérieur : son sceau, sa date d'arrivée, et sa forme
+//!   (un rouleau pour une carte, un journal pour une gazette : décision du MJ) ;
 //! * le texte d'un passage abîmé ne sort jamais : la vue le voile elle-même, et ne laisse
 //!   passer que des « · » à sa place. Ce fichier n'a donc jamais le texte abîmé en main.
 
@@ -26,14 +28,15 @@ use crate::acces::Joueur;
 use crate::base;
 use crate::calendrier::{Calendrier, DateJeu};
 use crate::erreur::Erreur;
+use crate::gabarits::Contenu;
 use crate::modele::{EtatSceau, Gabarit};
 use crate::passages::{self, Passage};
 
 /// Nombre de plis qu'un seul geste peut ranger ou détruire.
 const PLIS_PAR_GESTE: usize = 500;
 
-/// Le début d'une lettre ouverte, montré dans les listes pour la reconnaître.
-const LONGUEUR_DEBUT: i32 = 90;
+/// Le début d'un document ouvert, montré dans les listes pour le reconnaître.
+const LONGUEUR_DEBUT: usize = 90;
 
 // ---------------------------------------------------------------------------
 // Ce qui s'échange avec l'interface
@@ -57,6 +60,7 @@ pub struct Reception {
 #[ts(export)]
 pub struct PliFerme {
     pub id: Uuid,
+    /// La sorte de document. Elle se devine avant l'ouverture, à la forme du pli.
     pub gabarit: Gabarit,
     /// Le jour d'arrivée, dans le calendrier du jeu. Jamais l'heure.
     pub arrive_le: DateJeu,
@@ -67,7 +71,7 @@ pub struct PliFerme {
     pub sceau: Option<SceauVu>,
     /// Le nom signé sous le texte. Seulement une fois le pli ouvert.
     pub signature: Option<String>,
-    /// Les premiers mots. Seulement une fois le pli ouvert.
+    /// Les premiers mots, ou le titre. Seulement une fois le pli ouvert.
     pub debut: Option<String>,
 }
 
@@ -78,7 +82,8 @@ pub struct SceauVu {
     /// Le nom gravé : celui du propriétaire d'origine, même si le sceau a été volé.
     pub nom: String,
     pub initiales: String,
-    pub image: Option<String>,
+    /// L'image du sceau, s'il en a une : elle se demande à `/api/joueur/sceaux/{image}`.
+    pub image_id: Option<Uuid>,
     /// Intact, sauf si le destinataire a remarqué quelque chose.
     pub etat: EtatSceau,
 }
@@ -98,15 +103,17 @@ pub struct Pli {
 pub struct ContenuPli {
     /// Le jour où la lettre a été écrite, dans le calendrier du jeu.
     pub ecrit_le: DateJeu,
-    pub texte: String,
-    /// L'écriture du texte.
+    /// Le gabarit et ses cases. Une image s'y désigne par son identifiant, et se demande
+    /// à `/api/joueur/plis/{pli}/images/{image}`.
+    pub document: Contenu,
+    /// L'écriture du document, s'il est écrit à la main.
     pub police: Option<String>,
     pub signature: Option<SignatureVue>,
     /// Les passages réécrits que ce destinataire a remarqués. Vide sinon.
     pub passages_reecrits: Vec<Passage>,
     /// L'écriture de ces passages : celle du faussaire.
     pub police_reecriture: Option<String>,
-    /// Les passages abîmés : toujours visibles, jamais lisibles. Dans `texte`, leurs
+    /// Les passages abîmés : toujours visibles, jamais lisibles. Dans `document`, leurs
     /// caractères sont déjà remplacés par des « · ».
     pub passages_abimes: Vec<Passage>,
 }
@@ -187,11 +194,11 @@ pub(super) async fn plis_du_dossier(
             r.dossier_id,
             r.sceau_nom,
             r.sceau_initiales,
-            r.sceau_image,
+            r.sceau_image_id,
             r.sceau_etat                           as "sceau_etat: EtatSceau",
             case when r.ouvert_le is not null then r.signature_nom end as "signature?",
-            case when r.ouvert_le is not null then left(r.contenu->>'texte', $3) end
-                                                   as "debut?"
+            -- Le contenu ne quitte la base que pour un pli ouvert.
+            case when r.ouvert_le is not null then r.contenu end as "contenu?: Value"
         from plis_recus r
         cross join reglages g
         where r.destinataire_id = $1
@@ -200,7 +207,6 @@ pub(super) async fn plis_du_dossier(
         "#,
         joueur.personnage_id(),
         dossier_id,
-        LONGUEUR_DEBUT,
     )
     .fetch_all(pool)
     .await?;
@@ -216,11 +222,13 @@ pub(super) async fn plis_du_dossier(
             sceau: sceau_vu(
                 ligne.sceau_nom,
                 ligne.sceau_initiales,
-                ligne.sceau_image,
+                ligne.sceau_image_id,
                 ligne.sceau_etat,
             ),
             signature: ligne.signature,
-            debut: ligne.debut,
+            debut: ligne.contenu.map(|cases| {
+                Contenu::depuis_la_base(ligne.gabarit, cases).apercu(LONGUEUR_DEBUT)
+            }),
         })
         .collect())
 }
@@ -242,11 +250,11 @@ async fn lire_pli(pool: &PgPool, joueur: &Joueur, id: Uuid) -> Result<Pli, Erreu
             (r.ecrit_le at time zone g.fuseau)::date  as "ecrit_jour!",
             r.ouvert_le is not null                as "ouvert!",
             r.dossier_id,
-            coalesce(r.contenu->>'texte', '')      as "texte!",
+            case when r.ouvert_le is not null then r.contenu end as "contenu?: Value",
             texte.police                           as "police?",
             r.sceau_nom,
             r.sceau_initiales,
-            r.sceau_image,
+            r.sceau_image_id,
             r.sceau_etat                           as "sceau_etat: EtatSceau",
             r.signature_nom,
             signature.police                       as "signature_police?",
@@ -267,9 +275,16 @@ async fn lire_pli(pool: &PgPool, joueur: &Joueur, id: Uuid) -> Result<Pli, Erreu
     .await?
     .ok_or(Erreur::Introuvable)?;
 
-    let contenu = ligne.ouvert.then(|| ContenuPli {
+    // Fermé : la requête n'a pas rendu le contenu, il n'y a rien à transmettre.
+    let document = ligne
+        .contenu
+        .map(|cases| Contenu::depuis_la_base(ligne.gabarit, cases));
+    let debut = document
+        .as_ref()
+        .map(|document| document.apercu(LONGUEUR_DEBUT));
+    let contenu = document.map(|document| ContenuPli {
         ecrit_le: calendrier.date(ligne.ecrit_jour),
-        texte: ligne.texte.clone(),
+        document,
         police: ligne.police.clone(),
         signature: ligne.signature_nom.clone().map(|nom| SignatureVue {
             nom,
@@ -279,10 +294,6 @@ async fn lire_pli(pool: &PgPool, joueur: &Joueur, id: Uuid) -> Result<Pli, Erreu
         police_reecriture: ligne.police_reecriture.clone(),
         passages_abimes: passages::depuis_la_base(ligne.passages_abimes.clone()),
     });
-
-    let debut = ligne
-        .ouvert
-        .then(|| ligne.texte.chars().take(LONGUEUR_DEBUT as usize).collect());
 
     Ok(Pli {
         exterieur: PliFerme {
@@ -294,7 +305,7 @@ async fn lire_pli(pool: &PgPool, joueur: &Joueur, id: Uuid) -> Result<Pli, Erreu
             sceau: sceau_vu(
                 ligne.sceau_nom,
                 ligne.sceau_initiales,
-                ligne.sceau_image,
+                ligne.sceau_image_id,
                 ligne.sceau_etat,
             ),
             signature: if ligne.ouvert { ligne.signature_nom } else { None },
@@ -307,14 +318,14 @@ async fn lire_pli(pool: &PgPool, joueur: &Joueur, id: Uuid) -> Result<Pli, Erreu
 fn sceau_vu(
     nom: Option<String>,
     initiales: Option<String>,
-    image: Option<String>,
+    image_id: Option<Uuid>,
     etat: Option<EtatSceau>,
 ) -> Option<SceauVu> {
     match (nom, etat) {
         (Some(nom), Some(etat)) => Some(SceauVu {
             nom,
             initiales: initiales.unwrap_or_default(),
-            image,
+            image_id,
             etat,
         }),
         _ => None,

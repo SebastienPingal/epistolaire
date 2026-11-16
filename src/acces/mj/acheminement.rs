@@ -24,7 +24,8 @@ pub(super) const REFUS_PERSONNAGE: Erreur = Erreur::Refus("Ce personnage n'exist
 pub struct SceauPose {
     pub nom_grave: String,
     pub initiales: String,
-    pub image_url: Option<String>,
+    /// L'image du sceau, s'il en a une. Vide : il est dessiné à partir de ses initiales.
+    pub image_id: Option<Uuid>,
 }
 
 impl SceauPose {
@@ -32,12 +33,12 @@ impl SceauPose {
     pub(super) fn depuis(
         nom_grave: Option<String>,
         initiales: Option<String>,
-        image_url: Option<String>,
+        image_id: Option<Uuid>,
     ) -> Option<Self> {
         nom_grave.map(|nom_grave| Self {
             nom_grave,
             initiales: initiales.unwrap_or_default(),
-            image_url,
+            image_id,
         })
     }
 }
@@ -65,6 +66,9 @@ pub(super) fn origine_pour(
 /// Quand le pli est signé, l'exemplaire retient qui signe : c'est ce qui ajoutera
 /// l'auteur au carnet du destinataire, à l'ouverture.
 ///
+/// L'écriture est celle de l'auteur ; pour un document sans expéditeur, celle que le MJ
+/// a choisie pour le pli.
+///
 /// Un PNJ n'attend pas son courrier : c'est le MJ qui le lit pour lui. Son exemplaire
 /// est donc arrivé et ouvert aussitôt, quelle que soit la date demandée.
 pub(super) async fn poser_exemplaire(
@@ -85,7 +89,7 @@ pub(super) async fn poser_exemplaire(
         )
         select
             p.id, d.id, $3::text,
-            p.contenu, a.ecriture_id, p.sceau_id,
+            p.contenu, coalesce(a.ecriture_id, p.ecriture_id), p.sceau_id,
             case when p.sceau_id is not null then 'intact' end,
             case when p.signe then a.nom end,
             case when p.signe then a.ecriture_id end,
