@@ -45,6 +45,9 @@ Claude développe et maintient tout le code. Le MJ (propriétaire du repo) déci
 - **Écrans des joueurs** : dans `web/src/joueur/`. Ils sont immersifs et pensés d'abord pour le téléphone. Tous leurs textes viennent du vocabulaire du thème.
 - **Écrans du MJ** : dans `web/src/mj/`. Ce sont des outils, pas des écrans immersifs : leurs libellés sont écrits directement dans les composants. Seuls les écrans des joueurs passent par le vocabulaire du thème.
 - **Écritures** : la liste des polices manuscrites est dans `web/src/theme/ecritures.ts`. En ajouter une : installer le paquet `@fontsource/…`, l'ajouter à cette liste, puis l'insérer dans la table `ecritures` par une migration.
+- **Aperçus** : hors du site en ligne, rien ne part vers un joueur. Les notifications sont écrites dans le journal ; sur un aperçu, un e-mail de connexion ne part que vers la boîte du MJ (`meme_boite`, `src/connexion.rs`).
+- **Poids de l'interface** : l'espace du MJ et celui des joueurs sont chargés à part (`web/src/mj/RoutesMj.tsx`, `web/src/joueur/RoutesJoueur.tsx`). Un nouvel écran se déclare dans l'un de ces deux fichiers, jamais dans `App.tsx`.
+- **Données en ligne** : toute correction de la base du site en ligne passe par un script relu et accepté par le MJ, après une sauvegarde (`outils/`).
 - **Secrets** : jamais dans le repo. Ils vivent dans les variables d'environnement Vercel.
 
 ## Hébergement

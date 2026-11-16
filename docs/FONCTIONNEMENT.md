@@ -1,7 +1,7 @@
 # Guide de fonctionnement
 
 Ce guide décrit comment le site est construit. Il est mis à jour à la fin de chaque étape de `PLAN.md`.
-État décrit : étape 11 (documents et gabarits).
+État décrit : étape L (lancement, en cours).
 
 ## Vue d'ensemble
 
@@ -145,6 +145,8 @@ La base ne garde ni le code, ni le lien, ni le cookie : seulement leur empreinte
 Le compte du MJ se crée tout seul la première fois que son adresse demande à se connecter. Cette adresse est celle de la boîte d'envoi (`SMTP_USER`), sauf si la variable `MJ_EMAIL` en désigne une autre. Les comptes des joueurs sont créés par le MJ.
 
 Dans le code, un traitement réservé au MJ demande un `Mj`, un traitement de joueur demande un `Joueur`. Ces deux preuves ne sont fabriquées que par la connexion, à partir de la session.
+
+Sur un aperçu, un e-mail de connexion ne part que vers la boîte du MJ : son adresse, ou la même avec un ajout après un « + » (`nom+alix@…`), ce qui lui permet d'y jouer ses joueurs fictifs. Pour toute autre adresse, rien ne part.
 
 Les e-mails partent de la boîte Gmail du MJ, par SMTP. Les identifiants sont dans les variables d'environnement du projet Vercel, repris du projet `congres-champetre`. Sans eux, les e-mails d'un aperçu ou du serveur local ne partent pas : ils sont écrits dans les journaux du serveur. Le site en ligne, lui, refuse de fonctionner sans eux.
 
@@ -487,6 +489,16 @@ Après un changement de requête SQL, avec la base locale lancée :
 ```bash
 cargo sqlx prepare
 ```
+
+## L'interface, en trois morceaux
+
+Le navigateur charge d'abord la connexion, puis, une fois qu'il sait qui est connecté, l'espace du MJ ou celui des joueurs (`RoutesMj.tsx`, `RoutesJoueur.tsx`). Un joueur ne télécharge donc jamais le code des écrans du MJ, et son téléphone charge moins.
+
+## Avant et après le lancement
+
+`docs/REPETITION.md` est la liste à suivre : les gestes du MJ dans Vercel (stockage, une base par aperçu, accès public), la répétition générale, puis le nettoyage. `outils/nettoyer-lancement.sql` efface tout ce qui vient des essais ; il montre ce qu'il ferait et n'applique rien tant qu'on ne remplace pas sa dernière ligne.
+
+Une fois la partie lancée : toute modification passe par un aperçu validé ; une correction de données en ligne passe par un script relu et accepté par le MJ, après une sauvegarde ; les mises en ligne se font de préférence quand les joueurs n'écrivent pas.
 
 ## Déploiement
 

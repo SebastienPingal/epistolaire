@@ -137,6 +137,13 @@ pub async fn demander(
     .execute(pool)
     .await?;
 
+    // Sur un aperçu, la base est une copie de celle du site en ligne, avec les adresses des
+    // joueurs : aucun e-mail ne doit leur parvenir de là. Seule la boîte du MJ reçoit.
+    if sur_un_apercu() && !meme_boite(&email, &adresse_du_mj().unwrap_or_default()) {
+        eprintln!("--- e-mail de connexion retenu (aperçu) : seule la boîte du MJ reçoit ---");
+        return Ok(StatusCode::NO_CONTENT);
+    }
+
     courriel::envoyer(Courriel {
         destinataire: email,
         sujet: "Votre code de connexion".to_owned(),
@@ -448,6 +455,25 @@ pub fn adresse_du_mj() -> Option<String> {
         .and_then(|adresse| normaliser_email(&adresse))
 }
 
+/// Sur un aperçu Vercel : ni le site en ligne, ni un serveur local.
+fn sur_un_apercu() -> bool {
+    std::env::var("VERCEL_ENV").is_ok_and(|environnement| environnement != "production")
+}
+
+/// Deux adresses de la même boîte : la même, ou la même avec un ajout après un « + »
+/// (`nom+alix@exemple.fr` arrive chez `nom@exemple.fr`). Le MJ s'en sert pour ses joueurs
+/// fictifs.
+fn meme_boite(adresse: &str, boite: &str) -> bool {
+    fn sans_ajout(adresse: &str) -> Option<(&str, &str)> {
+        let (nom, domaine) = adresse.rsplit_once('@')?;
+        Some((nom.split('+').next().unwrap_or(nom), domaine))
+    }
+    match (sans_ajout(adresse), sans_ajout(boite)) {
+        (Some(a), Some(b)) => !a.0.is_empty() && a == b,
+        _ => false,
+    }
+}
+
 /// Met l'adresse en forme, ou la refuse si elle n'en a pas l'allure.
 pub fn normaliser_email(email: &str) -> Option<String> {
     let email = email.trim().to_lowercase();
@@ -524,4 +550,20 @@ fn lire_cookie(entetes: &HeaderMap) -> Option<String> {
         .find_map(|morceau| morceau.trim().strip_prefix(NOM_COOKIE)?.strip_prefix('='))
         .filter(|jeton| !jeton.is_empty())
         .map(str::to_owned)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::meme_boite;
+
+    #[test]
+    fn la_boite_du_mj_et_ses_ajouts() {
+        assert!(meme_boite("mj@exemple.fr", "mj@exemple.fr"));
+        assert!(meme_boite("mj+alix@exemple.fr", "mj@exemple.fr"));
+        assert!(meme_boite("mj+alix@exemple.fr", "mj+jeu@exemple.fr"));
+        assert!(!meme_boite("alix@exemple.fr", "mj@exemple.fr"));
+        assert!(!meme_boite("mj@ailleurs.fr", "mj@exemple.fr"));
+        assert!(!meme_boite("mj+alix@exemple.fr", ""));
+        assert!(!meme_boite("+alix@exemple.fr", "+mj@exemple.fr"));
+    }
 }

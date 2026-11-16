@@ -1,7 +1,7 @@
 # Jeu de rôle épistolaire : décisions de conception
 
 Ce document est tenu à jour au fil des échanges de conception.
-Dernière mise à jour : 16 novembre, à l'étape 11 (documents et gabarits).
+Dernière mise à jour : 16 novembre, à l'étape L (lancement).
 
 ## Avancement
 
@@ -41,6 +41,7 @@ Dernière mise à jour : 16 novembre, à l'étape 11 (documents et gabarits).
 - Six gabarits à cases fixes.
 - Notifications par le navigateur et par e-mail, au choix de chaque joueur.
 - Lancement visé fin novembre ou début décembre.
+- Pour le lancement (décidé le 16 novembre) : la répétition générale se fait avec des joueurs fictifs dont les adresses sont des adresses « en + » de la boîte du MJ ; rien n'est gardé de la répétition ni des essais antérieurs, la vraie partie se prépare sur une base propre ; le calendrier du jeu commence le jour où les joueurs reçoivent leur invitation ; Claude rédige le message d'accueil (`docs/ACCUEIL-JOUEURS.md`).
 - La partie commence dès que la boucle du courrier, les notifications et le filet de sécurité sont prêts (étapes 7 à 9), après une répétition générale. Les outils du MJ (altérations, documents, gazette, vue complète) et les finitions arrivent ensuite, pendant la partie.
 
 ## Espace joueur
@@ -192,6 +193,7 @@ Dernière mise à jour : 16 novembre, à l'étape 11 (documents et gabarits).
 - On reste connecté 180 jours après la dernière visite. Seules les adresses enregistrées par le MJ peuvent se connecter.
 - Une adresse inconnue reçoit la même réponse à l'écran qu'une adresse connue : le site ne dit pas qui a un compte.
 - Sécurité légère : pas de double vérification, même pour le MJ.
+- Sur un aperçu, un e-mail de connexion ne part que vers la boîte du MJ (son adresse, ou la même avec un ajout après un « + ») : la base d'un aperçu est une copie, avec les adresses des joueurs.
 - Le tri des informations se fait sur le serveur : un joueur ne reçoit jamais ce qu'il ne doit pas voir. Quelques tests automatiques le vérifient.
 - Les joueurs ne voient aucune liste de personnages, seulement leur carnet.
 - Données stockées : les adresses e-mail des joueurs, rien de plus.

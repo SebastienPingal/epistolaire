@@ -1,29 +1,16 @@
-import { useEffect, useRef, useState } from 'react';
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { BrowserRouter } from 'react-router';
 
 import { appeler, messageErreur } from '@/api';
 import { Connexion } from '@/ecrans/Connexion';
-import { Billet } from '@/joueur/Billet';
-import { Ecritoire } from '@/joueur/Ecritoire';
-import { EspaceJoueur } from '@/joueur/EspaceJoueur';
-import { Fiche } from '@/joueur/Fiche';
-import { Pli } from '@/joueur/Pli';
-import { DossierJoueur, Reception } from '@/joueur/Reception';
-import { Alteration } from '@/mj/Alteration';
-import { ATraiter } from '@/mj/ATraiter';
-import { Detruits } from '@/mj/Detruits';
-import { Documents } from '@/mj/Documents';
-import { Ecritures } from '@/mj/Ecritures';
-import { EnRoute } from '@/mj/EnRoute';
-import { EspaceMj } from '@/mj/EspaceMj';
-import { Personnage } from '@/mj/Personnage';
-import { Personnages } from '@/mj/Personnages';
-import { Reglages } from '@/mj/Reglages';
-import { Sceaux } from '@/mj/Sceaux';
-import { Traitement } from '@/mj/Traitement';
 import { vocabulaire } from '@/theme/neutre';
 import type { LienConnexion } from '@/types/LienConnexion';
 import type { Moi } from '@/types/Moi';
+
+// Chaque espace est chargé à part, une fois qu'on sait qui est connecté : le téléphone
+// d'un joueur ne télécharge pas les outils du MJ.
+const RoutesMj = lazy(() => import('@/mj/RoutesMj'));
+const RoutesJoueur = lazy(() => import('@/joueur/RoutesJoueur'));
 
 type Etat =
   | { etape: 'chargement' }
@@ -84,37 +71,13 @@ export function App() {
     case 'connecte':
       return (
         <BrowserRouter>
-          {etat.moi.role === 'mj' ? (
-            <Routes>
-              <Route path="/mj" element={<EspaceMj surDeconnexion={deconnecter} />}>
-                <Route path="a-traiter" element={<ATraiter />} />
-                <Route path="a-traiter/:id" element={<Traitement />} />
-                <Route path="en-route" element={<EnRoute />} />
-                <Route path="en-route/:id" element={<Alteration />} />
-                <Route path="documents" element={<Documents />} />
-                <Route path="detruits" element={<Detruits />} />
-                <Route path="personnages" element={<Personnages />} />
-                <Route path="personnages/:id" element={<Personnage />} />
-                <Route path="ecritures" element={<Ecritures />} />
-                <Route path="sceaux" element={<Sceaux />} />
-                <Route path="reglages" element={<Reglages />} />
-              </Route>
-              {/* À traiter est la page d'accueil du MJ. */}
-              <Route path="*" element={<Navigate to="/mj/a-traiter" replace />} />
-            </Routes>
-          ) : (
-            <Routes>
-              <Route element={<EspaceJoueur />}>
-                <Route path="/reception" element={<Reception />} />
-                <Route path="/dossiers/:id" element={<DossierJoueur />} />
-                <Route path="/pli/:id" element={<Pli />} />
-                <Route path="/ecrire" element={<Ecritoire />} />
-                <Route path="/ecrire/:id" element={<Billet />} />
-                <Route path="/personnage" element={<Fiche surDeconnexion={deconnecter} />} />
-              </Route>
-              <Route path="*" element={<Navigate to="/reception" replace />} />
-            </Routes>
-          )}
+          <Suspense fallback={null}>
+            {etat.moi.role === 'mj' ? (
+              <RoutesMj surDeconnexion={deconnecter} />
+            ) : (
+              <RoutesJoueur surDeconnexion={deconnecter} />
+            )}
+          </Suspense>
         </BrowserRouter>
       );
   }
