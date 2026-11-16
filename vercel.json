@@ -10,11 +10,6 @@
       "schedule": "*/15 * * * *",
       "path": "/api/taches/notifications",
       "requestMethod": "GET"
-    },
-    "sauvegarde": {
-      "schedule": "0 3 * * *",
-      "path": "/api/taches/sauvegarde",
-      "requestMethod": "GET"
     }
   },
   "headers": [
