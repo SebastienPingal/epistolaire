@@ -20,7 +20,7 @@ Le détail de chaque étape restante (tâches, questions à poser au MJ, parcour
 | 8 | Notifications et site installable | Fait |
 | 9 | Filet de sécurité | En ligne, à finir (stockage Blob, téléphones) |
 | L | Lancement : répétition générale et mise en jeu | À faire |
-| 10 | Altérations | En aperçu (avancée avant le lancement, à la demande du MJ) |
+| 10 | Altérations | En ligne (avancée avant le lancement, à la demande du MJ) ; à essayer par le MJ |
 | 11 | Documents et gabarits | Après le lancement |
 | 12 | Gazette | Après le lancement |
 | 13 | Vue MJ complète | Après le lancement |
@@ -37,12 +37,12 @@ La partie commence dès que les étapes 7, 8 et 9 sont en ligne, après la rép�
 
 ## Pour reprendre
 
-État au moment de cette note (16 novembre, étape 10 en aperçu) :
+État au moment de cette note (16 novembre, étape 10 mise en ligne à la demande du MJ) :
 
-- l'étape 10 (altérations) a été faite avant le lancement, à la demande du MJ. Elle est sur sa branche, en aperçu, pas encore en ligne. Ses réponses (main inconnue : une écriture choisie à chaque fois ; passage abîmé : une tache ; altérer au traitement et dans En route ; pas de lettre entièrement fausse pour l'instant) sont dans `DECISIONS.md` ;
+- l'étape 10 (altérations) a été faite avant le lancement, à la demande du MJ, et mise en ligne sur `main` à sa demande, sans attendre son essai : l'aperçu a seulement été construit (sur `claude/vigilant-tesla-3to8mw`, la branche que Vercel accepte) et vérifié par `/api/sante`. Ses réponses (main inconnue : une écriture choisie à chaque fois ; passage abîmé : une tache ; altérer au traitement et dans En route ; pas de lettre entièrement fausse pour l'instant) sont dans `DECISIONS.md` ;
 - fait et vérifié en local : le parcours `alterer`, tous les anciens parcours, les tests de confidentialité (ils couvrent le passage abîmé) et la restauration ;
-- la migration `0007_alterations.sql` ajoute deux colonnes à `exemplaires`, une fonction, et remplace la vue `plis_recus`. Elle ne supprime rien. Comme les aperçus partagent encore la base du site en ligne, elle s'y applique dès que l'aperçu démarre : le site en ligne (qui ne connaît pas ces colonnes) continue de marcher avec ;
-- reste à faire pour l'étape 10 : que le MJ falsifie une lettre sur l'aperçu, puis la mise en ligne (`git push origin <branche>:main`) et l'état « Fait » ;
+- la migration `0007_alterations.sql` ajoute deux colonnes à `exemplaires`, une fonction, et remplace la vue `plis_recus`. Elle ne supprime rien ;
+- reste à faire pour l'étape 10 : que le MJ falsifie une lettre sur le site (À traiter ou En route, « Altérer »), puis l'état « Fait » ;
 - non fait, reporté : écrire une lettre entièrement fausse au nom d'un joueur (viendra avec les compétences des personnages) ; altérer un autre gabarit que le billet (étape 11).
 
 Ce qui reste de l'étape 9 n'a pas changé :
