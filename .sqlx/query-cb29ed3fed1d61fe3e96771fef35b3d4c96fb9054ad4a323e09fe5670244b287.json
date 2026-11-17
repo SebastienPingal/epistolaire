@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "delete from brouillons_mj where reponse_a = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "cb29ed3fed1d61fe3e96771fef35b3d4c96fb9054ad4a323e09fe5670244b287"
+}

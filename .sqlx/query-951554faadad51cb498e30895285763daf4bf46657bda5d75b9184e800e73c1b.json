@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update modeles set nom = $2, modifie_le = now() where id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "951554faadad51cb498e30895285763daf4bf46657bda5d75b9184e800e73c1b"
+}

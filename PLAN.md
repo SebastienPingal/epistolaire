@@ -37,6 +37,8 @@ La partie commence dès que les étapes 7, 8 et 9 sont en ligne, après la rép�
 
 ## Pour reprendre
 
+Ajout du 17 novembre, à la demande du MJ, hors des étapes : **les brouillons et les modèles du MJ** (branche `claude/zen-cerf-x68rt6`). L'écran Documents devient la liste des brouillons (enregistrés sur le serveur, tout seuls), des réponses de PNJ en cours et des modèles (documents de départ nommés, sans destinataires). La réponse d'un PNJ sous une lettre de la file est un brouillon elle aussi. La migration `0009_brouillons_mj.sql` ajoute deux tables et ne touche à rien d'autre. Décisions dans `DECISIONS.md` (« PNJ et documents »). Reste : l'essai du MJ sur un aperçu.
+
 Étape L, au 16 novembre : ce que Claude pouvait faire seul est fait ; le reste attend le MJ, dans l'ordre de `docs/REPETITION.md`.
 
 - fait : l'interface découpée (un joueur ne télécharge plus les écrans du MJ), les e-mails de connexion retenus sur les aperçus sauf vers la boîte du MJ, le script `outils/nettoyer-lancement.sql` (il n'applique rien par défaut), la liste de la répétition, le message d'accueil ;

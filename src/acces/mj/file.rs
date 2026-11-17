@@ -23,6 +23,7 @@ use super::acheminement::{
     MINUTES_DE_RATTRAPAGE, SceauPose, noter, origine_pour, poser_exemplaire,
 };
 use super::alterations::{VersionLivree, appliquer_version};
+use super::brouillons;
 use super::plume::{self, BilletPnj};
 use crate::acces::Mj;
 use crate::base;
@@ -301,6 +302,10 @@ pub async fn traiter(
     )
     .await?;
 
+    // La réponse en cours sous cette lettre : jetée si elle part, sinon gardée parmi les
+    // brouillons ordinaires.
+    brouillons::detacher_reponse(&mut transaction, id, saisie.reponse.is_some()).await?;
+
     // La réponse du PNJ part dans le même geste : si elle est refusée, rien n'est traité.
     if let Some(reponse) = saisie.reponse {
         if saisie.decision != Decision::Livrer {
@@ -357,6 +362,11 @@ async fn changer_etat(
         return Err(Erreur::Refus(
             "Cette lettre n'est plus là, ou elle a un destinataire précis : perdez-la plutôt.",
         ));
+    }
+
+    // Une lettre écartée quitte la file : sa réponse en cours devient un brouillon ordinaire.
+    if apres == EtatPli::Ecarte {
+        brouillons::detacher_reponse(&mut transaction, id, false).await?;
     }
 
     noter(&mut transaction, &mj, id, None, evenement, json!({})).await?;

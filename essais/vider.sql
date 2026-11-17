@@ -1,5 +1,8 @@
 -- Vide la base locale d'essai (jamais la base en ligne), sans toucher aux écritures ni aux réglages.
 delete from evenements;
+-- Les brouillons du MJ avant les plis : une réponse en cours cite sa lettre.
+delete from brouillons_mj;
+delete from modeles;
 delete from exemplaires;
 delete from lettres_gazette;
 delete from numeros_gazette;

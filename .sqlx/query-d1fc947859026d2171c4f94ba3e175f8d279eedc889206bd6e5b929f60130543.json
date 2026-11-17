@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        update brouillons_mj\n        set auteur_id = $2, sans_expediteur = $3, gabarit = $4, contenu = $5, signe = $6,\n            sceau_id = $7, ecriture_id = $8, destinataires = $9, livraison_commune = $10,\n            modifie_le = now()\n        where id = $1\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Bool",
+        "Text",
+        "Jsonb",
+        "Bool",
+        "Uuid",
+        "Uuid",
+        "Jsonb",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "d1fc947859026d2171c4f94ba3e175f8d279eedc889206bd6e5b929f60130543"
+}

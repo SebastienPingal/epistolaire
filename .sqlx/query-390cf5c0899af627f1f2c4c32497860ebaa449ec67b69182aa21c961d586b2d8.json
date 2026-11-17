@@ -1,0 +1,21 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        insert into modeles (\n            nom, auteur_id, sans_expediteur, gabarit, contenu, signe, sceau_id, ecriture_id\n        )\n        values ($1, $2, $3, $4, $5, $6, $7, $8)\n        on conflict (lower(nom)) do update\n        set nom = excluded.nom, auteur_id = excluded.auteur_id,\n            sans_expediteur = excluded.sans_expediteur, gabarit = excluded.gabarit,\n            contenu = excluded.contenu, signe = excluded.signe, sceau_id = excluded.sceau_id,\n            ecriture_id = excluded.ecriture_id, modifie_le = now()\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Uuid",
+        "Bool",
+        "Text",
+        "Jsonb",
+        "Bool",
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "390cf5c0899af627f1f2c4c32497860ebaa449ec67b69182aa21c961d586b2d8"
+}

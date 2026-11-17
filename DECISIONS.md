@@ -1,7 +1,7 @@
 # Jeu de rôle épistolaire : décisions de conception
 
 Ce document est tenu à jour au fil des échanges de conception.
-Dernière mise à jour : 16 novembre, à l'étape L (lancement).
+Dernière mise à jour : 17 novembre, brouillons et modèles du MJ.
 
 ## Avancement
 
@@ -55,7 +55,7 @@ Dernière mise à jour : 16 novembre, à l'étape L (lancement).
 - Une lettre est un objet physique : l'expéditeur n'en garde aucune copie, et l'envoi est définitif.
 - Le brouillon est sauvegardé automatiquement tant que la lettre n'est pas envoyée.
 - Si le réseau manque, le billet en cours est gardé dans l'appareil du joueur et part vers le serveur dès que le réseau revient (décidé le 17 novembre). Si le brouillon a changé ailleurs entre-temps, c'est celui du serveur qui compte.
-- Côté MJ, le document en cours (écran Documents) et la réponse d'un PNJ sous une lettre de la file sont gardés dans le navigateur jusqu'à l'envoi (décidé le 17 novembre). Un seul document en cours à la fois ; un bouton l'efface. La déconnexion efface tout ce que le site a gardé dans l'appareil.
+- Côté MJ, les documents pas encore envoyés sont des brouillons, enregistrés sur le serveur (décidé le 17 novembre, en remplacement de la copie gardée dans le navigateur décidée le même jour) : voir « PNJ et documents ». La déconnexion efface tout ce que le site a gardé dans l'appareil.
 - Un joueur peut avoir plusieurs brouillons en cours (20 au plus).
 - L'envoi demande une confirmation, qui rappelle qu'on ne garde aucune copie.
 
@@ -154,6 +154,9 @@ Dernière mise à jour : 16 novembre, à l'étape L (lancement).
 - Tout pli peut être fermé par un sceau de l'expéditeur, quel que soit son gabarit : le cachet se voit sur le pli fermé. À l'intérieur, il ne figure que sur le billet, la lettre longue et l'acte officiel (décidé le 16 novembre).
 - Dans l'atelier des altérations, le MJ peut remplacer l'image d'une carte pour un destinataire (décidé le 16 novembre). Rien ne le signale au joueur : une image n'a pas d'écriture où montrer le faux.
 - Une version altérée garde la forme de l'original : le même gabarit, autant d'articles ou de rubriques. Le MJ réécrit une case, il ne la retire pas (choix de réalisation de l'étape 11, à revoir si le besoin se présente).
+- Le MJ a autant de brouillons qu'il veut (200 au plus), enregistrés sur le serveur : il les retrouve sur tout appareil, et ils sont dans la sauvegarde quotidienne (décidé le 17 novembre). Un brouillon s'enregistre tout seul, un instant après chaque changement, comme le billet d'un joueur. Il garde tout ce que l'écran Documents permet de choisir, destinataires et dates compris, même incomplet. Il disparaît à l'envoi, ou quand le MJ le jette.
+- La réponse d'un PNJ écrite sous une lettre de la file est un brouillon elle aussi, rattaché à la lettre (décidé le 17 novembre). Elle revient quand on rouvre la lettre, avec le PNJ choisi. Si la lettre quitte la file sans que la réponse parte (classée sans réponse, redirigée, perdue, écartée), la réponse reste parmi les brouillons ordinaires ; vide, elle est oubliée.
+- Le MJ peut enregistrer un document comme **modèle** (le mot « gabarit » désigne déjà la forme d'un document) : un nom, le gabarit, le contenu, l'expéditeur, la signature et le sceau ; ni destinataires, ni dates (décidé le 17 novembre). Partir d'un modèle crée un brouillon prérempli ; le modèle ne change pas. Enregistrer sous le nom d'un modèle existant le remplace. Un modèle de billet peut aussi servir à remplir la réponse d'un PNJ. Pas de repères à remplacer dans le texte (comme le nom du destinataire) pour l'instant.
 - Les images (cartes, illustrations, sceaux) ne sont vues que de leurs destinataires : celle d'un document, une fois le pli arrivé et ouvert ; celle d'un sceau, dès que le sceau se voit. Le site les sert lui-même, depuis le stockage privé Vercel Blob, celui des sauvegardes. Aucune image n'a d'adresse publique (décidé le 16 novembre). 4 Mo au plus par image.
 
 ## Gazette (l'ancienne zone commune)
@@ -215,6 +218,8 @@ Dernière mise à jour : 16 novembre, à l'étape L (lancement).
 | Numéro de gazette | Date de parution ; articles et lettres retenues. Un exemplaire par joueur | Chaque joueur, son exemplaire |
 | Dossier | Un nom et des exemplaires rangés. La Réception est le dossier par défaut | Son joueur |
 | Information | Un intitulé, des notes, les plis qui la contiennent | Le MJ |
+| Brouillon du MJ | Un document pas encore envoyé : tout ce que l'écran Documents permet de choisir, ou la réponse d'un PNJ sous une lettre de la file | Le MJ |
+| Modèle | Un document de départ nommé par le MJ, sans destinataires ni dates | Le MJ |
 | Réglages | Longueur, quota, remise à zéro, délai par défaut, hasard, fuseau horaire, calendrier | Le MJ. Le joueur n'en voit que les effets |
 
 - Un pli est écrit une fois, mais chaque destinataire reçoit son propre exemplaire.
@@ -225,7 +230,8 @@ Dernière mise à jour : 16 novembre, à l'étape L (lancement).
   - les dates prévues, ni les plis en route ;
   - ce que deviennent ses lettres une fois envoyées, ni leur texte ;
   - les plis, dossiers, carnets et fiches des autres ;
-  - les informations étiquetées, les notes du MJ, les comptes.
+  - les informations étiquetées, les notes du MJ, les comptes ;
+  - les brouillons et les modèles du MJ.
 - Absents de la V1 : les tours, les stats et les dés, les charges.
 
 ## Rendu

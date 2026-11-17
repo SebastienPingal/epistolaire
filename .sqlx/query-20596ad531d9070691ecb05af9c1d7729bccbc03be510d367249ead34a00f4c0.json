@@ -1,0 +1,21 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        insert into brouillons_mj (\n            reponse_a, auteur_id, gabarit, contenu, signe, sceau_id, ecriture_id,\n            destinataires, livraison_commune\n        )\n        values ($1, $2, 'billet', $3, $4, $5, $6, $7, $8)\n        on conflict (reponse_a) do update\n        set auteur_id = excluded.auteur_id, contenu = excluded.contenu,\n            signe = excluded.signe, sceau_id = excluded.sceau_id,\n            ecriture_id = excluded.ecriture_id, destinataires = excluded.destinataires,\n            livraison_commune = excluded.livraison_commune, modifie_le = now()\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Jsonb",
+        "Bool",
+        "Uuid",
+        "Uuid",
+        "Jsonb",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "20596ad531d9070691ecb05af9c1d7729bccbc03be510d367249ead34a00f4c0"
+}

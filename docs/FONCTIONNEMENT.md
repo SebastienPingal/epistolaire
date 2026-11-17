@@ -88,6 +88,8 @@ Toute autre adresse renvoie l'interface.
 | `evenements` | L'historique de chaque pli |
 | `reglages` | Les réglages généraux, sur une seule ligne |
 | `bonds_calendrier` | Les bonds dans le temps décidés par le MJ, chacun avec son jour |
+| `brouillons_mj` | Les documents du MJ pas encore envoyés, et les réponses de PNJ commencées sous une lettre de la file (`reponse_a`) |
+| `modeles` | Les modèles du MJ : des documents de départ nommés, sans destinataires ni dates |
 | `preferences_notification` | Les canaux choisis par chaque compte |
 | `abonnements_navigateur` | Les navigateurs abonnés aux notifications, plusieurs par compte |
 
@@ -270,7 +272,7 @@ L'atelier affiche aussi l'historique du pli, et reste lisible une fois le pli ar
 
 ### Documents
 
-Un seul outil pour tout ce qu'envoie le MJ (écran « Documents », `POST /api/mj/documents`). Il choisit :
+Un seul outil pour tout ce qu'envoie le MJ (écran « Documents »). L'écran montre la liste des brouillons, des réponses en cours et des modèles ; « Nouveau document » ou « Partir de ce modèle » ouvre un brouillon (`/mj/documents/<brouillon>`), où le MJ choisit :
 
 - **un gabarit** parmi les six (voir « Les gabarits ») ;
 - **un expéditeur** : un PNJ, un PNJ créé sur place, ou personne. Sans expéditeur, le document n'a ni signature ni sceau ;
@@ -279,7 +281,18 @@ Un seul outil pour tout ce qu'envoie le MJ (écran « Documents », `POST /api/m
 - **un ou plusieurs destinataires**, joueurs ou PNJ. Chacun reçoit son exemplaire. La date par défaut (le délai habituel, plus ou moins le hasard) est tirée une fois et partagée ; le MJ peut fixer une date pour tous, ou pour un seul ;
 - un aperçu montre le document tel qu'il sera lu.
 
-Tout ce que le MJ remplit sur cet écran est gardé dans le navigateur à chaque changement, et revient quand il rouvre l'écran ; c'est oublié à l'envoi ou par « Tout effacer ». La réponse d'un PNJ sous une lettre de la file est gardée de même, lettre par lettre.
+#### Brouillons et modèles
+
+Code : `src/acces/mj/brouillons.rs`, `web/src/mj/Documents.tsx` (la liste), `web/src/mj/Brouillon.tsx` (l'outil), `web/src/outils/useEnregistrementAuto.ts` (l'enregistrement automatique).
+
+- **Un brouillon** (table `brouillons_mj`) garde tout ce que l'écran montre, même incomplet : expéditeur, « aucun expéditeur », gabarit et cases, signature, sceau, écriture, destinataires avec leur date, date commune. Le serveur ne lui demande que de ne pas être démesuré (`Contenu::mesurer`) ; tout le reste se vérifie à l'envoi.
+- Il s'enregistre tout seul (`PUT /api/mj/brouillons/<id>`) un instant après la dernière frappe, en quittant l'écran, et quand le réseau revient. L'écran dit « Enregistré », « Enregistrement… », ou ce qui a échoué.
+- **L'envoi** (`POST /api/mj/brouillons/<id>/envoi`) passe par `rediger`, puis jette le brouillon dans la même transaction : si l'envoi est refusé, le brouillon reste. `POST /api/mj/documents` envoie toujours un document sans brouillon (les parcours d'essai s'en servent).
+- Seul le gabarit choisi est rangé : les cases remplies dans un autre gabarit, le temps d'hésiter, ne survivent pas à une page rouverte.
+- **La réponse d'un PNJ** sous une lettre de la file est un brouillon rattaché à la lettre (`reponse_a`, `GET`/`PUT`/`DELETE /api/mj/a-traiter/<lettre>/reponse`) : un billet du PNJ à l'auteur de la lettre. Une réponse redevenue vierge est effacée. Quand la lettre quitte la file (`file::traiter`, ou écartée), `detacher_reponse` jette la réponse si elle est partie ou vide, et sinon en fait un brouillon ordinaire.
+- **Un modèle** (table `modeles`) garde le gabarit et ses cases, l'expéditeur, la signature, le sceau et l'écriture ; ni destinataires ni dates. « Enregistrer comme modèle » (`POST /api/mj/modeles`) remplace un modèle du même nom, sans tenir compte des majuscules. « Partir de ce modèle » crée un brouillon qui le recopie : c'est l'interface qui recopie, le serveur ne voit qu'un nouveau brouillon. Sous une lettre de la file, un modèle de billet remplit la réponse du PNJ (texte, signature, et le sceau si ce PNJ le détient).
+- Un personnage, un sceau ou une écriture supprimé laisse le brouillon ou le modèle sans ce choix (`on delete set null`). Un destinataire supprimé disparaît du brouillon à sa réouverture.
+- Avant les brouillons, l'écran gardait un document en cours dans le navigateur (`mj:document`) : à la première visite de l'écran Documents, il devient un brouillon. Une réponse gardée de même (`mj:reponse:<lettre>`) est reprise en rouvrant la lettre, puis oubliée une fois enregistrée.
 
 Le document ne passe pas par la file : il part aussitôt, et chaque exemplaire reste modifiable dans En route. Un PNJ qui n'a pas encore d'écriture reçoit celle que le MJ choisit pour un document écrit à la main, et la garde. La réponse d'un PNJ écrite sous une lettre de la file est un billet envoyé par le même chemin.
 
@@ -353,8 +366,8 @@ Un texte en cours d'écriture est gardé dans le navigateur (`localStorage`), po
 
 | Clé | Écran | Oubliée |
 | --- | --- | --- |
-| `mj:document` | Documents (MJ) : gabarit, contenus, expéditeur, sceau, destinataires, dates | à l'envoi, par « Tout effacer » |
-| `mj:reponse:<lettre>` | Réponse d'un PNJ, sous une lettre de la file | quand la lettre est traitée ou écartée |
+| `mj:document` | Ancienne copie du document en cours (MJ), d'avant les brouillons du serveur | quand elle devient un brouillon |
+| `mj:reponse:<lettre>` | Ancienne copie d'une réponse de PNJ, d'avant les brouillons du serveur | quand elle est enregistrée sur le serveur, ou la lettre traitée |
 | `billet:<brouillon>` | Billet d'un joueur, tant que le serveur ne l'a pas reçu | dès que le serveur l'a, à l'envoi, au jet |
 
 - La copie d'un billet note l'état du serveur sur lequel elle s'appuie. Elle ne reprend la main que si le serveur n'a pas changé depuis ; sinon le brouillon a été repris sur un autre appareil, et la copie est oubliée.

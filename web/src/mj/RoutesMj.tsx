@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router';
 
 import { Alteration } from './Alteration';
 import { ATraiter } from './ATraiter';
+import { Brouillon } from './Brouillon';
 import { Detruits } from './Detruits';
 import { Documents } from './Documents';
 import { Ecritures } from './Ecritures';
@@ -26,6 +27,7 @@ export default function RoutesMj({ surDeconnexion }: { surDeconnexion: () => voi
         <Route path="en-route" element={<EnRoute />} />
         <Route path="en-route/:id" element={<Alteration />} />
         <Route path="documents" element={<Documents />} />
+        <Route path="documents/:id" element={<Brouillon />} />
         <Route path="detruits" element={<Detruits />} />
         <Route path="personnages" element={<Personnages />} />
         <Route path="personnages/:id" element={<Personnage />} />

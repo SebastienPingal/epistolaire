@@ -1,0 +1,30 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        insert into brouillons_mj (\n            auteur_id, sans_expediteur, gabarit, contenu, signe, sceau_id, ecriture_id,\n            destinataires, livraison_commune\n        )\n        values ($1, $2, $3, $4, $5, $6, $7, $8, $9)\n        returning id\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Bool",
+        "Text",
+        "Jsonb",
+        "Bool",
+        "Uuid",
+        "Uuid",
+        "Jsonb",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "d8bb7cc9bf1ef2d6c624c23042384a026023757ffacf54e89fd4e41d5ae140bd"
+}

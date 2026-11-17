@@ -260,6 +260,20 @@ insert into abonnements_navigateur (compte_id, endpoint, cle_p256dh, cle_auth) v
     ('00000000-0000-0000-0000-0000000000b2', 'https://push.exemple/BERTRAND-ABONNEMENT',
      'BERTRAND-CLE', 'BERTRAND-AUTH');
 
+-- Les brouillons et les modèles du MJ : rien n'en sort vers un joueur. Un document au nom
+-- de l'auteur caché, adressé à Alix ; une réponse commencée sous la lettre d'Alix, encore
+-- dans la file ; un modèle.
+insert into brouillons_mj (id, reponse_a, auteur_id, gabarit, contenu, destinataires) values
+    ('00000000-0000-0000-0000-0000000000f5', null, '00000000-0000-0000-0000-0000000000a4',
+     'billet', '{"texte":"BROUILLON-MJ"}',
+     '[{"personnage_id":"00000000-0000-0000-0000-0000000000a1","livraison_le":null}]'),
+    ('00000000-0000-0000-0000-0000000000f6', '00000000-0000-0000-0000-0000000000d3',
+     '00000000-0000-0000-0000-0000000000a3', 'billet', '{"texte":"REPONSE-MJ"}',
+     '[{"personnage_id":"00000000-0000-0000-0000-0000000000a1","livraison_le":null}]');
+insert into modeles (id, nom, auteur_id, gabarit, contenu) values
+    ('00000000-0000-0000-0000-0000000000f7', 'MODELE-MJ', '00000000-0000-0000-0000-0000000000a4',
+     'billet', '{"texte":"MODELE-MJ"}');
+
 -- Les sessions : la base n'en garde que l'empreinte (sha256 du jeton, en hexadécimal).
 insert into sessions (compte_id, jeton_hash, expire_le) values
     ('00000000-0000-0000-0000-0000000000b0', encode(sha256('jeton-mj'::bytea), 'hex'), now() + interval '1 day'),

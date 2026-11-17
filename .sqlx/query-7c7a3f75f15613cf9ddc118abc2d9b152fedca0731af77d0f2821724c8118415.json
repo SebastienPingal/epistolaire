@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update brouillons_mj set reponse_a = null, modifie_le = now() where reponse_a = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "7c7a3f75f15613cf9ddc118abc2d9b152fedca0731af77d0f2821724c8118415"
+}

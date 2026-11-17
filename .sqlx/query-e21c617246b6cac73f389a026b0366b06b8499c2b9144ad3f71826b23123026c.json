@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        delete from brouillons_mj\n        where reponse_a = $1\n          and ($2 or btrim(coalesce(contenu ->> 'texte', '')) = '')\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Bool"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "e21c617246b6cac73f389a026b0366b06b8499c2b9144ad3f71826b23123026c"
+}

@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "lock table modeles in share row exclusive mode",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "eee9c367c7d8e3490dbc4762e5740d17842bb70da187dee478047b57ff1d0c86"
+}

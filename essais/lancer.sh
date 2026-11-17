@@ -13,7 +13,8 @@
 #   essais/lancer.sh alterer          l'atelier du MJ : réécrire, abîmer, trafiquer le sceau et
 #                                     la signature ; ce que chaque destinataire voit ensuite
 #   essais/lancer.sh documents        l'outil Documents du MJ : les six gabarits, les images,
-#                                     plusieurs destinataires ; ce que chacun reçoit, et quand
+#                                     plusieurs destinataires, les brouillons et les modèles ;
+#                                     ce que chacun reçoit, et quand
 #
 # Le script vide la base locale, y met le jeu de données du parcours, lance le serveur
 # et l'interface, déroule le parcours, puis arrête tout. Les captures d'écran et le

@@ -1,0 +1,92 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        select\n            b.id, b.reponse_a, a.nom as \"reponse_a_auteur?\",\n            b.auteur_id, b.sans_expediteur, b.gabarit as \"gabarit: Gabarit\", b.contenu,\n            b.signe, b.sceau_id, b.ecriture_id, b.destinataires, b.livraison_commune,\n            b.modifie_le\n        from brouillons_mj b\n        left join plis p on p.id = b.reponse_a\n        left join personnages a on a.id = p.auteur_id\n        order by b.modifie_le desc\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "reponse_a",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "reponse_a_auteur?",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "auteur_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 4,
+        "name": "sans_expediteur",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 5,
+        "name": "gabarit: Gabarit",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "contenu",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 7,
+        "name": "signe",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 8,
+        "name": "sceau_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 9,
+        "name": "ecriture_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 10,
+        "name": "destinataires",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 11,
+        "name": "livraison_commune",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 12,
+        "name": "modifie_le",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "113776bc846a519b196f86ccf95a7d9b9c6942e1f64d76dba5e64ea88b0d2752"
+}

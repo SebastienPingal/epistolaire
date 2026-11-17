@@ -20,7 +20,7 @@ use axum::Json;
 use axum::http::StatusCode;
 use chrono::{DateTime, Utc};
 use rand::Rng;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::json;
 use sqlx::{Postgres, Transaction};
 use ts_rs::TS;
@@ -35,7 +35,7 @@ use crate::images;
 use crate::modele::{Acheminement, Gabarit, GenreDestinataire, GenrePersonnage, OrigineExemplaire};
 
 /// Le nombre de destinataires d'un même document.
-const DESTINATAIRES_MAX: usize = 50;
+pub(super) const DESTINATAIRES_MAX: usize = 50;
 
 /// Un document, tel que le MJ le compose.
 #[derive(Deserialize, TS)]
@@ -55,7 +55,7 @@ pub struct DocumentSaisi {
     pub destinataires: Vec<DestinataireDocument>,
 }
 
-#[derive(Deserialize, TS)]
+#[derive(Clone, Serialize, Deserialize, TS)]
 #[ts(export)]
 pub struct DestinataireDocument {
     pub personnage_id: Uuid,

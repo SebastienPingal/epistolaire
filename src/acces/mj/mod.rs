@@ -5,6 +5,7 @@
 
 mod acheminement;
 mod alterations;
+mod brouillons;
 mod detruits;
 mod documents;
 mod ecritures;
@@ -30,6 +31,12 @@ pub fn routes() -> Router {
         .route("/a-traiter", get(file::lister))
         .route("/a-traiter/{id}/traitement", post(file::traiter))
         .route(
+            "/a-traiter/{id}/reponse",
+            get(brouillons::lire_reponse)
+                .put(brouillons::enregistrer_reponse)
+                .delete(brouillons::oublier_reponse),
+        )
+        .route(
             "/a-traiter/{id}/ecart",
             post(file::ecarter).delete(file::reprendre),
         )
@@ -41,6 +48,23 @@ pub fn routes() -> Router {
         .route("/exemplaires/{id}/version", put(alterations::alterer))
         .route("/exemplaires/{id}/copie", post(en_route::copier))
         .route("/documents", post(documents::envoyer))
+        // Les brouillons et les modèles du MJ.
+        .route("/brouillons", get(brouillons::lister).post(brouillons::creer))
+        .route(
+            "/brouillons/{id}",
+            get(brouillons::lire)
+                .put(brouillons::modifier)
+                .delete(brouillons::jeter),
+        )
+        .route("/brouillons/{id}/envoi", post(brouillons::envoyer))
+        .route(
+            "/modeles",
+            get(brouillons::lister_modeles).post(brouillons::enregistrer_modele),
+        )
+        .route(
+            "/modeles/{id}",
+            put(brouillons::renommer_modele).delete(brouillons::supprimer_modele),
+        )
         // Les images des documents et des sceaux. Le dépôt reçoit le fichier lui-même :
         // sa limite est celle d'une image, pas celle d'une demande ordinaire.
         .route(

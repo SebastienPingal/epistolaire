@@ -275,6 +275,9 @@ const MARQUEURS_POUR_ALIX: &[&str] = &[
     "ADRESSE-BLOB",
     "CHEMIN-BLOB",
     "faux-stockage",
+    "BROUILLON-MJ",
+    "REPONSE-MJ",
+    "MODELE-MJ",
     "@",
 ];
 
@@ -283,13 +286,13 @@ const MARQUEURS_POUR_ALIX: &[&str] = &[
 /// sont pas arrivés chez elle, ce qui est à Bertrand, l'écriture du faussaire, le sceau
 /// qu'elle ne détient pas, l'information du MJ, et les images qu'elle ne voit pas : celle
 /// de Bertrand, celle d'un pli en route, le sceau de Bertrand, et l'image d'origine que le
-/// MJ a remplacée dans son exemplaire. (L'image 92, celle de sa carte encore fermée, est
+/// MJ a remplacée dans son exemplaire. Ni les brouillons ni les modèles du MJ. (L'image 92, celle de sa carte encore fermée, est
 /// vérifiée à part : elle ne lui est permise qu'une fois le pli ouvert.)
 fn identifiants_interdits_a_alix() -> Vec<String> {
     [
         "b0", "b1", "b2", "a3", "a4", "c2", "c3", "f2", "d0", "d2", "d3", "d4", "d5", "d6", "d7",
         "d8", "d9", "da", "db", "dc", "dd", "de", "df", "e1", "e2", "e3", "e7", "e8", "eb", "ec",
-        "ef", "93", "94", "96", "97", "99",
+        "ef", "93", "94", "96", "97", "99", "f5", "f6", "f7",
     ]
     .iter()
     .map(|s| id(s))
@@ -320,6 +323,9 @@ const MARQUEURS_POUR_BERTRAND: &[&str] = &[
     "AUTEUR-CACHE",
     "CLEMENCE-VISEE",
     "ABIME-SECRET",
+    "BROUILLON-MJ",
+    "REPONSE-MJ",
+    "MODELE-MJ",
     "@",
 ];
 

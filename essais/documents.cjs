@@ -107,9 +107,25 @@ const stockage = http.createServer((req, res) => {
   await p.waitForTimeout(600);
   await p.screenshot({ path: dossier + '/e11-sceaux.png', fullPage: true });
 
+  // Attend qu'une condition soit vraie : un enregistrement automatique, par exemple.
+  const attendreQue = async (condition, ms = 5000) => {
+    const fin = Date.now() + ms;
+    while (Date.now() < fin) {
+      if (await condition()) return true;
+      await p.waitForTimeout(100);
+    }
+    return false;
+  };
+  const nouveauDocument = async () => {
+    await p.click('a[href="/mj/documents"]');
+    await p.waitForSelector('h1:has-text("Documents")');
+    await p.click('button:has-text("Nouveau document")');
+    await p.waitForURL('**/mj/documents/*-*');
+    await p.waitForSelector('h1:has-text("Brouillon")');
+  };
+
   // Une carte, par l'écran : image, titre, légende, deux destinataires à des dates différentes.
-  await p.click('a[href="/mj/documents"]');
-  await p.waitForSelector('h1:has-text("Documents")');
+  await nouveauDocument();
   await p.click('button:has-text("Carte ou illustration")');
   await choisir(p, '#auteur', 'Le Chancelier');
   await p.setInputFiles('input[aria-label="Image de la carte"]', dossier + '/carte.png');
@@ -126,6 +142,7 @@ const stockage = http.createServer((req, res) => {
   await p.screenshot({ path: dossier + '/e11-documents-carte.png', fullPage: true });
   await p.click('button:text-is("Envoyer")');
   await p.waitForURL('**/mj/en-route');
+  ok('carte : le brouillon disparaît à l\'envoi', sql('select count(*) from brouillons_mj') === '0');
   let route = await enRoute();
   const carteBertrand = route.en_route.find((x) => x.contenu.gabarit === 'carte');
   const imageCarte = carteBertrand?.contenu.image;
@@ -135,8 +152,7 @@ const stockage = http.createServer((req, res) => {
   ok('carte : celle d\'Alix est arrivée, scellée', sql(`select count(*) from plis_recus where destinataire_id = '${ALIX}' and gabarit = 'carte' and sceau_nom = 'Chancellerie du Duché'`) === '1');
 
   // Un rapport, par l'écran : une seconde rubrique, montée en premier.
-  await p.click('a[href="/mj/documents"]');
-  await p.waitForSelector('h1:has-text("Documents")');
+  await nouveauDocument();
   await p.click('button:has-text("Rapport")');
   await choisir(p, '#auteur', 'Le Chancelier');
   await p.fill('#doc-titre', 'État des greniers');
@@ -155,6 +171,56 @@ const stockage = http.createServer((req, res) => {
   await p.click('button:text-is("Envoyer")');
   await p.waitForURL('**/mj/en-route');
   ok('rapport : rubriques rangées dans l\'ordre choisi', sql(`select contenu->'rubriques'->0->>'titre' from plis where gabarit = 'rapport'`) === 'Le sel');
+
+  // Les brouillons et les modèles : enregistrés tout seuls, repris, recopiés.
+  const CONVOCATION = 'Le conseil se tiendra à l\'aube.';
+  await nouveauDocument();
+  const brouillonId = p.url().split('/').pop();
+  await choisir(p, '#auteur', 'Le Chancelier');
+  await p.fill('#doc-texte', CONVOCATION);
+  await choisir(p, '#destinataire', 'Alix de Montfort');
+  ok('brouillon : enregistré tout seul sur le serveur, destinataire compris', await attendreQue(() => sql(`select contenu->>'texte' || ' ' || (destinataires->0->>'personnage_id') from brouillons_mj where id = '${brouillonId}'`) === `${CONVOCATION} ${ALIX}`));
+  await p.waitForSelector('[role=status]:text-is("Enregistré")');
+  await p.reload();
+  await p.waitForSelector('#doc-texte');
+  ok('brouillon : repris tel quel en rouvrant la page', await p.inputValue('#doc-texte') === CONVOCATION && await p.locator('ul[aria-label="Destinataires"] li:has-text("Alix de Montfort")').count() === 1);
+  await p.click('button:has-text("Enregistrer comme modèle")');
+  await p.fill('#nom-modele', 'Convocation au conseil');
+  await p.click('[role=dialog] button[type=submit]');
+  await p.waitForSelector('text=Modèle enregistré');
+  ok('modèle : enregistré sans destinataires, le brouillon reste', sql(`select count(*) from modeles where nom = 'Convocation au conseil' and contenu->>'texte' = '${CONVOCATION.replace("'", "''")}' and auteur_id = '${CHANCELIER}'`) === '1' && sql(`select count(*) from brouillons_mj where id = '${brouillonId}'`) === '1');
+  await p.fill('#doc-texte', 'Le conseil se tiendra à midi.');
+  await p.click('button:has-text("Enregistrer comme modèle")');
+  await p.fill('#nom-modele', 'convocation au conseil');
+  ok('modèle : un nom déjà pris propose de remplacer', await p.locator('[role=dialog] button[type=submit]:text-is("Remplacer")').count() === 1);
+  await p.click('[role=dialog] button[type=submit]');
+  await p.waitForSelector('text=Modèle remplacé');
+  ok('modèle : remplacé, pas doublé', sql(`select count(*) || ' ' || max(contenu->>'texte') from modeles`) === '1 Le conseil se tiendra à midi.');
+  await p.click('a[href="/mj/documents"]');
+  await p.waitForSelector('ul[aria-label="Modèles"]');
+  ok('Documents : le brouillon et le modèle sont dans la liste', await p.locator('ul[aria-label="Brouillons"] li').count() === 1 && await p.locator('ul[aria-label="Modèles"] li:has-text("convocation au conseil")').count() === 1);
+  await p.waitForTimeout(500);
+  await p.screenshot({ path: dossier + '/e11-documents-liste.png', fullPage: true });
+  await p.click('ul[aria-label="Modèles"] li button:has-text("Partir de ce modèle")');
+  await p.waitForURL((url) => /\/mj\/documents\/.+-/.test(url.pathname) && !url.pathname.endsWith(brouillonId));
+  await p.waitForSelector('#doc-texte');
+  ok('partir d\'un modèle : un nouveau brouillon, prérempli, sans destinataire', await p.inputValue('#doc-texte') === 'Le conseil se tiendra à midi.' && await p.locator('ul[aria-label="Destinataires"]').count() === 0 && sql('select count(*) from brouillons_mj') === '2');
+  await p.click('button:text-is("Jeter")');
+  await p.click('[role=dialog] button:text-is("Jeter")');
+  await p.waitForURL('**/mj/documents');
+  ok('jeter un brouillon : il disparaît', sql('select count(*) from brouillons_mj') === '1');
+  await p.click('ul[aria-label="Modèles"] li button:text-is("Renommer")');
+  await p.fill('#renommer-modele', 'Convocation');
+  await p.click('[role=dialog] button[type=submit]');
+  ok('renommer un modèle', await attendreQue(() => sql('select nom from modeles') === 'Convocation'));
+  // Le document que ce navigateur gardait avant les brouillons devient un brouillon.
+  await p.evaluate(() => localStorage.setItem('epistolaire:mj:document', JSON.stringify({ gabarit: 'billet', contenus: { billet: { gabarit: 'billet', texte: 'Gardé dans le navigateur.' } }, auteurId: null, sansExpediteur: false, ecritureId: null, signe: true, sceauId: null, destinataires: [], dateCommune: '' })));
+  await p.reload();
+  ok('le document gardé dans le navigateur devient un brouillon', await attendreQue(() => sql(`select count(*) from brouillons_mj where contenu->>'texte' = 'Gardé dans le navigateur.'`) === '1'));
+  ok('… et le navigateur l\'oublie', await attendreQue(() => p.evaluate(() => localStorage.getItem('epistolaire:mj:document') === null)));
+  ok('un modèle sans nom : refusé', (await api.post(base + '/api/mj/modeles', { data: { nom: ' ', auteur_id: null, sans_expediteur: true, contenu: { gabarit: 'billet', texte: '' }, signe: false, sceau_id: null, ecriture_id: null } })).status() === 400);
+  ok('un brouillon démesuré : refusé', (await api.put(`${base}/api/mj/brouillons/${brouillonId}`, { data: { auteur_id: null, sans_expediteur: false, contenu: { gabarit: 'billet', texte: 'x'.repeat(20001) }, signe: true, sceau_id: null, ecriture_id: null, destinataires: [], livraison_commune: null } })).status() === 400);
+  ok('un brouillon reste incomplet sans être refusé', (await api.post(base + '/api/mj/brouillons', { data: { auteur_id: null, sans_expediteur: false, contenu: { gabarit: 'gazette', titre: '', numero: '', date: '', articles: [], courrier: [] }, signe: true, sceau_id: null, ecriture_id: null, destinataires: [], livraison_commune: null } })).status() === 200);
 
   // Les quatre autres gabarits, directement.
   const gazette = { gabarit: 'gazette', titre: 'La Gazette du Duché', numero: '12', date: '3e jour du 2e mois', articles: [{ titre: 'Le conseil se réunit', texte: 'Les registres du duché seront ouverts à tous, a promis le Chancelier.' }, { titre: 'Marché', texte: 'Le prix du sel reste stable cette semaine.' }], courrier: [{ texte: 'Qui paiera la réfection du pont ?', signature: null }, { texte: 'Bravo pour le dernier numéro.', signature: 'Un lecteur fidèle' }] };

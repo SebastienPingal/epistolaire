@@ -91,6 +91,14 @@ const billet = (auteur, destinataire, plus = {}) => ({ auteur_id: auteur, conten
   const mains = await p.locator('fieldset:has(legend:has-text("Écriture de")) button').allTextContents();
   ok('écritures proposées : les génériques d\'abord, pas celles des joueurs (' + mains.length + ')', mains.length === 11 && mains[0].includes('générique') && mains[1].includes('générique') && !mains[2].includes('générique') && !mains.some((m) => /Vive|Appliquée|Ronde/.test(m)));
   await p.click('fieldset:has(legend:has-text("Écriture de")) button:has-text("Soignée")');
+  // La réponse est un brouillon : enregistrée sur le serveur, elle revient avec son PNJ.
+  const reponseGardee = () => sql(`select contenu->>'texte' from brouillons_mj where reponse_a = '${pliId(3)}'`);
+  let attente = Date.now() + 5000;
+  while (reponseGardee() !== 'Mon fils, venez à Clairval dimanche. Nous parlerons.' && Date.now() < attente) await p.waitForTimeout(100);
+  ok('réponse : enregistrée toute seule, sous la lettre', reponseGardee() === 'Mon fils, venez à Clairval dimanche. Nous parlerons.');
+  await p.reload();
+  await p.waitForSelector('h2:has-text("Réponse de L\'évêque de Clairval")');
+  ok('réponse : reprise en rouvrant la lettre, avec le PNJ choisi', await p.inputValue('textarea') === 'Mon fils, venez à Clairval dimanche. Nous parlerons.');
   await p.waitForTimeout(800);
   await p.screenshot({ path: dossier + '/e6-reponse.png', fullPage: true });
   await envoyerReponse.click();
@@ -103,10 +111,15 @@ const billet = (auteur, destinataire, plus = {}) => ({ auteur_id: auteur, conten
   ok('l\'écriture choisie reste celle du PNJ', eveque && eveque.genre === 'pnj' && eveque.ecriture_id !== null);
   ok('la lettre d\'origine est remise au PNJ : arrivée et lue aussitôt', sql(`select count(*) from exemplaires where pli_id = '${pliId(3)}' and destinataire_id = '${eveque.id}' and livraison_le <= now() and ouvert_le is not null`) === '1');
   ok('elle a quitté la file', !(await file()).lettres.some((l) => l.id === pliId(3)));
+  ok('la réponse partie n\'est plus un brouillon', sql('select count(*) from brouillons_mj') === '0');
 
   // 5. Lettre à un PNJ : rediriger vers un joueur, copier pour un tiers, changer la date
   await carte('Alix de Montfort à Dame Inconnue').locator('a:text-is("Répondre")').click();
   await p.waitForSelector('h2:has-text("Réponse de Dame Inconnue")');
+  // Une réponse commencée, puis abandonnée : la lettre est redirigée.
+  await p.locator('textarea').fill('Je ne sais rien de cette affaire.');
+  attente = Date.now() + 5000;
+  while (sql(`select count(*) from brouillons_mj where reponse_a = '${pliId(2)}'`) !== '1' && Date.now() < attente) await p.waitForTimeout(100);
   await choisir(p, '[aria-label="Destinataire"]', 'Bertrand Lenoir');
   await p.waitForSelector('text=Redirigée');
   ok('redirigée vers un joueur : Livrer, Retenir, Perdre, et plus de réponse de PNJ', await p.locator('h2:has-text("Réponse de")').count() === 0 && await p.locator('button:text-is("Livrer")').count() === 1 && await p.locator('button:text-is("Retenir")').count() === 1 && await p.locator('button:text-is("Perdre")').count() === 1);
@@ -122,6 +135,7 @@ const billet = (auteur, destinataire, plus = {}) => ({ auteur_id: auteur, conten
   const ex2 = route.en_route.filter((x) => x.pli_id === pliId(2));
   ok('redirection vers Bertrand et copie pour Clémence, à la date choisie', ex2.length === 2 && ex2.some((x) => x.origine === 'redirection' && x.destinataire_nom === 'Bertrand Lenoir') && ex2.some((x) => x.origine === 'copie' && x.destinataire_nom === 'Clémence Hardy') && ex2.every((x) => new Date(x.livraison_le).getTime() === new Date(choisie).getTime()));
   ok('une lettre anonyme reste anonyme : ni signature ni sceau', ex2.every((x) => x.signature === null && x.sceau === null));
+  ok('la réponse abandonnée reste parmi les brouillons ordinaires', sql(`select count(*) from brouillons_mj where reponse_a is null and contenu->>'texte' = 'Je ne sais rien de cette affaire.'`) === '1');
 
   // 6. Lettre à un PNJ : classer sans réponse
   await carte('Bertrand Lenoir à Le Chancelier').locator('button:text-is("Classer sans réponse")').click();
@@ -201,6 +215,9 @@ const billet = (auteur, destinataire, plus = {}) => ({ auteur_id: auteur, conten
   // 10. Écrire au nom d'un PNJ
   await p.click('a[href="/mj/documents"]');
   await p.waitForSelector('h1:has-text("Documents")');
+  ok('Documents : la réponse abandonnée est dans la liste des brouillons', await p.locator('ul[aria-label="Brouillons"] li:has-text("Je ne sais rien de cette affaire.")').count() === 1);
+  await p.click('button:has-text("Nouveau document")');
+  await p.waitForURL('**/mj/documents/*-*');
   await choisir(p, '#auteur', 'Le Chancelier');
   await choisir(p, '#destinataire', 'Alix de Montfort');
   await p.waitForSelector('textarea');

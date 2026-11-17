@@ -1,0 +1,74 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        select id, nom, auteur_id, sans_expediteur, gabarit as \"gabarit: Gabarit\", contenu,\n               signe, sceau_id, ecriture_id, modifie_le\n        from modeles\n        order by lower(nom)\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "nom",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "auteur_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 3,
+        "name": "sans_expediteur",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 4,
+        "name": "gabarit: Gabarit",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "contenu",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 6,
+        "name": "signe",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 7,
+        "name": "sceau_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 8,
+        "name": "ecriture_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 9,
+        "name": "modifie_le",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "ecaa5c4ab0a453203fed29810f680796642b2d21273cc32c6211a9a401dcca13"
+}

@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "lock table brouillons_mj in share row exclusive mode",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "d5ce82740aafbaf6cf33c845236220103cef091e67e6f49f3bcce2d87972f1e8"
+}

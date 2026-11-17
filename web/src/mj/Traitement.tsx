@@ -1,21 +1,32 @@
 import { ArrowLeftIcon, PlusIcon, XIcon } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import { toast } from 'sonner';
 
-import { appeler, messageErreur, supprimer } from '@/api';
+import { appeler, messageErreur, modifier, supprimer } from '@/api';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ecrireMemoire, lireMemoire, oublierMemoire } from '@/outils/memoire';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { lireMemoire, oublierMemoire } from '@/outils/memoire';
+import { libelleEnregistrement, useEnregistrementAuto } from '@/outils/useEnregistrementAuto';
 import { useLecture } from '@/outils/useLecture';
 import type { BilletPnj } from '@/types/BilletPnj';
 import type { Decision } from '@/types/Decision';
 import type { EcritureMj } from '@/types/EcritureMj';
 import type { FileMj } from '@/types/FileMj';
 import type { LettreATraiter } from '@/types/LettreATraiter';
+import type { ModeleMj } from '@/types/ModeleMj';
 import type { PersonnageResume } from '@/types/PersonnageResume';
 import type { Reglages } from '@/types/Reglages';
+import type { ReponseEnCours } from '@/types/ReponseEnCours';
+import type { ReponseGardee } from '@/types/ReponseGardee';
 import type { SceauMj } from '@/types/SceauMj';
 import type { Traitement as TraitementSaisi } from '@/types/Traitement';
 import type { VersionLivree } from '@/types/VersionLivree';
@@ -52,6 +63,8 @@ export function Traitement() {
   const ecritures = useLecture<EcritureMj[]>('/mj/ecritures');
   const sceaux = useLecture<SceauMj[]>('/mj/sceaux');
   const reglages = useLecture<Reglages>('/mj/reglages');
+  const reponse = useLecture<ReponseGardee>(`/mj/a-traiter/${id}/reponse`);
+  const modeles = useLecture<ModeleMj[]>('/mj/modeles');
 
   const retour = (
     <Link
@@ -67,14 +80,22 @@ export function Traitement() {
     !personnages.donnees ||
     !ecritures.donnees ||
     !sceaux.donnees ||
-    !reglages.donnees
+    !reglages.donnees ||
+    !reponse.donnees ||
+    !modeles.donnees
   ) {
     return (
       <>
         {retour}
         <Attente
           erreur={
-            file.erreur ?? personnages.erreur ?? ecritures.erreur ?? sceaux.erreur ?? reglages.erreur
+            file.erreur ??
+            personnages.erreur ??
+            ecritures.erreur ??
+            sceaux.erreur ??
+            reglages.erreur ??
+            reponse.erreur ??
+            modeles.erreur
           }
         />
       </>
@@ -96,6 +117,8 @@ export function Traitement() {
           ecritures={ecritures.donnees}
           sceaux={sceaux.donnees}
           longueur={reglages.donnees.longueur_billet}
+          reponseGardee={reponse.donnees}
+          modeles={modeles.donnees}
           surNouveauPnj={async () => {
             await Promise.all([personnages.recharger(), sceaux.recharger()]);
           }}
@@ -160,6 +183,8 @@ function Decider({
   ecritures,
   sceaux,
   longueur,
+  reponseGardee,
+  modeles,
   surNouveauPnj,
 }: {
   lettre: LettreATraiter;
@@ -167,29 +192,32 @@ function Decider({
   ecritures: EcritureMj[];
   sceaux: SceauMj[];
   longueur: number;
+  /** La réponse commencée sous cette lettre, enregistrée sur le serveur. */
+  reponseGardee: ReponseGardee;
+  modeles: ModeleMj[];
   surNouveauPnj: () => Promise<void>;
 }) {
   const naviguer = useNavigate();
   const vise = lettre.destinataire.genre === 'personnage' ? lettre.destinataire.id : null;
 
-  const [destinataireId, setDestinataireId] = useState<string | null>(vise);
+  // Une réponse commencée garde le PNJ à qui la lettre allait être remise.
+  const [destinataireId, setDestinataireId] = useState<string | null>(
+    (reponseGardee.billet && reponseGardee.pnj_id) || vise,
+  );
   const [copies, setCopies] = useState<string[]>([]);
   // La date du champ n'est envoyée que si le MJ y touche : sinon le site applique sa proposition.
   const [date, setDate] = useState(() =>
     versChamp(lettre.date_depassee ? dansQuelquesMinutes() : lettre.date_proposee),
   );
   const [dateChoisie, setDateChoisie] = useState(false);
-  // La réponse en cours est gardée dans ce navigateur, lettre par lettre, jusqu'à ce que
-  // la lettre quitte la file : une page fermée ne la fait pas perdre.
-  const memoire = `mj:reponse:${lettre.id}`;
+  // La réponse en cours est un brouillon, enregistré sur le serveur à chaque changement :
+  // on la retrouve sur tout appareil. Avant les brouillons, elle était gardée dans le
+  // navigateur : une réponse gardée ainsi est reprise, puis oubliée une fois enregistrée.
+  const ancienneMemoire = `mj:reponse:${lettre.id}`;
   const [reponse, setReponse] = useState<BilletPnj>(() => ({
     ...BILLET_VIERGE,
-    ...lireMemoire<Partial<BilletPnj>>(memoire),
+    ...(reponseGardee.billet ?? lireMemoire<Partial<BilletPnj>>(ancienneMemoire)),
   }));
-  useEffect(() => {
-    if (JSON.stringify(reponse) === JSON.stringify(BILLET_VIERGE)) oublierMemoire(memoire);
-    else ecrireMemoire(memoire, reponse);
-  }, [memoire, reponse]);
   // L'altération : vide tant que le MJ ne touche pas à la lettre.
   const [version, setVersion] = useState<VersionLivree | null>(null);
   const [mainInconnue, setMainInconnue] = useState(false);
@@ -199,6 +227,47 @@ function Decider({
 
   const destinataire = personnages.find((personnage) => personnage.id === destinataireId) ?? null;
   const versPnj = destinataire?.genre === 'pnj';
+
+  // Une réponse redevenue vierge est oubliée ; sans PNJ choisi, il n'y a rien à enregistrer.
+  const pnjId = versPnj ? destinataireId : null;
+  const [departReponse] = useState(() => ({
+    pnjId,
+    reponse: reponseGardee.billet ?? BILLET_VIERGE,
+  }));
+  const enregistrement = useEnregistrementAuto(
+    { pnjId, reponse },
+    departReponse,
+    async ({ pnjId: pnj, reponse: billet }) => {
+      if (JSON.stringify(billet) === JSON.stringify(BILLET_VIERGE)) {
+        await supprimer(`/mj/a-traiter/${lettre.id}/reponse`);
+      } else if (pnj) {
+        await modifier(`/mj/a-traiter/${lettre.id}/reponse`, {
+          pnj_id: pnj,
+          billet,
+        } satisfies ReponseEnCours);
+      } else {
+        return;
+      }
+      oublierMemoire(ancienneMemoire);
+    },
+  );
+  const modelesDeBillet = modeles.filter((modele) => modele.contenu.gabarit === 'billet');
+
+  /** Le texte, la signature et le sceau d'un modèle de billet, si ce PNJ détient ce sceau. */
+  function partirDuModele(id: string | null) {
+    const modele = modelesDeBillet.find((candidat) => candidat.id === id);
+    if (!modele || modele.contenu.gabarit !== 'billet' || !destinataire) return;
+    const texte = modele.contenu.texte;
+    const detenu = sceaux.some(
+      (sceau) => sceau.id === modele.sceau_id && sceau.detenteur_id === destinataire.id,
+    );
+    setReponse((avant) => ({
+      ...avant,
+      texte,
+      signe: modele.signe,
+      sceau_id: detenu ? modele.sceau_id : avant.sceau_id,
+    }));
+  }
   const redirigee = vise !== null && destinataireId !== null && destinataireId !== vise;
   const tiers = personnages.filter(
     (personnage) => personnage.id !== destinataireId && !copies.includes(personnage.id),
@@ -223,6 +292,10 @@ function Decider({
   async function decider(decision: Decision, succes: string, avecReponse = false) {
     setOccupe(true);
     setErreur(null);
+    // La lettre quitte la file : sa réponse ne s'enregistre plus sous elle. Envoyée, elle
+    // disparaît ; sinon, le serveur en fait un brouillon ordinaire, tel qu'il l'a reçu.
+    await enregistrement.enregistrerMaintenant();
+    enregistrement.suspendre(true);
     try {
       await appeler(`/mj/a-traiter/${lettre.id}/traitement`, {
         destinataire_id: destinataireId,
@@ -232,10 +305,11 @@ function Decider({
         reponse: avecReponse ? reponse : null,
         version: alteree ? version : null,
       } satisfies TraitementSaisi);
-      oublierMemoire(memoire);
+      oublierMemoire(ancienneMemoire);
       toast.success(succes);
       naviguer('/mj/a-traiter');
     } catch (e) {
+      enregistrement.suspendre(false);
       setErreur(messageErreur(e));
       setOccupe(false);
     }
@@ -244,12 +318,15 @@ function Decider({
   async function ecarter() {
     setOccupe(true);
     setErreur(null);
+    await enregistrement.enregistrerMaintenant();
+    enregistrement.suspendre(true);
     try {
       await appeler(`/mj/a-traiter/${lettre.id}/ecart`, {});
-      oublierMemoire(memoire);
+      oublierMemoire(ancienneMemoire);
       toast.success('Lettre écartée');
       naviguer('/mj/a-traiter');
     } catch (e) {
+      enregistrement.suspendre(false);
       setErreur(messageErreur(e));
       setOccupe(false);
     }
@@ -367,6 +444,26 @@ function Decider({
           titre={`Réponse de ${destinataire.nom}`}
           aide={`La lettre reste dans la file tant que ${destinataire.nom} n'y a pas répondu, ou que vous ne l'avez pas classée. La réponse part vers ${lettre.auteur_nom}.`}
         >
+          {modelesDeBillet.length > 0 && (
+            <div className="mb-4">
+              <Select
+                items={modelesDeBillet.map((modele) => ({ value: modele.id, label: modele.nom }))}
+                value={null}
+                onValueChange={partirDuModele}
+              >
+                <SelectTrigger aria-label="Partir d'un modèle" className="min-w-48">
+                  <SelectValue placeholder="Partir d'un modèle…" />
+                </SelectTrigger>
+                <SelectContent>
+                  {modelesDeBillet.map((modele) => (
+                    <SelectItem key={modele.id} value={modele.id}>
+                      {modele.nom}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           <ComposerBillet
             pnj={destinataire}
             personnages={personnages}
@@ -376,6 +473,9 @@ function Decider({
             billet={reponse}
             surBillet={setReponse}
           />
+          <p role="status" className="mt-2 text-sm text-muted-foreground">
+            {libelleEnregistrement(enregistrement.etat, enregistrement.erreur)}
+          </p>
         </Section>
       )}
 

@@ -4,7 +4,7 @@
 //! répondre sans quitter l'écran : un billet, pour un seul destinataire.
 
 use chrono::{DateTime, Utc};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use sqlx::{Postgres, Transaction};
 use ts_rs::TS;
 use uuid::Uuid;
@@ -15,7 +15,7 @@ use crate::erreur::Erreur;
 use crate::gabarits::Contenu;
 
 /// Ce que le MJ écrit sur le billet d'un PNJ.
-#[derive(Deserialize, TS)]
+#[derive(Clone, Serialize, Deserialize, TS)]
 #[ts(export)]
 pub struct BilletPnj {
     /// L'écriture à donner au PNJ s'il n'en a pas encore. Elle devient la sienne.

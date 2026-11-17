@@ -411,6 +411,22 @@ impl Contenu {
                 }
             }
         }
+        self.mesurer()
+    }
+
+    /// Vérifie seulement que rien n'est démesuré : c'est ce qu'on demande à un brouillon,
+    /// qui peut encore avoir des cases vides.
+    pub fn mesurer(&self) -> Result<(), Erreur> {
+        let repetitions = match self {
+            Self::Gazette(gazette) => gazette.articles.len().max(gazette.courrier.len()),
+            Self::Rapport(rapport) => rapport.rubriques.len(),
+            _ => 0,
+        };
+        if repetitions > REPETITIONS_MAX {
+            return Err(Erreur::Refus(
+                "Ce document a trop d'articles, de rubriques ou de lettres.",
+            ));
+        }
 
         let mut total = 0;
         for (chemin, texte) in self.textes() {

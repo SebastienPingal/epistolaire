@@ -1,0 +1,58 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        select b.auteur_id, b.gabarit as \"gabarit: Gabarit\", b.contenu, b.signe, b.sceau_id,\n               b.ecriture_id, b.livraison_commune\n        from brouillons_mj b\n        where b.reponse_a = $1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "auteur_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "gabarit: Gabarit",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "contenu",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 3,
+        "name": "signe",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 4,
+        "name": "sceau_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 5,
+        "name": "ecriture_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 6,
+        "name": "livraison_commune",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      true,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "94f2d326cdd394c3de0d06b9254b29659f73d8f9c882f5ebdfa4557e15c845fa"
+}
