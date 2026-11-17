@@ -27,12 +27,18 @@ export function GazetteLue({ contenu, className }: { contenu: GazetteContenu; cl
   const articles = suite.slice(0, 2);
   const breves = suite.slice(2);
 
+  // Toute la feuille suit la même grille, pour que les colonnes tombent les unes sous les
+  // autres : deux sur un écran moyen ; sur un grand, trois, sauf quand deux articles sans
+  // brèves partagent la ligne sous la une.
+  const trois = breves.length > 0 || articles.length < 2;
+  const colonnes = cn('@2xl:columns-2', trois && '@4xl:columns-3');
+
   return (
     <Feuille imprimee className={cn('@container', className)}>
       <Bandeau contenu={contenu} />
 
       {une && (
-        <section className="mt-4 border-b border-foreground/40 pb-5 @2xl:mt-5">
+        <section className="py-5">
           {a(une.article.titre) && (
             <h3 className="mb-3 text-2xl leading-tight font-bold break-words text-balance @xl:text-3xl @4xl:mb-4 @4xl:text-center @4xl:text-4xl">
               <Ecrit champ={`articles.${une.rang}.titre`} texte={une.article.titre} />
@@ -41,7 +47,10 @@ export function GazetteLue({ contenu, className }: { contenu: GazetteContenu; cl
           <Texte
             rang={une.rang}
             article={une.article}
-            className="text-[1.05rem] first-letter:float-left first-letter:mt-1 first-letter:mr-2 first-letter:text-5xl first-letter:leading-[0.8] first-letter:font-bold @2xl:columns-2 @4xl:columns-3"
+            className={cn(
+              'text-[1.05rem] first-letter:float-left first-letter:mt-1 first-letter:mr-2 first-letter:text-5xl first-letter:leading-[0.8] first-letter:font-bold',
+              colonnes,
+            )}
           />
         </section>
       )}
@@ -49,7 +58,7 @@ export function GazetteLue({ contenu, className }: { contenu: GazetteContenu; cl
       {articles.length > 0 && (
         <div
           className={cn(
-            'grid @2xl:gap-x-6',
+            'grid border-t border-foreground/40 @2xl:gap-x-8',
             articles.length === 2 && '@2xl:grid-cols-2',
             breves.length > 0 && '@4xl:grid-cols-3',
           )}
@@ -58,25 +67,31 @@ export function GazetteLue({ contenu, className }: { contenu: GazetteContenu; cl
             <section
               key={rang}
               className={cn(
-                'border-b border-foreground/25 py-5',
-                place === 1 && '@2xl:border-l @2xl:pl-6',
-                // Un seul article sous la une : il prend toute la largeur, sur deux colonnes.
-                articles.length === 1 && 'border-foreground/40',
+                'relative py-5',
+                place === 1 && 'border-t border-foreground/25 @2xl:border-t-0',
+                place === 1 && FILET_A_GAUCHE_2XL,
               )}
             >
               <Titre rang={rang} article={article} className="text-xl @xl:text-2xl" />
               <Texte
                 rang={rang}
                 article={article}
-                className={cn(articles.length === 1 && '@2xl:columns-2 @4xl:columns-3')}
+                // Seul sous la une, il prend toute la largeur, en colonnes comme elle.
+                className={cn(articles.length === 1 && colonnes)}
               />
             </section>
           ))}
 
           {breves.length > 0 && (
-            // Sur un grand écran, les brèves font la troisième colonne, à côté des articles.
-            <div className="border-b border-foreground/40 py-5 @2xl:col-span-2 @4xl:col-span-1 @4xl:border-l @4xl:pl-6">
-              <div className="gap-6 [column-rule:1px_solid_color-mix(in_oklab,var(--foreground)_25%,transparent)] @2xl:columns-2 @4xl:columns-1">
+            // Sur un écran moyen, les brèves passent dessous, sur toute la largeur ; sur un
+            // grand, elles font la troisième colonne, à côté des articles.
+            <div
+              className={cn(
+                'relative border-t border-foreground/40 py-5 @2xl:col-span-2 @4xl:col-span-1 @4xl:border-t-0',
+                FILET_A_GAUCHE_4XL,
+              )}
+            >
+              <div className={cn('gap-8 @2xl:columns-2 @4xl:columns-1', FILET_ENTRE_COLONNES)}>
                 {breves.map(({ article, rang }) => (
                   <section
                     key={rang}
@@ -97,11 +112,11 @@ export function GazetteLue({ contenu, className }: { contenu: GazetteContenu; cl
       )}
 
       {contenu.courrier.length > 0 && (
-        <section className="mt-6 border-y-2 border-double border-foreground/60 py-3 @2xl:border-y-4">
+        <section className="border-y-4 border-double border-foreground/60 py-3">
           <h3 className="mb-3 text-center text-sm font-bold tracking-widest uppercase">
             {mots.courrier}
           </h3>
-          <div className="gap-6 [column-rule:1px_solid_color-mix(in_oklab,var(--foreground)_20%,transparent)] @2xl:columns-2 @4xl:columns-3">
+          <div className={cn('gap-8', colonnes, FILET_ENTRE_COLONNES)}>
             {contenu.courrier.map((lettre, rang) => (
               <blockquote key={rang} className="mb-4 break-inside-avoid last:mb-0">
                 <p className="text-sm leading-relaxed break-words whitespace-pre-wrap italic">
@@ -123,6 +138,18 @@ export function GazetteLue({ contenu, className }: { contenu: GazetteContenu; cl
     </Feuille>
   );
 }
+
+/*
+ * Les filets verticaux. Entre deux colonnes de texte, le filet est au milieu de l'écart
+ * (2rem) ; entre deux cases de la grille, il est tracé à la même place, à 1rem à gauche de
+ * la case, pour que tous les filets d'une même colonne soient alignés.
+ */
+const FILET_ENTRE_COLONNES =
+  '[column-rule:1px_solid_color-mix(in_oklab,var(--foreground)_25%,transparent)]';
+const FILET_A_GAUCHE_2XL =
+  '@2xl:before:absolute @2xl:before:inset-y-0 @2xl:before:-left-4 @2xl:before:border-l @2xl:before:border-foreground/25';
+const FILET_A_GAUCHE_4XL =
+  '@4xl:before:absolute @4xl:before:inset-y-0 @4xl:before:-left-4 @4xl:before:border-l @4xl:before:border-foreground/25';
 
 /** Le haut de la feuille : le titre en grand, puis le numéro et la date entre deux filets. */
 function Bandeau({ contenu }: { contenu: GazetteContenu }) {
@@ -167,7 +194,8 @@ function Texte({ rang, article, className }: Case) {
   return (
     <p
       className={cn(
-        'gap-6 leading-relaxed break-words hyphens-auto whitespace-pre-wrap [column-rule:1px_solid_color-mix(in_oklab,var(--foreground)_20%,transparent)] @md:text-justify',
+        'gap-8 leading-relaxed break-words hyphens-auto whitespace-pre-wrap @md:text-justify',
+        FILET_ENTRE_COLONNES,
         className,
       )}
     >
