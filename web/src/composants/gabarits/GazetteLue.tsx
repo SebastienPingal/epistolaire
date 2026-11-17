@@ -142,14 +142,15 @@ export function GazetteLue({ contenu, className }: { contenu: GazetteContenu; cl
 /*
  * Les filets verticaux. Entre deux colonnes de texte, le filet est au milieu de l'écart
  * (2rem) ; entre deux cases de la grille, il est tracé à la même place, à 1rem à gauche de
- * la case, pour que tous les filets d'une même colonne soient alignés.
+ * la case, pour que tous les filets d'une même colonne soient alignés. Comme celui des
+ * colonnes de texte, il s'arrête à distance des filets horizontaux (la marge des cases).
  */
 const FILET_ENTRE_COLONNES =
   '[column-rule:1px_solid_color-mix(in_oklab,var(--foreground)_25%,transparent)]';
 const FILET_A_GAUCHE_2XL =
-  '@2xl:before:absolute @2xl:before:inset-y-0 @2xl:before:-left-4 @2xl:before:border-l @2xl:before:border-foreground/25';
+  '@2xl:before:absolute @2xl:before:inset-y-5 @2xl:before:-left-4 @2xl:before:border-l @2xl:before:border-foreground/25';
 const FILET_A_GAUCHE_4XL =
-  '@4xl:before:absolute @4xl:before:inset-y-0 @4xl:before:-left-4 @4xl:before:border-l @4xl:before:border-foreground/25';
+  '@4xl:before:absolute @4xl:before:inset-y-5 @4xl:before:-left-4 @4xl:before:border-l @4xl:before:border-foreground/25';
 
 /** Le haut de la feuille : le titre en grand, puis le numéro et la date entre deux filets. */
 function Bandeau({ contenu }: { contenu: GazetteContenu }) {
@@ -189,12 +190,15 @@ function Titre({ rang, article, className }: Case) {
   );
 }
 
-/** Le corps d'un article. Justifié seulement quand la colonne est assez large. */
+/**
+ * Le corps d'un article, aligné à gauche : justifié, un mot trop long pour être coupé
+ * (une adresse, un nom composé) étirerait sa ligne en grands trous.
+ */
 function Texte({ rang, article, className }: Case) {
   return (
     <p
       className={cn(
-        'gap-8 leading-relaxed break-words hyphens-auto whitespace-pre-wrap @md:text-justify',
+        'gap-8 leading-relaxed break-words text-pretty hyphens-auto whitespace-pre-wrap',
         FILET_ENTRE_COLONNES,
         className,
       )}
