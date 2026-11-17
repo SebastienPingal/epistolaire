@@ -9,15 +9,27 @@
 //! * supprimer : `POST https://vercel.com/api/blob/delete`, avec `{ "urls": [ … ] }` ;
 //! * lire un fichier privé : `GET <son url>`, avec le jeton.
 //!
-//! Chaque appel porte le jeton `BLOB_READ_WRITE_TOKEN`, que Vercel ajoute au projet quand
-//! le stockage y est relié, et l'identifiant du stockage, tiré de ce jeton
-//! (`vercel_blob_rw_<stockage>_<secret>`).
+//! Chaque appel porte un jeton et l'identifiant du stockage. Deux façons de les obtenir,
+//! comme dans la bibliothèque officielle (version 2.9, relue le 17 novembre) :
+//!
+//! * **OIDC**, sur Vercel : c'est ainsi que Vercel relie aujourd'hui un stockage à un projet.
+//!   Le projet reçoit `BLOB_STORE_ID` ; le jeton, de courte durée, arrive avec chaque requête
+//!   dans l'en-tête `x-vercel-oidc-token` (ou, à défaut, dans le fichier
+//!   `VERCEL_OIDC_TOKEN_FILE` ou la variable `VERCEL_OIDC_TOKEN`). Le routeur le met de côté
+//!   pour la durée de la requête ([`avec_jeton_oidc`]) ;
+//! * **un jeton fixe**, `BLOB_READ_WRITE_TOKEN` (`vercel_blob_rw_<stockage>_<secret>`) : la
+//!   façon d'avant, gardée pour les essais locaux et les outils en ligne de commande.
 //!
 //! Le jeton n'est jamais envoyé ailleurs qu'à Vercel : un fichier n'est lu que si son
 //! adresse est celle d'un stockage Vercel. Pour les essais, `VERCEL_BLOB_API_URL` remplace
 //! l'adresse de l'API par celle d'un faux stockage local ; il est alors seul accepté.
 
+use std::future::Future;
 use std::time::Duration;
+
+use axum::extract::Request;
+use axum::middleware::Next;
+use axum::response::Response as ReponseAxum;
 
 use chrono::{DateTime, Utc};
 use reqwest::{Client, RequestBuilder, Response};
@@ -30,8 +42,56 @@ const API_PAR_DEFAUT: &str = "https://vercel.com/api/blob";
 const VERSION_API: &str = "13";
 
 pub const REFUS_NON_CONFIGURE: Erreur = Erreur::Refus(
-    "Le stockage des copies et des images n'est pas relié au site (BLOB_READ_WRITE_TOKEN manque).",
+    "Le stockage des copies et des images n'est pas relié au site (ni BLOB_STORE_ID, ni BLOB_READ_WRITE_TOKEN).",
 );
+
+tokio::task_local! {
+    /// Le jeton OIDC que Vercel a joint à la requête en cours, s'il y en a un.
+    static JETON_OIDC: Option<String>;
+}
+
+/// Garde, pour la durée de la requête, le jeton OIDC que Vercel lui a joint. Branché sur
+/// tout le routeur : la copie quotidienne, les sauvegardes du MJ et les images en ont besoin.
+pub async fn avec_jeton_oidc(requete: Request, suite: Next) -> ReponseAxum {
+    let jeton = requete
+        .headers()
+        .get("x-vercel-oidc-token")
+        .and_then(|valeur| valeur.to_str().ok())
+        .map(|valeur| valeur.trim().to_owned())
+        .filter(|valeur| !valeur.is_empty());
+    JETON_OIDC.scope(jeton, suite.run(requete)).await
+}
+
+/// Exécute un traitement avec un jeton OIDC donné : pour les programmes lancés hors d'une
+/// requête, et pour les essais.
+pub async fn avec_le_jeton<F: Future>(jeton: Option<String>, traitement: F) -> F::Output {
+    JETON_OIDC.scope(jeton, traitement).await
+}
+
+/// Le jeton OIDC de la requête en cours, sinon celui du fichier ou de la variable que Vercel
+/// fournit.
+fn jeton_oidc() -> Option<String> {
+    let non_vide = |jeton: String| Some(jeton.trim().to_owned()).filter(|jeton| !jeton.is_empty());
+    JETON_OIDC
+        .try_with(Clone::clone)
+        .ok()
+        .flatten()
+        .or_else(|| {
+            std::env::var("VERCEL_OIDC_TOKEN_FILE")
+                .ok()
+                .and_then(|fichier| std::fs::read_to_string(fichier).ok())
+                .and_then(non_vide)
+        })
+        .or_else(|| std::env::var("VERCEL_OIDC_TOKEN").ok().and_then(non_vide))
+}
+
+/// Une variable d'environnement non vide.
+fn variable(nom: &str) -> Option<String> {
+    std::env::var(nom)
+        .ok()
+        .map(|valeur| valeur.trim().to_owned())
+        .filter(|valeur| !valeur.is_empty())
+}
 
 pub struct Blob {
     jeton: String,
@@ -69,16 +129,30 @@ struct Page {
 }
 
 impl Blob {
-    /// Le stockage relié au projet. Sans jeton : `None`.
+    /// Le stockage relié au projet. Sans stockage relié : `None`.
+    ///
+    /// Comme la bibliothèque officielle : OIDC d'abord, quand le projet a `BLOB_STORE_ID` et
+    /// qu'un jeton OIDC est là ; sinon le jeton fixe `BLOB_READ_WRITE_TOKEN`.
     pub fn depuis_l_environnement() -> Result<Option<Self>, Erreur> {
-        let Some(jeton) = std::env::var("BLOB_READ_WRITE_TOKEN")
-            .ok()
-            .map(|jeton| jeton.trim().to_owned())
-            .filter(|jeton| !jeton.is_empty())
-        else {
+        let identifiants = match (variable("BLOB_STORE_ID"), jeton_oidc()) {
+            (Some(stockage), Some(jeton)) => Some((
+                jeton,
+                stockage.strip_prefix("store_").unwrap_or(&stockage).to_owned(),
+            )),
+            _ => variable("BLOB_READ_WRITE_TOKEN").map(|jeton| {
+                let stockage = jeton.split('_').nth(3).unwrap_or_default().to_owned();
+                (jeton, stockage)
+            }),
+        };
+        let Some((jeton, stockage)) = identifiants else {
+            if variable("BLOB_STORE_ID").is_some() {
+                // Le stockage est relié, mais Vercel n'a joint aucun jeton à cette requête.
+                return Err(Erreur::interne(
+                    "BLOB_STORE_ID est là, mais aucun jeton OIDC (en-tête x-vercel-oidc-token)",
+                ));
+            }
             return Ok(None);
         };
-        let stockage = jeton.split('_').nth(3).unwrap_or_default().to_owned();
         if stockage.is_empty() {
             return Err(Erreur::interne("BLOB_READ_WRITE_TOKEN n'a pas la forme attendue"));
         }

@@ -403,7 +403,7 @@ Chaque jour à 4 h du matin, heure de Paris, une tâche planifiée (`GET /api/ta
 4. Ensuite seulement, les copies de plus de 30 jours sont supprimées. Si la copie du jour échoue, rien n'est supprimé.
 5. Si quelque chose échoue, le MJ reçoit un e-mail « La copie de la base a échoué », à l'adresse de `MJ_EMAIL` (ou de `SMTP_USER`) : elle ne dépend pas de la base, qui est peut-être en cause.
 
-La tâche a la même garde que celle des notifications (`CRON_SECRET`). Vercel n'a pas de bibliothèque Blob en Rust : `src/sauvegarde/blob.rs` parle directement à son API, comme la bibliothèque officielle `@vercel/blob`. Le jeton `BLOB_READ_WRITE_TOKEN` n'est jamais envoyé ailleurs qu'à Vercel.
+La tâche a la même garde que celle des notifications (`CRON_SECRET`). Vercel n'a pas de bibliothèque Blob en Rust : `src/sauvegarde/blob.rs` parle directement à son API, comme la bibliothèque officielle `@vercel/blob`. Sur Vercel, le site s'identifie auprès du stockage avec le jeton OIDC que Vercel joint à chaque requête, et l'identifiant `BLOB_STORE_ID` (comme la bibliothèque officielle depuis que Vercel relie les stockages ainsi) ; en local, avec le jeton fixe `BLOB_READ_WRITE_TOKEN`. Aucun de ces jetons n'est jamais envoyé ailleurs qu'à Vercel.
 
 En plus de ces copies, Neon garde un historique court de la base (quelques heures) : il permet de revenir à un instant précis, s'il est encore temps.
 
@@ -521,7 +521,8 @@ Une fois la partie lancée : toute modification passe par un aperçu validé ; u
 | `VAPID_SUJET` | Le contact donné aux services de notifications : `mailto:` suivi d'une adresse, ou l'adresse `https://` du site. Sur Vercel, c'est l'adresse e-mail du MJ, à sa demande : les services de notifications (Google, Apple…) le contactent en cas de souci avec les envois |
 
 Ces quatre variables sont posées dans Vercel (site en ligne et aperçus) depuis l'étape 8. `CRON_SECRET` et `VAPID_PRIVATE` y sont de type « sensible » : personne ne peut plus les relire, pas même depuis le tableau de bord. Pour en changer, en tirer de nouvelles. Changer la paire VAPID oblige chacun à réactiver les notifications sur ses appareils.
-| `BLOB_READ_WRITE_TOKEN` | Le jeton du stockage Vercel Blob des sauvegardes et des images. Vercel l'ajoute tout seul quand le stockage est relié au projet. Sans lui, aucune copie ne se fait, aucune image ne se dépose ni ne s'affiche, et le site le dit |
+| `BLOB_STORE_ID` | L'identifiant du stockage Vercel Blob des sauvegardes et des images (`epistolaire-sauvegardes`, privé, Francfort). Vercel l'ajoute tout seul quand le stockage est relié au projet (site en ligne et aperçus). Le site s'identifie auprès du stockage avec le jeton OIDC que Vercel joint à chaque requête (en-tête `x-vercel-oidc-token`) : aucun jeton fixe n'est nécessaire |
+| `BLOB_READ_WRITE_TOKEN` | L'ancienne façon de relier le stockage : un jeton fixe. Il ne sert plus que pour les essais locaux et les programmes `sauvegarder`/`restaurer` lancés hors de Vercel. Sans lui ni `BLOB_STORE_ID`, aucune copie ne se fait, aucune image ne se dépose ni ne s'affiche, et le site le dit |
 | `VERCEL_BLOB_API_URL` | Pour les essais seulement : l'adresse d'un faux stockage. Jamais sur Vercel |
 | `SITE_URL` | L'adresse du site, pour les liens des e-mails envoyés par la tâche. Facultatif : par défaut, celle que Vercel donne au site en ligne ou à l'aperçu |
 

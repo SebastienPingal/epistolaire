@@ -40,9 +40,10 @@ La partie commence dès que les étapes 7, 8 et 9 sont en ligne, après la rép�
 Étape L, au 16 novembre : ce que Claude pouvait faire seul est fait ; le reste attend le MJ, dans l'ordre de `docs/REPETITION.md`.
 
 - fait : l'interface découpée (un joueur ne télécharge plus les écrans du MJ), les e-mails de connexion retenus sur les aperçus sauf vers la boîte du MJ, le script `outils/nettoyer-lancement.sql` (il n'applique rien par défaut), la liste de la répétition, le message d'accueil ;
-- vérifié avec l'outil Vercel : le site en ligne tourne sur l'étape 11 ; toutes les variables attendues sont là sauf `BLOB_READ_WRITE_TOKEN` ; `DATABASE_URL` est la même pour le site en ligne et les aperçus (les bases ne sont pas encore séparées) ;
+- 17 novembre : le MJ a créé le stockage Blob ; Vercel l'a relié par OIDC (`BLOB_STORE_ID`, pas de `BLOB_READ_WRITE_TOKEN`), et la copie de 4 h a échoué. Le site sait maintenant s'identifier par OIDC (vérifié en local avec un faux stockage) ;
+- vérifié avec l'outil Vercel : le site en ligne tourne sur l'étape 11 ; `DATABASE_URL` est la même pour le site en ligne et les aperçus (les bases ne sont pas encore séparées) ;
 - pas vérifié : que l'adresse du site en ligne s'ouvre sans compte Vercel (la machine de Claude n'a pas le droit de joindre `vercel.app` ; le projet a la protection `all_except_custom_domains`, à regarder par le MJ en navigation privée) ; les limites gratuites de Neon et de Blob ;
-- reste au MJ : créer le stockage Blob (A.1), activer une base par aperçu dans l'intégration Neon (A.2), vérifier l'accès public (A.3), puis la répétition (B) ;
+- reste au MJ : faire une copie à la main une fois l'adaptation OIDC en ligne (A.1), activer une base par aperçu dans l'intégration Neon (A.2), vérifier l'accès public (A.3), puis la répétition (B) ;
 - reste à Claude, après ces gestes : vérifier la séparation des bases sur un aperçu, l'inventaire puis le nettoyage de la base en ligne **avec l'accord explicite du MJ**, mettre l'adresse du site dans la documentation.
 
 État au moment de cette note (16 novembre, étape 11 mise en ligne à la demande du MJ) :

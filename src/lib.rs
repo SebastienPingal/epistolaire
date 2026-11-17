@@ -42,6 +42,9 @@ pub fn routeur() -> Router {
                 .nest("/taches", taches::routes()),
         )
         .fallback(introuvable)
+        // Le jeton que Vercel joint à chaque requête, pour parler au stockage des copies et
+        // des images (voir `sauvegarde::blob`).
+        .layer(axum::middleware::from_fn(sauvegarde::blob::avec_jeton_oidc))
 }
 
 async fn introuvable(uri: Uri) -> (StatusCode, Json<Value>) {

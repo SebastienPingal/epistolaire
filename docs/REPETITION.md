@@ -8,11 +8,10 @@ Décidé le 16 novembre : les joueurs fictifs ont des adresses « en + » de la 
 
 ### A.1 Le stockage des sauvegardes et des images
 
-- [ ] Tableau de bord Vercel, projet `epistolaire`, onglet **Storage**, **Create Database**, **Blob**.
-- [ ] Nom : `epistolaire-sauvegardes`. Accès : **Private**. Région : Frankfurt (fra1).
-- [ ] Le relier au projet, pour les trois environnements (Production, Preview, Development).
-- [ ] Dans **Settings**, **Environment Variables** : `BLOB_READ_WRITE_TOKEN` doit apparaître.
-- [ ] Redéployer le site en ligne (**Deployments**, le dernier de `main`, « … », **Redeploy**) : une variable n'est prise qu'au déploiement suivant.
+- [x] Le stockage `epistolaire-sauvegardes` est créé et relié au projet (17 novembre). Vercel le relie désormais par OIDC : le projet reçoit `BLOB_STORE_ID`, pas de jeton fixe. Le site a été adapté.
+- [ ] Une fois l'adaptation en ligne : Réglages, Sauvegardes, « Faire une copie maintenant » ; une copie doit paraître dans la liste.
+- [ ] Le lendemain matin : la copie de 4 h est dans la liste, et aucun e-mail d'échec n'est arrivé.
+- [ ] Le jeton fixe du stockage (« Revoke Token » dans Vercel) ne sert pas au site : il peut être révoqué.
 
 ### A.2 Une base à part pour les aperçus
 
