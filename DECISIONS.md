@@ -162,6 +162,7 @@ Dernière mise à jour : 16 novembre, à l'étape L (lancement).
 - Chaque joueur reçoit son propre exemplaire dans sa Réception. Le MJ peut modifier un exemplaire en particulier.
 - Les textes y sont recopiés ou imprimés : ni écriture ni sceau de l'auteur. La signature devient un simple nom, ou « anonyme ».
 - Le nom « gazette » fait partie de l'habillage.
+- Un numéro tient sur une seule feuille, mise en page comme un journal (décidé le 17 novembre). La place d'un article suit son rang : le premier fait la une, les deux suivants sont les articles, les autres des brèves ; le courrier des lecteurs ferme la feuille. Le nombre de colonnes suit la largeur : une seule sur téléphone, jusqu'à trois sur ordinateur, où la gazette s'ouvre plus large que les autres documents.
 
 ## Vue MJ
 

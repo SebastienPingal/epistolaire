@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Attente } from '@/composants/Attente';
 import { Confirmation } from '@/composants/Confirmation';
 import { Document } from '@/composants/gabarits/Document';
+import { cn } from '@/lib/utils';
 import { adresseImageDuPli, adresseSceauJoueur } from '@/outils/images';
 import { useLecture } from '@/outils/useLecture';
 import { vocabulaire } from '@/theme/neutre';
@@ -105,7 +106,13 @@ function LecturePli({ id }: { id: string }) {
       ) : (
         <>
           <Document
-            className="animate-in duration-500 fade-in slide-in-from-bottom-2 motion-reduce:animate-none"
+            className={cn(
+              'animate-in duration-500 fade-in slide-in-from-bottom-2 motion-reduce:animate-none',
+              // Une gazette se déplie en grand sur ordinateur : elle sort de la colonne de
+              // lecture pour tenir ses colonnes, jusqu'à 64rem, sans toucher les bords.
+              contenu.document.gabarit === 'gazette' &&
+                'md:mx-[calc(50%_-_min(32rem,50vw_-_2rem))]',
+            )}
             contenu={contenu.document}
             police={contenu.police}
             date={vocabulaire.date(contenu.ecrit_le)}

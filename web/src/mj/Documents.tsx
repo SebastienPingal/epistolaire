@@ -403,7 +403,8 @@ export function Documents() {
 
           <Section titre="Aperçu" aide="Le document tel que le lira un destinataire, une fois le pli ouvert.">
             <Document
-              className="max-w-xl"
+              // Une gazette prend toute la largeur, pour montrer ses colonnes.
+              className={contenu.gabarit === 'gazette' ? undefined : 'max-w-xl'}
               contenu={contenu}
               police={police}
               date={null}
