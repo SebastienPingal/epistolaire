@@ -157,6 +157,8 @@ export const vocabulaire = {
     enregistrement: 'Enregistrement…',
     enregistre: 'Brouillon enregistré',
     nonEnregistre: 'Brouillon non enregistré',
+    /** Le réseau manque : le billet attend dans le téléphone, il partira à son retour. */
+    gardeIci: 'Gardé sur cet appareil, en attente du réseau',
     manque: {
       texte: 'Ce billet est encore vide.',
       destinataire: 'Choisissez à qui vous écrivez.',

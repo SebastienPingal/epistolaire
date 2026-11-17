@@ -1,5 +1,5 @@
 import { PlusIcon, XIcon } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 
@@ -8,9 +8,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Confirmation } from '@/composants/Confirmation';
 import { Document } from '@/composants/gabarits/Document';
 import { contenuVierge, estManuscrit, seSigne } from '@/outils/gabarits';
 import { adresseImageMj } from '@/outils/images';
+import { ecrireMemoire, lireMemoire, oublierMemoire } from '@/outils/memoire';
 import { useLecture } from '@/outils/useLecture';
 import type { Contenu } from '@/types/Contenu';
 import type { DocumentSaisi } from '@/types/DocumentSaisi';
@@ -49,6 +51,59 @@ const DESCRIPTIONS: Record<Gabarit, string> = {
 type Destinataire = { personnage_id: string; date: string };
 
 /**
+ * Le document en cours, gardé dans le navigateur à chaque changement : une page fermée ou
+ * rechargée ne fait rien perdre. Il est oublié à l'envoi, ou quand le MJ efface tout.
+ */
+type EnCours = {
+  gabarit: Gabarit;
+  contenus: Partial<Record<Gabarit, Contenu>>;
+  auteurId: string | null;
+  sansExpediteur: boolean;
+  ecritureId: string | null;
+  signe: boolean;
+  sceauId: string | null;
+  destinataires: Destinataire[];
+  dateCommune: string;
+};
+
+const MEMOIRE = 'mj:document';
+
+const VIERGE: EnCours = {
+  gabarit: 'billet',
+  contenus: {},
+  auteurId: null,
+  sansExpediteur: false,
+  ecritureId: null,
+  signe: true,
+  sceauId: null,
+  destinataires: [],
+  dateCommune: '',
+};
+
+/**
+ * Le document gardé, s'il y en a un. Une case ajoutée à un gabarit depuis qu'il a été
+ * gardé prend sa valeur vide : le formulaire trouve toujours toutes ses cases.
+ */
+function documentGarde(): EnCours {
+  const garde = lireMemoire<Partial<EnCours>>(MEMOIRE);
+  if (!garde || typeof garde !== 'object') return VIERGE;
+  const contenus: Partial<Record<Gabarit, Contenu>> = {};
+  for (const gabarit of GABARITS) {
+    const contenu = garde.contenus?.[gabarit];
+    if (contenu && typeof contenu === 'object') {
+      contenus[gabarit] = { ...contenuVierge(gabarit), ...contenu, gabarit } as Contenu;
+    }
+  }
+  return {
+    ...VIERGE,
+    ...garde,
+    gabarit: GABARITS.includes(garde.gabarit as Gabarit) ? (garde.gabarit as Gabarit) : 'billet',
+    contenus,
+    destinataires: Array.isArray(garde.destinataires) ? garde.destinataires : [],
+  };
+}
+
+/**
  * L'outil unique du MJ : tout ce qu'il envoie. Un gabarit, un expéditeur, un contenu, et
  * un ou plusieurs destinataires, chacun avec sa date. Le document part aussitôt, sans
  * passer par la file.
@@ -60,19 +115,70 @@ export function Documents() {
   const sceaux = useLecture<SceauMj[]>('/mj/sceaux');
   const reglages = useLecture<Reglages>('/mj/reglages');
 
-  const [gabarit, setGabarit] = useState<Gabarit>('billet');
+  // On reprend le document là où on l'avait laissé, sur cet appareil.
+  const [garde] = useState(documentGarde);
+  const [gabarit, setGabarit] = useState<Gabarit>(garde.gabarit);
   // Chaque gabarit garde ce qu'on y a écrit : en changer ne fait rien perdre.
-  const [contenus, setContenus] = useState<Partial<Record<Gabarit, Contenu>>>({});
-  const [auteurId, setAuteurId] = useState<string | null>(null);
-  const [sansExpediteur, setSansExpediteur] = useState(false);
-  const [ecritureId, setEcritureId] = useState<string | null>(null);
-  const [signe, setSigne] = useState(true);
-  const [sceauId, setSceauId] = useState<string | null>(null);
-  const [destinataires, setDestinataires] = useState<Destinataire[]>([]);
-  const [dateCommune, setDateCommune] = useState('');
+  const [contenus, setContenus] = useState<Partial<Record<Gabarit, Contenu>>>(garde.contenus);
+  const [auteurId, setAuteurId] = useState<string | null>(garde.auteurId);
+  const [sansExpediteur, setSansExpediteur] = useState(garde.sansExpediteur);
+  const [ecritureId, setEcritureId] = useState<string | null>(garde.ecritureId);
+  const [signe, setSigne] = useState(garde.signe);
+  const [sceauId, setSceauId] = useState<string | null>(garde.sceauId);
+  const [destinataires, setDestinataires] = useState<Destinataire[]>(garde.destinataires);
+  const [dateCommune, setDateCommune] = useState(garde.dateCommune);
   const [creation, setCreation] = useState(false);
+  const [effacement, setEffacement] = useState(false);
   const [occupe, setOccupe] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
+
+  const enCours: EnCours = {
+    gabarit,
+    contenus,
+    auteurId,
+    sansExpediteur,
+    ecritureId,
+    signe,
+    sceauId,
+    destinataires,
+    dateCommune,
+  };
+  const instantane = JSON.stringify(enCours);
+  const commence = instantane !== JSON.stringify(VIERGE);
+
+  // Chaque changement est gardé aussitôt ; un document vierge ne laisse rien derrière lui.
+  useEffect(() => {
+    if (commence) ecrireMemoire(MEMOIRE, JSON.parse(instantane));
+    else oublierMemoire(MEMOIRE);
+  }, [instantane, commence]);
+
+  // Un destinataire gardé a pu disparaître depuis : on le retire.
+  const connus = personnages.donnees;
+  useEffect(() => {
+    if (!connus) return;
+    const ids = new Set(connus.map((personnage) => personnage.id));
+    setDestinataires((avant) =>
+      avant.some((destinataire) => !ids.has(destinataire.personnage_id))
+        ? avant.filter((destinataire) => ids.has(destinataire.personnage_id))
+        : avant,
+    );
+  }, [connus]);
+
+  function toutEffacer(confirme: boolean) {
+    setEffacement(false);
+    if (!confirme) return;
+    setGabarit(VIERGE.gabarit);
+    setContenus(VIERGE.contenus);
+    setAuteurId(VIERGE.auteurId);
+    setSansExpediteur(VIERGE.sansExpediteur);
+    setEcritureId(VIERGE.ecritureId);
+    setSigne(VIERGE.signe);
+    setSceauId(VIERGE.sceauId);
+    setDestinataires(VIERGE.destinataires);
+    setDateCommune(VIERGE.dateCommune);
+    setErreur(null);
+    oublierMemoire(MEMOIRE);
+  }
 
   if (!personnages.donnees || !ecritures.donnees || !sceaux.donnees || !reglages.donnees) {
     return (
@@ -141,6 +247,7 @@ export function Documents() {
           livraison_le: depuisChamp(destinataire.date || dateCommune),
         })),
       } satisfies DocumentSaisi);
+      oublierMemoire(MEMOIRE);
       toast.success(destinataires.length === 1 ? 'Le pli est en route' : 'Les plis sont en route');
       naviguer('/mj/en-route');
     } catch (e) {
@@ -151,11 +258,18 @@ export function Documents() {
 
   return (
     <>
-      <Entete titre="Documents" />
+      <Entete titre="Documents">
+        {commence && (
+          <Button variant="outline" onClick={() => setEffacement(true)}>
+            Tout effacer
+          </Button>
+        )}
+      </Entete>
       <p className="mb-6 text-muted-foreground">
         Tout ce que vous envoyez part d'ici. Le document part aussitôt, et chaque destinataire
         reçoit son exemplaire comme un pli ordinaire : fermé, dans sa Réception. Jusqu'à son
-        arrivée, chaque exemplaire reste modifiable dans En route.
+        arrivée, chaque exemplaire reste modifiable dans En route. Ce que vous écrivez est
+        gardé dans ce navigateur jusqu'à l'envoi : vous pouvez fermer la page et revenir.
       </p>
 
       <Section titre="Gabarit">
@@ -430,6 +544,14 @@ export function Documents() {
           Envoyer
         </Button>
       </div>
+
+      <Confirmation
+        ouverte={effacement}
+        titre="Tout effacer ?"
+        texte="Le document en cours, ses destinataires et ses dates sont effacés de ce navigateur. Rien n'est envoyé."
+        action="Tout effacer"
+        surReponse={toutEffacer}
+      />
 
       <NouveauPnj
         ouvert={creation}

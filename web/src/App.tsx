@@ -3,6 +3,7 @@ import { BrowserRouter } from 'react-router';
 
 import { appeler, messageErreur } from '@/api';
 import { Connexion } from '@/ecrans/Connexion';
+import { oublierToutesLesMemoires } from '@/outils/memoire';
 import { vocabulaire } from '@/theme/neutre';
 import type { LienConnexion } from '@/types/LienConnexion';
 import type { Moi } from '@/types/Moi';
@@ -50,6 +51,8 @@ export function App() {
   async function deconnecter() {
     // Même si le serveur ne répond pas, on revient à l'écran de connexion.
     await appeler('/deconnexion', {}).catch(() => undefined);
+    // Un appareil peut changer de mains : rien de ce qu'on écrivait n'y reste.
+    oublierToutesLesMemoires();
     window.history.replaceState(null, '', '/');
     setEtat({ etape: 'deconnecte' });
   }

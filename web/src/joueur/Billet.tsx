@@ -14,6 +14,7 @@ import { Confirmation } from '@/composants/Confirmation';
 import { Main } from '@/composants/Main';
 import { cn } from '@/lib/utils';
 import { adresseSceauJoueur } from '@/outils/images';
+import { ecrireMemoire, lireMemoire, oublierMemoire } from '@/outils/memoire';
 import { useLecture } from '@/outils/useLecture';
 import { policeDe } from '@/theme/ecritures';
 import { vocabulaire } from '@/theme/neutre';
@@ -61,15 +62,35 @@ function Retour() {
 
 type Sauvegarde = 'a_jour' | 'en_cours' | 'echec';
 
+/**
+ * La copie d'un brouillon gardée dans le téléphone, tant que le serveur ne l'a pas reçue :
+ * un réseau qui tombe pendant qu'on écrit ne fait rien perdre.
+ */
+type CopieLocale = {
+  /** Le brouillon tel que le serveur l'avait la dernière fois qu'il a répondu. */
+  base: string;
+  saisie: BrouillonSaisi;
+};
+
 function Editeur({ ecritoire, brouillon }: { ecritoire: Ecritoire; brouillon: Brouillon }) {
   const naviguer = useNavigate();
-  const [saisie, setSaisie] = useState<BrouillonSaisi>({
-    texte: brouillon.texte,
-    destinataire: brouillon.destinataire,
-    sceau_id: brouillon.sceau_id,
-    signe: brouillon.signe,
+  const memoire = `billet:${brouillon.id}`;
+  const [depart] = useState(() => {
+    const serveur: BrouillonSaisi = {
+      texte: brouillon.texte,
+      destinataire: brouillon.destinataire,
+      sceau_id: brouillon.sceau_id,
+      signe: brouillon.signe,
+    };
+    // La copie du téléphone ne reprend la main que si le serveur n'a pas changé depuis :
+    // sinon le brouillon a été repris ailleurs, et c'est celui du serveur qui compte.
+    const copie = lireMemoire<CopieLocale>(memoire);
+    const reprise = copie?.base === JSON.stringify(serveur) ? copie.saisie : null;
+    return { serveur, reprise };
   });
+  const [saisie, setSaisie] = useState<BrouillonSaisi>(depart.reprise ?? depart.serveur);
   const [sauvegarde, setSauvegarde] = useState<Sauvegarde>('a_jour');
+  const [gardeIci, setGardeIci] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
   const [choixDestinataire, setChoixDestinataire] = useState(false);
   const [demande, setDemande] = useState<'envoi' | 'jet' | null>(null);
@@ -77,11 +98,30 @@ function Editeur({ ecritoire, brouillon }: { ecritoire: Ecritoire; brouillon: Br
 
   // --- Sauvegarde automatique -------------------------------------------------
   // `courante` suit la saisie ; `enregistree` est ce que le serveur a reçu en dernier.
+  // Une copie reprise du téléphone n'est pas encore sur le serveur : elle partira à la
+  // première sauvegarde.
   const courante = useRef(saisie);
   courante.current = saisie;
-  const enregistree = useRef(JSON.stringify(saisie));
+  const enregistree = useRef(JSON.stringify(depart.serveur));
   const enCours = useRef<Promise<void> | null>(null);
   const termine = useRef(false);
+
+  // Le téléphone garde ce que le serveur n'a pas encore reçu, et l'oublie dès qu'il l'a.
+  // Dit si une copie est gardée.
+  const garderCopie = useCallback(() => {
+    if (termine.current || JSON.stringify(courante.current) === enregistree.current) {
+      oublierMemoire(memoire);
+      return false;
+    }
+    return ecrireMemoire(memoire, {
+      base: enregistree.current,
+      saisie: courante.current,
+    } satisfies CopieLocale);
+  }, [memoire]);
+
+  useEffect(() => {
+    garderCopie();
+  }, [saisie, garderCopie]);
 
   const sauvegarder = useCallback(async () => {
     // Une sauvegarde à la fois : la suivante attend, puis envoie le dernier état.
@@ -94,10 +134,12 @@ function Editeur({ ecritoire, brouillon }: { ecritoire: Ecritoire; brouillon: Br
     enCours.current = modifier(`/joueur/brouillons/${brouillon.id}`, courante.current)
       .then(() => {
         enregistree.current = instantane;
+        garderCopie();
         setSauvegarde('a_jour');
         setErreur(null);
       })
       .catch((e) => {
+        setGardeIci(garderCopie());
         setSauvegarde('echec');
         setErreur(messageErreur(e));
       })
@@ -105,7 +147,7 @@ function Editeur({ ecritoire, brouillon }: { ecritoire: Ecritoire; brouillon: Br
         enCours.current = null;
       });
     await enCours.current;
-  }, [brouillon.id]);
+  }, [brouillon.id, garderCopie]);
 
   // Chaque changement relance le compte à rebours.
   useEffect(() => {
@@ -116,9 +158,13 @@ function Editeur({ ecritoire, brouillon }: { ecritoire: Ecritoire; brouillon: Br
   // En quittant l'écran ou en changeant d'application : on sauvegarde sans attendre.
   useEffect(() => {
     const surMasquage = () => document.visibilityState === 'hidden' && void sauvegarder();
+    // Le réseau revient : ce que le téléphone gardait part aussitôt.
+    const surReseau = () => void sauvegarder();
     document.addEventListener('visibilitychange', surMasquage);
+    window.addEventListener('online', surReseau);
     return () => {
       document.removeEventListener('visibilitychange', surMasquage);
+      window.removeEventListener('online', surReseau);
       void sauvegarder();
     };
   }, [sauvegarder]);
@@ -146,12 +192,14 @@ function Editeur({ ecritoire, brouillon }: { ecritoire: Ecritoire; brouillon: Br
       if (geste === 'jet') {
         termine.current = true;
         await supprimer(`/joueur/brouillons/${brouillon.id}`);
+        oublierMemoire(memoire);
         naviguer('/ecrire');
         return;
       }
       await sauvegarder();
       await appeler<Envoi>(`/joueur/brouillons/${brouillon.id}/envoi`, {});
       termine.current = true;
+      oublierMemoire(memoire);
       setParti(true);
     } catch (e) {
       termine.current = false;
@@ -236,7 +284,7 @@ function Editeur({ ecritoire, brouillon }: { ecritoire: Ecritoire; brouillon: Br
         {erreur ? (
           <span className="text-destructive">{erreur}</span>
         ) : (
-          (manque ?? etatDeSauvegarde(sauvegarde))
+          (manque ?? etatDeSauvegarde(sauvegarde, gardeIci))
         )}
       </p>
 
@@ -274,12 +322,12 @@ function Editeur({ ecritoire, brouillon }: { ecritoire: Ecritoire; brouillon: Br
   );
 }
 
-function etatDeSauvegarde(sauvegarde: Sauvegarde): string {
+function etatDeSauvegarde(sauvegarde: Sauvegarde, gardeIci: boolean): string {
   switch (sauvegarde) {
     case 'en_cours':
       return mots.enregistrement;
     case 'echec':
-      return mots.nonEnregistre;
+      return gardeIci ? mots.gardeIci : mots.nonEnregistre;
     case 'a_jour':
       return mots.enregistre;
   }

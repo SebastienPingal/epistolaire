@@ -54,6 +54,8 @@ Dernière mise à jour : 16 novembre, à l'étape L (lancement).
 - Un pli détruit disparaît pour le joueur, mais pas pour le MJ : la base le garde, et le MJ le voit dans une liste « Détruites », avec la date et le dossier d'où il a été détruit. Le carnet du joueur garde les contacts appris en l'ouvrant.
 - Une lettre est un objet physique : l'expéditeur n'en garde aucune copie, et l'envoi est définitif.
 - Le brouillon est sauvegardé automatiquement tant que la lettre n'est pas envoyée.
+- Si le réseau manque, le billet en cours est gardé dans l'appareil du joueur et part vers le serveur dès que le réseau revient (décidé le 17 novembre). Si le brouillon a changé ailleurs entre-temps, c'est celui du serveur qui compte.
+- Côté MJ, le document en cours (écran Documents) et la réponse d'un PNJ sous une lettre de la file sont gardés dans le navigateur jusqu'à l'envoi (décidé le 17 novembre). Un seul document en cours à la fois ; un bouton l'efface. La déconnexion efface tout ce que le site a gardé dans l'appareil.
 - Un joueur peut avoir plusieurs brouillons en cours (20 au plus).
 - L'envoi demande une confirmation, qui rappelle qu'on ne garde aucune copie.
 

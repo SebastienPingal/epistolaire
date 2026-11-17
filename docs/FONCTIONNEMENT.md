@@ -157,7 +157,7 @@ Un joueur a trois destinations : la Réception, l'écritoire et sa fiche. Sur t�
 ### Écrire
 
 1. L'écritoire montre combien de lettres il reste à envoyer cette semaine, et les brouillons en cours.
-2. Un billet se rédige dans l'écriture du personnage. Il est sauvegardé tout seul, un instant après la dernière frappe.
+2. Un billet se rédige dans l'écriture du personnage. Il est sauvegardé tout seul, un instant après la dernière frappe. Tant que le serveur ne l'a pas reçu (réseau absent), une copie attend dans le téléphone (`localStorage`, voir « Ce que garde le navigateur »).
 3. Une jauge sans chiffre montre la place qui reste. Le billet peut déborder, mais il ne part pas tant qu'il est trop long.
 4. Le joueur choisit son destinataire : un personnage de son carnet, la gazette, ou une adresse écrite librement.
 5. Il choisit de signer ou non, et de sceller ou non avec un sceau qu'il détient.
@@ -279,6 +279,8 @@ Un seul outil pour tout ce qu'envoie le MJ (écran « Documents », `POST /api/m
 - **un ou plusieurs destinataires**, joueurs ou PNJ. Chacun reçoit son exemplaire. La date par défaut (le délai habituel, plus ou moins le hasard) est tirée une fois et partagée ; le MJ peut fixer une date pour tous, ou pour un seul ;
 - un aperçu montre le document tel qu'il sera lu.
 
+Tout ce que le MJ remplit sur cet écran est gardé dans le navigateur à chaque changement, et revient quand il rouvre l'écran ; c'est oublié à l'envoi ou par « Tout effacer ». La réponse d'un PNJ sous une lettre de la file est gardée de même, lettre par lettre.
+
 Le document ne passe pas par la file : il part aussitôt, et chaque exemplaire reste modifiable dans En route. Un PNJ qui n'a pas encore d'écriture reçoit celle que le MJ choisit pour un document écrit à la main, et la garde. La réponse d'un PNJ écrite sous une lettre de la file est un billet envoyé par le même chemin.
 
 Le MJ n'écrit qu'au nom d'un PNJ, ou de personne. Ses documents ne comptent dans aucun quota. Écrire une lettre entièrement fausse au nom d'un joueur n'est pas possible pour l'instant : cela viendra avec les compétences des personnages.
@@ -344,6 +346,21 @@ Deux joueurs ne peuvent pas avoir la même écriture : c'est la base elle-même 
 ### Les sceaux
 
 Un sceau est un objet, avec un nom gravé qui ne change pas quand il change de mains. À la création d'un personnage, le site propose de lui créer un sceau à son nom. Dans l'habillage neutre, un sceau est dessiné comme un simple cachet portant des initiales. Le MJ peut lui donner une image (écran Sceaux) : elle est alors gravée dans la cire à la place des initiales, et les états d'un sceau trafiqué (brisé, recollé, contrefait) se dessinent par-dessus.
+
+## Ce que garde le navigateur
+
+Un texte en cours d'écriture est gardé dans le navigateur (`localStorage`), pour qu'une page fermée ou un réseau absent ne fasse rien perdre. Tout passe par `web/src/outils/memoire.ts` ; les clés commencent par `epistolaire:`.
+
+| Clé | Écran | Oubliée |
+| --- | --- | --- |
+| `mj:document` | Documents (MJ) : gabarit, contenus, expéditeur, sceau, destinataires, dates | à l'envoi, par « Tout effacer » |
+| `mj:reponse:<lettre>` | Réponse d'un PNJ, sous une lettre de la file | quand la lettre est traitée ou écartée |
+| `billet:<brouillon>` | Billet d'un joueur, tant que le serveur ne l'a pas reçu | dès que le serveur l'a, à l'envoi, au jet |
+
+- La copie d'un billet note l'état du serveur sur lequel elle s'appuie. Elle ne reprend la main que si le serveur n'a pas changé depuis ; sinon le brouillon a été repris sur un autre appareil, et la copie est oubliée.
+- Le stockage peut manquer (navigation privée) : tout fonctionne sans lui.
+- La déconnexion efface toutes les clés du site : un appareil peut changer de mains.
+- Un contenu gardé est complété par les cases vides de son gabarit à la relecture : une case ajoutée plus tard ne casse pas un document gardé avant.
 
 ## Les notifications
 

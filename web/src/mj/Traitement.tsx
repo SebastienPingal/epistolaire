@@ -1,5 +1,5 @@
 import { ArrowLeftIcon, PlusIcon, XIcon } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import { toast } from 'sonner';
 
@@ -7,6 +7,7 @@ import { appeler, messageErreur, supprimer } from '@/api';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { ecrireMemoire, lireMemoire, oublierMemoire } from '@/outils/memoire';
 import { useLecture } from '@/outils/useLecture';
 import type { BilletPnj } from '@/types/BilletPnj';
 import type { Decision } from '@/types/Decision';
@@ -178,7 +179,17 @@ function Decider({
     versChamp(lettre.date_depassee ? dansQuelquesMinutes() : lettre.date_proposee),
   );
   const [dateChoisie, setDateChoisie] = useState(false);
-  const [reponse, setReponse] = useState<BilletPnj>(BILLET_VIERGE);
+  // La réponse en cours est gardée dans ce navigateur, lettre par lettre, jusqu'à ce que
+  // la lettre quitte la file : une page fermée ne la fait pas perdre.
+  const memoire = `mj:reponse:${lettre.id}`;
+  const [reponse, setReponse] = useState<BilletPnj>(() => ({
+    ...BILLET_VIERGE,
+    ...lireMemoire<Partial<BilletPnj>>(memoire),
+  }));
+  useEffect(() => {
+    if (JSON.stringify(reponse) === JSON.stringify(BILLET_VIERGE)) oublierMemoire(memoire);
+    else ecrireMemoire(memoire, reponse);
+  }, [memoire, reponse]);
   // L'altération : vide tant que le MJ ne touche pas à la lettre.
   const [version, setVersion] = useState<VersionLivree | null>(null);
   const [mainInconnue, setMainInconnue] = useState(false);
@@ -221,6 +232,7 @@ function Decider({
         reponse: avecReponse ? reponse : null,
         version: alteree ? version : null,
       } satisfies TraitementSaisi);
+      oublierMemoire(memoire);
       toast.success(succes);
       naviguer('/mj/a-traiter');
     } catch (e) {
@@ -234,6 +246,7 @@ function Decider({
     setErreur(null);
     try {
       await appeler(`/mj/a-traiter/${lettre.id}/ecart`, {});
+      oublierMemoire(memoire);
       toast.success('Lettre écartée');
       naviguer('/mj/a-traiter');
     } catch (e) {
